@@ -3,7 +3,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 require('dotenv').config();
-
+const authRoutes = require('./routes/authRoutes');
 // Initialize App
 const app = express();
 
@@ -12,6 +12,7 @@ app.use(express.json()); // Parse JSON bodies
 app.use(cors());         // Allow cross-origin requests
 app.use(helmet());       // Secure HTTP headers
 app.use(morgan('dev'));  // Log requests to console
+app.use('/api/auth', authRoutes); // Auth Routes
 
 // Basic Test Route
 app.get('/', (req, res) => {
