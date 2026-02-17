@@ -13,6 +13,12 @@ class User {
     );
     return result.insertId;
   }
+  static async findByToken(token) {
+    const [rows] = await pool.execute('SELECT * FROM users WHERE verification_token = ?', [token]);
+    return rows[0];
+  }
+  static async verifyUser(id) {
+    await pool.execute('UPDATE users SET is_verified = 1, verification_token = NULL WHERE id = ?', [id]);
+  }
 }
-
 module.exports = User;

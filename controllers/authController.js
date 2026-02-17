@@ -2,6 +2,7 @@ const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const User = require('../models/userModel');
 const jwt = require('jsonwebtoken');
+const { sendVerificationEmail } = require('../utils/emailService');
 
 exports.register = async (req, res) => {
   try {
@@ -32,6 +33,9 @@ exports.register = async (req, res) => {
 
     // 6. Save to Database
     await User.create(email, passwordHash, verificationToken);
+
+    // 7. Send Verification Email
+    await sendVerificationEmail(email, verificationToken);
 
     res.status(201).json({ 
       message: "Registration successful! Please verify your email.",
@@ -87,5 +91,27 @@ exports.login = async (req, res) => {
   } catch (error) {
     console.error("Login Error:", error);
     res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+exports.verifyEmail = async (req, res) => {
+  try {
+    const { token } = req.params;
+
+    // 1. Find user with this token
+    // (We need to add a helper in User model for this, see Step 4)
+    const user = await User.findByToken(token);
+
+    if (!user) {
+      return res.status(400).json({ error: "Invalid or expired token." });
+    }
+
+    // 2. Mark as Verified in Database
+    await User.verifyUser(user.id);
+
+    res.send("<h1>Email Verified! ✅</h1><p>You can now close this tab and log in.</p>");
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error verifying email.");
   }
 };
