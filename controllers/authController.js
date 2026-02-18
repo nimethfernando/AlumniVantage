@@ -77,6 +77,13 @@ exports.login = async (req, res) => {
       { expiresIn: '1h' }                   // Expiration time
     );
 
+    res.cookie('token', token, {
+      httpOnly: true, // Prevents XSS (JavaScript cannot read this)
+      secure: process.env.NODE_ENV === 'production', // True if using HTTPS
+      sameSite: 'strict', // CSRF protection
+      maxAge: 3600000 // 1 hour
+    });
+
     // 5. Send Success Response
     res.json({ 
       message: "Login successful", 
@@ -93,6 +100,8 @@ exports.login = async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
+
+
 exports.verifyEmail = async (req, res) => {
   try {
     const { token } = req.params;
