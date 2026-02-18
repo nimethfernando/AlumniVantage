@@ -16,7 +16,7 @@ app.use(morgan('dev'));  // Log requests to console
 app.use('/api/auth', authRoutes); // Auth Routes
 app.use(cookieParser()); // Parse cookies
 app.use(cors({
-  origin: 'http://localhost:3000', // Frontend URL
+  origin: 'http://localhost:5172/', // Frontend URL
   credentials: true // Allow cookies to be sent
 }));
 
