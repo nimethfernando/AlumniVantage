@@ -3,6 +3,7 @@ const crypto = require('crypto');
 const User = require('../models/userModel');
 const jwt = require('jsonwebtoken');
 const { sendVerificationEmail } = require('../utils/emailService');
+const crypto = require('crypto');
 
 exports.register = async (req, res) => {
   try {
@@ -126,5 +127,59 @@ exports.verifyEmail = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).send("Error verifying email.");
+  }
+};
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findByEmail(email);
+
+    if (!user) {
+      // Security: Don't reveal if user exists or not, just say email sent
+      return res.json({ message: "If that email exists, a reset link has been sent." });
+    }
+
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    await User.saveResetToken(email, resetToken);
+
+    // Create the link
+    const resetLink = `http://localhost:5173/reset-password/${resetToken}`;
+    
+    // Simulate Email Sending (Print to Terminal)
+    console.log("--------------------------------------------------");
+    console.log("🔑 PASSWORD RESET LINK:");
+    console.log(resetLink);
+    console.log("--------------------------------------------------");
+
+    res.json({ message: "Password reset link sent to email (Check terminal)" });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Server error" });
+  }
+};
+
+exports.resetPassword = async (req, res) => {
+  try {
+    const { token } = req.params;
+    const { newPassword } = req.body;
+
+    const user = await User.findByResetToken(token);
+    if (!user) {
+      return res.status(400).json({ error: "Invalid or expired token" });
+    }
+
+    // Hash new password
+    const salt = await bcrypt.genSalt(10);
+    const hash = await bcrypt.hash(newPassword, salt);
+
+    // Update DB
+    await User.resetPassword(user.id, hash);
+
+    res.json({ message: "Password successfully reset! You can now login." });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Server error" });
   }
 };
