@@ -3,7 +3,6 @@ const crypto = require('crypto');
 const User = require('../models/userModel');
 const jwt = require('jsonwebtoken');
 const { sendVerificationEmail } = require('../utils/emailService');
-const crypto = require('crypto');
 
 exports.register = async (req, res) => {
   try {
