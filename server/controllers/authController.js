@@ -2,14 +2,14 @@ const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const User = require('../models/userModel');
 const jwt = require('jsonwebtoken');
-const { sendVerificationEmail } = require('../utils/emailService');
+const { sendVerificationEmail ,sendResetEmail } = require('../utils/emailService');
 
 exports.register = async (req, res) => {
   try {
     const { email, password } = req.body;
 
     // 1. Validation: Check for University Domain
-    if (!email.endsWith('@westminster.ac.uk')) {
+    if (!email.endsWith('@my.westminster.ac.uk')) {
       return res.status(400).json({ error: "Registration restricted to @westminster.ac.uk emails only." });
     }
 
@@ -134,23 +134,16 @@ exports.forgotPassword = async (req, res) => {
     const user = await User.findByEmail(email);
 
     if (!user) {
-      // Security: Don't reveal if user exists or not, just say email sent
       return res.json({ message: "If that email exists, a reset link has been sent." });
     }
 
     const resetToken = crypto.randomBytes(32).toString('hex');
     await User.saveResetToken(email, resetToken);
 
-    // Create the link
-    const resetLink = `http://localhost:5173/reset-password/${resetToken}`;
-    
-    // Simulate Email Sending (Print to Terminal)
-    console.log("--------------------------------------------------");
-    console.log("🔑 PASSWORD RESET LINK:");
-    console.log(resetLink);
-    console.log("--------------------------------------------------");
+    // CALL THE EMAIL SERVICE HERE
+    await sendResetEmail(email, resetToken);
 
-    res.json({ message: "Password reset link sent to email (Check terminal)" });
+    res.json({ message: "Password reset link sent to your email." });
 
   } catch (error) {
     console.error(error);
