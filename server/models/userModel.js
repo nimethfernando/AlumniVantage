@@ -6,20 +6,28 @@ class User {
     return rows[0];
   }
 
-  static async create(email, passwordHash, verificationToken) {
+  // Only ONE create method, accepting expiresAt
+  static async create(email, passwordHash, verificationToken, expiresAt) {
     const [result] = await pool.execute(
-      'INSERT INTO users (email, password_hash, verification_token) VALUES (?, ?, ?)',
-      [email, passwordHash, verificationToken]
+      'INSERT INTO users (email, password_hash, verification_token, verification_expires_at) VALUES (?, ?, ?, ?)',
+      [email, passwordHash, verificationToken, expiresAt]
     );
     return result.insertId;
   }
+
+  // checks if verification_expires_at is still in the future!
   static async findByToken(token) {
-    const [rows] = await pool.execute('SELECT * FROM users WHERE verification_token = ?', [token]);
+    const [rows] = await pool.execute(
+      'SELECT * FROM users WHERE verification_token = ? AND verification_expires_at > NOW()', 
+      [token]
+    );
     return rows[0];
   }
+
   static async verifyUser(id) {
     await pool.execute('UPDATE users SET is_verified = 1, verification_token = NULL WHERE id = ?', [id]);
   }
+
   // Password Reset Methods (1 hour expiry)
   static async saveResetToken(email, token) {
     const expires = new Date(Date.now() + 3600000); // 1 hour
@@ -28,6 +36,7 @@ class User {
       [token, expires, email]
     );
   }
+
   // Find user by reset token and check if it's still valid
   static async findByResetToken(token) {
     const [rows] = await pool.execute(
@@ -36,6 +45,7 @@ class User {
     );
     return rows[0];
   }
+
   // Update password and clear reset token
   static async resetPassword(id, newPasswordHash) {
     await pool.execute(
@@ -43,13 +53,6 @@ class User {
       [newPasswordHash, id]
     );
   }
-  static async create(email, passwordHash, verificationToken, expiresAt) {
-    const [result] = await pool.execute(
-      // Add verification_expires_at to the INSERT statement
-      'INSERT INTO users (email, password_hash, verification_token, verification_expires_at) VALUES (?, ?, ?, ?)',
-      [email, passwordHash, verificationToken, expiresAt]
-    );
-    return result.insertId;
-  }
 }
+
 module.exports = User;
