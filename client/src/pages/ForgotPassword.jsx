@@ -9,9 +9,9 @@ const ForgotPassword = () => {
     e.preventDefault();
     try {
       await axios.post('http://localhost:3000/api/auth/forgot-password', { email });
-      setMessage('Check your email for the link!');
+      setMessage(res.data.message);
     } catch (err) {
-      setMessage(err.response?.data?.error || 'Error sending email');
+      setMessage(err.response?.data?.error || 'Error sending email Plz check Your Email Address');
     }
   };
 

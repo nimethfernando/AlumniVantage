@@ -43,5 +43,13 @@ class User {
       [newPasswordHash, id]
     );
   }
+  static async create(email, passwordHash, verificationToken, expiresAt) {
+    const [result] = await pool.execute(
+      // Add verification_expires_at to the INSERT statement
+      'INSERT INTO users (email, password_hash, verification_token, verification_expires_at) VALUES (?, ?, ?, ?)',
+      [email, passwordHash, verificationToken, expiresAt]
+    );
+    return result.insertId;
+  }
 }
 module.exports = User;

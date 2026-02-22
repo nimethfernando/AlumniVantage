@@ -30,9 +30,10 @@ exports.register = async (req, res) => {
 
     // 5. Generate Verification Token
     const verificationToken = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 10000);
 
     // 6. Save to Database
-    await User.create(email, passwordHash, verificationToken);
+    await User.create(email, passwordHash, verificationToken, expiresAt);
 
     // 7. Send Verification Email
     await sendVerificationEmail(email, verificationToken);
@@ -111,14 +112,21 @@ exports.verifyEmail = async (req, res) => {
     const { token } = req.params;
 
     // 1. Find user with this token
-    // (We need to add a helper in User model for this, see Step 4)
     const user = await User.findByToken(token);
 
     if (!user) {
-      return res.status(400).json({ error: "Invalid or expired token." });
+      return res.status(400).json({ error: "Invalid token." });
     }
 
-    // 2. Mark as Verified in Database
+    // 2. Check if the token has expired
+    const currentTime = new Date();
+    const expirationTime = new Date(user.verification_expires_at);
+
+    if (currentTime > expirationTime) {
+      return res.status(400).json({ error: "Verification link has expired. Please request a new one." });
+    }
+
+    // 3. Mark as Verified in Database
     await User.verifyUser(user.id);
 
     res.send("<h1>Email Verified! ✅</h1><p>You can now close this tab and log in.</p>");
@@ -128,6 +136,7 @@ exports.verifyEmail = async (req, res) => {
     res.status(500).send("Error verifying email.");
   }
 };
+
 exports.forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
