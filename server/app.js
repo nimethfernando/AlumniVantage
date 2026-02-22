@@ -17,7 +17,7 @@ app.use(cookieParser()); // Parse cookies
 
 // CORS setup: Removed the trailing "/" from the origin!
 app.use(cors({
-  origin: 'http://localhost:5172', // Frontend URL
+  origin: 'http://localhost:5173', // Frontend URL
   credentials: true // Allow cookies to be sent
 }));
 

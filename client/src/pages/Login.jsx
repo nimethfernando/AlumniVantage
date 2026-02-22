@@ -2,7 +2,7 @@
 import { useState, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom'; // 1. Added Link import
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -15,10 +15,15 @@ const Login = () => {
     e.preventDefault();
     try {
       // Connects to your backend Login route
-      const res = await axios.post('http://localhost:3000/api/auth/login', {
-        email,
-        password,
-      });
+      const res = await axios.post('http://localhost:3000/api/auth/login', 
+        {
+          email,
+          password,
+        },
+        {
+          withCredentials: true // 2. Added this to fix the CORS generic error!
+        }
+      );
 
       login(res.data.token); // Save the token
       navigate('/profile');  // Go to profile page
@@ -50,6 +55,14 @@ const Login = () => {
         <br />
         <button type="submit">Login</button>
       </form>
+
+      {/* 3. Added the Forgot Password Link below the form */}
+      <div style={{ marginTop: '15px' }}>
+        <Link to="/forgot-password" style={{ color: '#007bff', textDecoration: 'none' }}>
+          Forgot Password?
+        </Link>
+      </div>
+
     </div>
   );
 };
