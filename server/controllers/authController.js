@@ -14,9 +14,12 @@ exports.register = async (req, res) => {
     }
 
     // 2. Validation: Check Password Strength (Basic)
-    if (password.length < 6) {
-      return res.status(400).json({ error: "Password must be at least 6 characters long." });
-    }
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+      if (!passwordRegex.test(password)) {
+        return res.status(400).json({ 
+          error: "Password must be at least 8 characters long, contain 1 uppercase letter, 1 number, and 1 special character." 
+        });
+      }
 
     // 3. Check if User Already Exists
     const existingUser = await User.findByEmail(email);
