@@ -4,6 +4,7 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 require('dotenv').config();
 const cookieParser = require('cookie-parser');
+const profileRoutes = require('./routes/profileRoutes');
 
 const authRoutes = require('./routes/authRoutes');
 const db = require('./config/db'); // Moved import to the top
@@ -31,6 +32,9 @@ app.use('/api/auth', authRoutes); // Auth Routes
 app.get('/', (req, res) => {
   res.json({ message: 'Welcome to the AlumniVantage API' });
 });
+
+app.use(express.static('public')); // Serve static files from "public" directory
+app.use('/api/profile', profileRoutes); // Profile Routes
 
 // ==========================================
 // 3. START SERVER

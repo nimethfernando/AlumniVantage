@@ -6,23 +6,12 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import Profile from './pages/Profile'; // <-- 1. IMPORT THE REAL PROFILE PAGE HERE
 
 // A "Guard" component that blocks non-logged-in users
 const PrivateRoute = ({ children }) => {
   const { user } = useContext(AuthContext);
   return user ? children : <Navigate to="/login" />;
-};
-
-// Simple Profile Placeholder
-const Profile = () => {
-  const { logout } = useContext(AuthContext);
-  return (
-    <div>
-      <h1>My Profile</h1>
-      <p>You are logged in!</p>
-      <button onClick={logout}>Logout</button>
-    </div>
-  );
 };
 
 function App() {
@@ -34,14 +23,16 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password/:token" element={<ResetPassword />} />
+        
           <Route 
             path="/profile" 
             element={
               <PrivateRoute>
-                <Profile />
+                <Profile /> 
               </PrivateRoute>
             } 
           />
+          
           <Route path="/" element={<Navigate to="/login" />} />
         </Routes>
       </BrowserRouter>
