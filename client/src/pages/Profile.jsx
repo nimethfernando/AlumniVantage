@@ -6,7 +6,11 @@ const Profile = () => {
   const [image, setImage] = useState(null);
   const [degrees, setDegrees] = useState([]);
   const [newDegree, setNewDegree] = useState({ degree_name: '', university_url: '', completion_date: '' });
+  const [degrees, setDegrees] = useState([]);
+  const [newDegree, setNewDegree] = useState({ degree_name: '', university_url: '', completion_date: '' });
 
+  const [certifications, setCertifications] = useState([]);
+  const [newCert, setNewCert] = useState({ cert_name: '', course_url: '', completion_date: '' });
   // Add credentials to axios if using HttpOnly cookies
   axios.defaults.withCredentials = true;
 
@@ -19,6 +23,7 @@ const Profile = () => {
       const res = await axios.get('http://localhost:3000/api/profile');
       if (res.data.profile) setProfile(res.data.profile);
       if (res.data.degrees) setDegrees(res.data.degrees);
+      if(res.data.certifications) setCertifications(res.data.certifications);
     } catch (err) {
       console.error("Failed to fetch profile");
     }
@@ -39,6 +44,17 @@ const Profile = () => {
       fetchProfile(); // Refresh data
     } catch (err) {
       alert('Error updating profile');
+    }
+  };
+
+  const handleAddCertification = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.post('http://localhost:3000/api/profile/certifications', newCert);
+      setNewCert({ cert_name: '', course_url: '', completion_date: '' }); // Reset form
+      fetchProfile(); // Refresh list
+    } catch (err) {
+      alert('Error adding certification');
     }
   };
 
@@ -122,6 +138,36 @@ const Profile = () => {
         <button type="submit">Add Degree</button>
       </form>
 
+      {/* Certifications Section */}
+      <h3>Certifications</h3>
+      <ul>
+        {certifications.map((cert, index) => (
+          <li key={index}>
+            <strong>{cert.cert_name}</strong> - <a href={cert.course_url} target="_blank">Course Link</a> ({new Date(cert.completion_date).toLocaleDateString()})
+          </li>
+        ))}
+      </ul>
+
+      {/* Add Certification Form */}
+      <form onSubmit={handleAddCertification}>
+        <input 
+          type="text" placeholder="Certification Name" required
+          value={newCert.cert_name} 
+          onChange={(e) => setNewCert({ ...newCert, cert_name: e.target.value })} 
+        />
+        <input 
+          type="url" placeholder="Course URL" required
+          value={newCert.course_url} 
+          onChange={(e) => setNewCert({ ...newCert, course_url: e.target.value })} 
+        />
+        <input 
+          type="date" required
+          value={newCert.completion_date} 
+          onChange={(e) => setNewCert({ ...newCert, completion_date: e.target.value })} 
+        />
+        <button type="submit">Add Certification</button>
+      </form>
+        
     </div>
   );
 };
