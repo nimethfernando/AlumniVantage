@@ -6,8 +6,6 @@ const Profile = () => {
   const [image, setImage] = useState(null);
   const [degrees, setDegrees] = useState([]);
   const [newDegree, setNewDegree] = useState({ degree_name: '', university_url: '', completion_date: '' });
-  const [degrees, setDegrees] = useState([]);
-  const [newDegree, setNewDegree] = useState({ degree_name: '', university_url: '', completion_date: '' });
 
   const [certifications, setCertifications] = useState([]);
   const [newCert, setNewCert] = useState({ cert_name: '', course_url: '', completion_date: '' });

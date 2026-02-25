@@ -8,10 +8,13 @@ exports.getProfile = async (req, res) => {
     const [profile] = await pool.execute('SELECT * FROM profiles WHERE user_id = ?', [userId]);
     // Fetch Degrees
     const [degrees] = await pool.execute('SELECT * FROM degrees WHERE user_id = ?', [userId]);
+    // Fetch Certifications
+    const [certifications] = await pool.execute('SELECT * FROM certifications WHERE user_id = ?', [userId]);
 
     res.json({
       profile: profile[0] || {},
-      degrees: degrees
+      degrees: degrees,
+      certifications: certifications
     });
   } catch (error) {
     console.error(error);
@@ -74,4 +77,30 @@ exports.addDegree = async (req, res) => {
     console.error(error);
     res.status(500).json({ error: "Failed to add degree" });
   }
+};
+
+exports.addCertification = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        
+        // 1. Destructure the exact keys sent by React
+        const { cert_name, course_url, completion_date } = req.body;
+
+        // 2. Map them to your database variables. Pass `null` for missing fields to avoid the undefined error.
+        const name = cert_name;
+        const issuing_organization = null; 
+        const issue_date = completion_date;
+        const expiration_date = null;
+        const credential_url = course_url;
+
+        const [result] = await pool.execute(
+            'INSERT INTO certifications (user_id, name, issuing_organization, issue_date, expiration_date, credential_url) VALUES (?, ?, ?, ?, ?, ?)',
+            [userId, name, issuing_organization, issue_date, expiration_date, credential_url]
+        );
+
+        res.status(201).json({ message: 'Certification added successfully!', certificationId: result.insertId });
+    } catch (error) {
+        console.error("Error adding certification:", error);
+        res.status(500).json({ error: "Failed to add certification" });
+    }
 };
