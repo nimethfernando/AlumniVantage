@@ -15,5 +15,8 @@ router.post('/degrees', verifyToken, profileController.addDegree);
 
 // ADD Certification
 router.post('/certifications', verifyToken, profileController.addCertification);
+router.post('/licenses', verifyToken, profileController.addLicense);
+router.post('/courses', verifyToken, profileController.addCourse);
+router.post('/employment', verifyToken, profileController.addEmployment);
 
 module.exports = router;

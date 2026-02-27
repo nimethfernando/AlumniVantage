@@ -10,11 +10,22 @@ exports.getProfile = async (req, res) => {
     const [degrees] = await pool.execute('SELECT * FROM degrees WHERE user_id = ?', [userId]);
     // Fetch Certifications
     const [certifications] = await pool.execute('SELECT * FROM certifications WHERE user_id = ?', [userId]);
+    // Fetch Short Courses
+    const [courses] = await pool.execute('SELECT * FROM short_courses WHERE user_id = ?', [userId]);
+    // Fetch Employment History
+    const [employment] = await pool.execute('SELECT * FROM employment_history WHERE user_id = ? ORDER BY start_date DESC', [userId]);
+    // Fetch Licenses
+    const [licenses] = await pool.execute('SELECT * FROM licenses WHERE user_id = ?', [userId]);
+
+
 
     res.json({
       profile: profile[0] || {},
       degrees: degrees,
-      certifications: certifications
+      certifications: certifications,
+      courses: courses,
+      employment: employment,
+      licenses: licenses
     });
   } catch (error) {
     console.error(error);
@@ -103,4 +114,36 @@ exports.addCertification = async (req, res) => {
         console.error("Error adding certification:", error);
         res.status(500).json({ error: "Failed to add certification" });
     }
+};
+exports.addLicense = async (req, res) => {
+  try {
+    const { license_name, awarding_body_url, completion_date } = req.body;
+    await pool.execute(
+      'INSERT INTO licenses (user_id, license_name, awarding_body_url, completion_date) VALUES (?, ?, ?, ?)',
+      [req.user.userId, license_name, awarding_body_url, completion_date]
+    );
+    res.status(201).json({ message: "License added!" });
+  } catch (error) { res.status(500).json({ error: "Failed to add license" }); }
+};
+
+exports.addCourse = async (req, res) => {
+  try {
+    const { course_name, course_url, completion_date } = req.body;
+    await pool.execute(
+      'INSERT INTO short_courses (user_id, course_name, course_url, completion_date) VALUES (?, ?, ?, ?)',
+      [req.user.userId, course_name, course_url, completion_date]
+    );
+    res.status(201).json({ message: "Course added!" });
+  } catch (error) { res.status(500).json({ error: "Failed to add course" }); }
+};
+
+exports.addEmployment = async (req, res) => {
+  try {
+    const { company_name, job_title, start_date, end_date } = req.body;
+    await pool.execute(
+      'INSERT INTO employment_history (user_id, company_name, job_title, start_date, end_date) VALUES (?, ?, ?, ?, ?)',
+      [req.user.userId, company_name, job_title, start_date, end_date || null]
+    );
+    res.status(201).json({ message: "Employment added!" });
+  } catch (error) { res.status(500).json({ error: "Failed to add employment" }); }
 };
