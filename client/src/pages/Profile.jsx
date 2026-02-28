@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import '../App.css'; // Make sure this imports your updated CSS
 
 const Profile = () => {
   const [profile, setProfile] = useState({ bio: '', linkedin_url: '' });
@@ -37,8 +38,8 @@ const Profile = () => {
       
       // Fetch new sections
       if (res.data.licenses) setLicenses(res.data.licenses);
-      if (res.data.shortCourses) setShortCourses(res.data.shortCourses);
-      if (res.data.employmentHistory) setEmploymentHistory(res.data.employmentHistory);
+      if (res.data.courses) setShortCourses(res.data.courses); // Adjusted to match your backend controller 'courses' key
+      if (res.data.employment) setEmploymentHistory(res.data.employment); // Adjusted to match your backend controller 'employment' key
     } catch (err) {
       console.error("Failed to fetch profile");
     }
@@ -66,8 +67,8 @@ const Profile = () => {
     e.preventDefault();
     try {
       await axios.post('http://localhost:3000/api/profile/degrees', newDegree);
-      setNewDegree({ degree_name: '', university_url: '', completion_date: '' }); // Reset form
-      fetchProfile(); // Refresh list
+      setNewDegree({ degree_name: '', university_url: '', completion_date: '' }); 
+      fetchProfile(); 
     } catch (err) {
       alert('Error adding degree');
     }
@@ -77,8 +78,8 @@ const Profile = () => {
     e.preventDefault();
     try {
       await axios.post('http://localhost:3000/api/profile/certifications', newCert);
-      setNewCert({ cert_name: '', course_url: '', completion_date: '' }); // Reset form
-      fetchProfile(); // Refresh list
+      setNewCert({ cert_name: '', course_url: '', completion_date: '' }); 
+      fetchProfile(); 
     } catch (err) {
       alert('Error adding certification');
     }
@@ -99,7 +100,7 @@ const Profile = () => {
   const handleAddShortCourse = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('http://localhost:3000/api/profile/short-courses', newShortCourse);
+      await axios.post('http://localhost:3000/api/profile/courses', newShortCourse); // ensure this matches your backend route
       setNewShortCourse({ course_name: '', course_url: '', completion_date: '' });
       fetchProfile();
     } catch (err) {
@@ -119,203 +120,260 @@ const Profile = () => {
   };
 
   return (
-    <div style={{ maxWidth: '600px', margin: 'auto', padding: '20px' }}>
-      <h2>Alumni Profile</h2>
-
-      {/* Profile Picture Display */}
-      {profile.profile_image_url && (
-        <img 
-          src={`http://localhost:3000${profile.profile_image_url}`} 
-          alt="Profile" 
-          style={{ width: '150px', height: '150px', borderRadius: '50%' }} 
-        />
-      )}
+    <div className="profile-container">
+      <div className="profile-header">
+        {profile.profile_image_url ? (
+          <img 
+            src={`http://localhost:3000${profile.profile_image_url}`} 
+            alt="Profile" 
+            className="profile-image"
+          />
+        ) : (
+          <div className="profile-image-placeholder">No Image</div>
+        )}
+        <h2>Alumni Profile</h2>
+      </div>
 
       {/* Main Profile Form */}
-      <form onSubmit={handleProfileSubmit}>
-        <div>
-          <label>Profile Image:</label>
-          <input type="file" accept="image/*" onChange={(e) => setImage(e.target.files[0])} />
-        </div>
-        <div>
-          <label>Bio:</label>
-          <textarea 
-            value={profile.bio} 
-            onChange={(e) => setProfile({ ...profile, bio: e.target.value })} 
-          />
-        </div>
-        <div>
-          <label>LinkedIn URL:</label>
-          <input 
-            type="url" 
-            value={profile.linkedin_url} 
-            onChange={(e) => setProfile({ ...profile, linkedin_url: e.target.value })} 
-          />
-        </div>
-        <button type="submit">Save Profile</button>
-      </form>
-
-      <hr />
+      <div className="card-section">
+        <h3>Personal Information</h3>
+        <form className="custom-form" onSubmit={handleProfileSubmit}>
+          <div className="form-group">
+            <label>Profile Image</label>
+            <input type="file" accept="image/*" onChange={(e) => setImage(e.target.files[0])} className="file-input" />
+          </div>
+          <div className="form-group">
+            <label>Bio</label>
+            <textarea 
+              rows="4"
+              placeholder="Tell us about yourself..."
+              value={profile.bio} 
+              onChange={(e) => setProfile({ ...profile, bio: e.target.value })} 
+            />
+          </div>
+          <div className="form-group">
+            <label>LinkedIn URL</label>
+            <input 
+              type="url" 
+              placeholder="https://linkedin.com/in/yourprofile"
+              value={profile.linkedin_url} 
+              onChange={(e) => setProfile({ ...profile, linkedin_url: e.target.value })} 
+            />
+          </div>
+          <button type="submit" className="btn-primary">Save Profile</button>
+        </form>
+      </div>
 
       {/* Degrees Section */}
-      <h3>Degrees</h3>
-      <ul>
-        {degrees.map((deg, index) => (
-          <li key={index}>
-            <strong>{deg.degree_name}</strong> - <a href={deg.university_url} target="_blank" rel="noreferrer">University Link</a> ({new Date(deg.completion_date).toLocaleDateString()})
-          </li>
-        ))}
-      </ul>
-      <form onSubmit={handleAddDegree}>
-        <input 
-          type="text" placeholder="Degree Name" required
-          value={newDegree.degree_name} 
-          onChange={(e) => setNewDegree({ ...newDegree, degree_name: e.target.value })} 
-        />
-        <input 
-          type="url" placeholder="University URL" required
-          value={newDegree.university_url} 
-          onChange={(e) => setNewDegree({ ...newDegree, university_url: e.target.value })} 
-        />
-        <input 
-          type="date" required
-          value={newDegree.completion_date} 
-          onChange={(e) => setNewDegree({ ...newDegree, completion_date: e.target.value })} 
-        />
-        <button type="submit">Add Degree</button>
-      </form>
-
-      <hr />
+      <div className="card-section">
+        <h3>Degrees</h3>
+        {degrees.length > 0 ? (
+          <ul className="item-list">
+            {degrees.map((deg, index) => (
+              <li key={index} className="list-item">
+                <div className="item-details">
+                  <strong>{deg.degree_name}</strong>
+                  <span>{new Date(deg.completion_date).toLocaleDateString()}</span>
+                </div>
+                <a href={deg.university_url} target="_blank" rel="noopener noreferrer" className="link-btn">University Link</a>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="empty-text">No degrees added yet.</p>
+        )}
+        <form className="inline-form" onSubmit={handleAddDegree}>
+          <input 
+            type="text" placeholder="Degree Name" required
+            value={newDegree.degree_name} 
+            onChange={(e) => setNewDegree({ ...newDegree, degree_name: e.target.value })} 
+          />
+          <input 
+            type="url" placeholder="University URL" required
+            value={newDegree.university_url} 
+            onChange={(e) => setNewDegree({ ...newDegree, university_url: e.target.value })} 
+          />
+          <input 
+            type="date" required
+            value={newDegree.completion_date} 
+            onChange={(e) => setNewDegree({ ...newDegree, completion_date: e.target.value })} 
+          />
+          <button type="submit" className="btn-secondary">Add Degree</button>
+        </form>
+      </div>
 
       {/* Certifications Section */}
-      <h3>Certifications</h3>
-      <ul>
-        {certifications.map((cert, index) => (
-          <li key={index}>
-            <strong>{cert.cert_name}</strong> - <a href={cert.course_url} target="_blank" rel="noreferrer">Course Link</a> ({new Date(cert.completion_date).toLocaleDateString()})
-          </li>
-        ))}
-      </ul>
-      <form onSubmit={handleAddCertification}>
-        <input 
-          type="text" placeholder="Certification Name" required
-          value={newCert.cert_name} 
-          onChange={(e) => setNewCert({ ...newCert, cert_name: e.target.value })} 
-        />
-        <input 
-          type="url" placeholder="Course URL" required
-          value={newCert.course_url} 
-          onChange={(e) => setNewCert({ ...newCert, course_url: e.target.value })} 
-        />
-        <input 
-          type="date" required
-          value={newCert.completion_date} 
-          onChange={(e) => setNewCert({ ...newCert, completion_date: e.target.value })} 
-        />
-        <button type="submit">Add Certification</button>
-      </form>
-
-      <hr />
+      <div className="card-section">
+        <h3>Certifications</h3>
+        {certifications.length > 0 ? (
+          <ul className="item-list">
+            {certifications.map((cert, index) => (
+              <li key={index} className="list-item">
+                <div className="item-details">
+                  <strong>{cert.cert_name}</strong>
+                  <span>{new Date(cert.completion_date).toLocaleDateString()}</span>
+                </div>
+                <a href={cert.course_url} target="_blank" rel="noopener noreferrer" className="link-btn">Course Link</a>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="empty-text">No certifications added yet.</p>
+        )}
+        <form className="inline-form" onSubmit={handleAddCertification}>
+          <input 
+            type="text" placeholder="Certification Name" required
+            value={newCert.cert_name} 
+            onChange={(e) => setNewCert({ ...newCert, cert_name: e.target.value })} 
+          />
+          <input 
+            type="url" placeholder="Course URL" required
+            value={newCert.course_url} 
+            onChange={(e) => setNewCert({ ...newCert, course_url: e.target.value })} 
+          />
+          <input 
+            type="date" required
+            value={newCert.completion_date} 
+            onChange={(e) => setNewCert({ ...newCert, completion_date: e.target.value })} 
+          />
+          <button type="submit" className="btn-secondary">Add Cert</button>
+        </form>
+      </div>
 
       {/* Professional Licenses Section */}
-      <h3>Professional Licenses</h3>
-      <ul>
-        {licenses.map((lic, index) => (
-          <li key={index}>
-            <strong>{lic.license_name}</strong> - <a href={lic.awarding_body_url} target="_blank" rel="noreferrer">Awarding Body Link</a> ({new Date(lic.completion_date).toLocaleDateString()})
-          </li>
-        ))}
-      </ul>
-      <form onSubmit={handleAddLicense}>
-        <input 
-          type="text" placeholder="License Name" required 
-          value={newLicense.license_name} 
-          onChange={(e) => setNewLicense({ ...newLicense, license_name: e.target.value })} 
-        />
-        <input 
-          type="url" placeholder="Awarding Body URL" required 
-          value={newLicense.awarding_body_url} 
-          onChange={(e) => setNewLicense({ ...newLicense, awarding_body_url: e.target.value })} 
-        />
-        <input 
-          type="date" required 
-          value={newLicense.completion_date} 
-          onChange={(e) => setNewLicense({ ...newLicense, completion_date: e.target.value })} 
-        />
-        <button type="submit">Add License</button>
-      </form>
-
-      <hr />
+      <div className="card-section">
+        <h3>Professional Licenses</h3>
+        {licenses.length > 0 ? (
+          <ul className="item-list">
+            {licenses.map((lic, index) => (
+              <li key={index} className="list-item">
+                <div className="item-details">
+                  <strong>{lic.license_name}</strong>
+                  <span>{new Date(lic.completion_date).toLocaleDateString()}</span>
+                </div>
+                <a href={lic.awarding_body_url} target="_blank" rel="noopener noreferrer" className="link-btn">Awarding Body</a>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="empty-text">No licenses added yet.</p>
+        )}
+        <form className="inline-form" onSubmit={handleAddLicense}>
+          <input 
+            type="text" placeholder="License Name" required 
+            value={newLicense.license_name} 
+            onChange={(e) => setNewLicense({ ...newLicense, license_name: e.target.value })} 
+          />
+          <input 
+            type="url" placeholder="Awarding Body URL" required 
+            value={newLicense.awarding_body_url} 
+            onChange={(e) => setNewLicense({ ...newLicense, awarding_body_url: e.target.value })} 
+          />
+          <input 
+            type="date" required 
+            value={newLicense.completion_date} 
+            onChange={(e) => setNewLicense({ ...newLicense, completion_date: e.target.value })} 
+          />
+          <button type="submit" className="btn-secondary">Add License</button>
+        </form>
+      </div>
 
       {/* Short Professional Courses Section */}
-      <h3>Short Professional Courses</h3>
-      <ul>
-        {shortCourses.map((course, index) => (
-          <li key={index}>
-            <strong>{course.course_name}</strong> - <a href={course.course_url} target="_blank" rel="noreferrer">Course Link</a> ({new Date(course.completion_date).toLocaleDateString()})
-          </li>
-        ))}
-      </ul>
-      <form onSubmit={handleAddShortCourse}>
-        <input 
-          type="text" placeholder="Course Name" required 
-          value={newShortCourse.course_name} 
-          onChange={(e) => setNewShortCourse({ ...newShortCourse, course_name: e.target.value })} 
-        />
-        <input 
-          type="url" placeholder="Course URL" required 
-          value={newShortCourse.course_url} 
-          onChange={(e) => setNewShortCourse({ ...newShortCourse, course_url: e.target.value })} 
-        />
-        <input 
-          type="date" required 
-          value={newShortCourse.completion_date} 
-          onChange={(e) => setNewShortCourse({ ...newShortCourse, completion_date: e.target.value })} 
-        />
-        <button type="submit">Add Short Course</button>
-      </form>
-
-      <hr />
+      <div className="card-section">
+        <h3>Short Professional Courses</h3>
+        {shortCourses.length > 0 ? (
+          <ul className="item-list">
+            {shortCourses.map((course, index) => (
+              <li key={index} className="list-item">
+                <div className="item-details">
+                  <strong>{course.course_name}</strong>
+                  <span>{new Date(course.completion_date).toLocaleDateString()}</span>
+                </div>
+                <a href={course.course_url} target="_blank" rel="noopener noreferrer" className="link-btn">Course Link</a>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="empty-text">No short courses added yet.</p>
+        )}
+        <form className="inline-form" onSubmit={handleAddShortCourse}>
+          <input 
+            type="text" placeholder="Course Name" required 
+            value={newShortCourse.course_name} 
+            onChange={(e) => setNewShortCourse({ ...newShortCourse, course_name: e.target.value })} 
+          />
+          <input 
+            type="url" placeholder="Course URL" required 
+            value={newShortCourse.course_url} 
+            onChange={(e) => setNewShortCourse({ ...newShortCourse, course_url: e.target.value })} 
+          />
+          <input 
+            type="date" required 
+            value={newShortCourse.completion_date} 
+            onChange={(e) => setNewShortCourse({ ...newShortCourse, completion_date: e.target.value })} 
+          />
+          <button type="submit" className="btn-secondary">Add Course</button>
+        </form>
+      </div>
 
       {/* Employment History Section */}
-      <h3>Employment History</h3>
-      <ul>
-        {employmentHistory.map((job, index) => (
-          <li key={index}>
-            <strong>{job.job_title}</strong> at {job.company_name} <br/>
-            ({new Date(job.start_date).toLocaleDateString()} - {job.end_date ? new Date(job.end_date).toLocaleDateString() : 'Present'})
-          </li>
-        ))}
-      </ul>
-      <form onSubmit={handleAddEmployment} style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxWidth: '300px' }}>
-        <input 
-          type="text" placeholder="Job Title" required 
-          value={newEmployment.job_title} 
-          onChange={(e) => setNewEmployment({ ...newEmployment, job_title: e.target.value })} 
-        />
-        <input 
-          type="text" placeholder="Company Name" required 
-          value={newEmployment.company_name} 
-          onChange={(e) => setNewEmployment({ ...newEmployment, company_name: e.target.value })} 
-        />
-        <div>
-          <label>Start Date:</label>
-          <input 
-            type="date" required style={{ marginLeft: '10px' }}
-            value={newEmployment.start_date} 
-            onChange={(e) => setNewEmployment({ ...newEmployment, start_date: e.target.value })} 
-          />
-        </div>
-        <div>
-          <label>End Date (leave blank if current):</label>
-          <input 
-            type="date" style={{ marginLeft: '10px' }}
-            value={newEmployment.end_date} 
-            onChange={(e) => setNewEmployment({ ...newEmployment, end_date: e.target.value })} 
-          />
-        </div>
-        <button type="submit">Add Employment</button>
-      </form>
+      <div className="card-section">
+        <h3>Employment History</h3>
+        {employmentHistory.length > 0 ? (
+          <ul className="item-list">
+            {employmentHistory.map((job, index) => (
+              <li key={index} className="list-item">
+                <div className="item-details">
+                  <strong>{job.job_title}</strong>
+                  <span>{job.company_name}</span>
+                  <span style={{color: '#646cff'}}>
+                    {new Date(job.start_date).toLocaleDateString()} - {job.end_date ? new Date(job.end_date).toLocaleDateString() : 'Present'}
+                  </span>
+                </div>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="empty-text">No employment history added yet.</p>
+        )}
+        <form className="custom-form" onSubmit={handleAddEmployment} style={{marginTop: '1.5rem'}}>
+          <div className="form-group">
+            <label>Job Title</label>
+            <input 
+              type="text" placeholder="e.g. Software Engineer" required 
+              value={newEmployment.job_title} 
+              onChange={(e) => setNewEmployment({ ...newEmployment, job_title: e.target.value })} 
+            />
+          </div>
+          <div className="form-group">
+            <label>Company Name</label>
+            <input 
+              type="text" placeholder="e.g. Google" required 
+              value={newEmployment.company_name} 
+              onChange={(e) => setNewEmployment({ ...newEmployment, company_name: e.target.value })} 
+            />
+          </div>
+          <div style={{ display: 'flex', gap: '1rem' }}>
+            <div className="form-group" style={{ flex: 1 }}>
+              <label>Start Date</label>
+              <input 
+                type="date" required 
+                value={newEmployment.start_date} 
+                onChange={(e) => setNewEmployment({ ...newEmployment, start_date: e.target.value })} 
+              />
+            </div>
+            <div className="form-group" style={{ flex: 1 }}>
+              <label>End Date (Optional)</label>
+              <input 
+                type="date" 
+                value={newEmployment.end_date} 
+                onChange={(e) => setNewEmployment({ ...newEmployment, end_date: e.target.value })} 
+              />
+            </div>
+          </div>
+          <button type="submit" className="btn-secondary" style={{alignSelf: 'flex-start'}}>Add Employment</button>
+        </form>
+      </div>
 
     </div>
   );

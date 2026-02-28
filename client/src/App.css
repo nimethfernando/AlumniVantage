@@ -1,42 +1,233 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
+/* --- Profile Page Styling --- */
+
+/* --- Center the main container --- */
+.profile-container {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 20px;
+  font-family: inherit;
+  color: #333;
+  
+  /* Flexbox rules to perfectly center the content inside */
+  display: flex;
+  flex-direction: column;
+  align-items: center; 
+}
+
+/* For Dark mode support (matches Vite's default setup) */
+@media (prefers-color-scheme: dark) {
+  .profile-container {
+    color: #f9f9f9;
+  }
+  .card-section {
+    background-color: #2a2a2a !important;
+    border: 1px solid #444 !important;
+  }
+  .list-item {
+    background-color: #333 !important;
+    border: 1px solid #444 !important;
+  }
+  input, textarea {
+    background-color: #1a1a1a !important;
+    color: #fff !important;
+    border: 1px solid #555 !important;
+  }
+}
+
+/* Ensure the header text and image are centered */
+.profile-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 2rem;
+  width: 100%;
   text-align: center;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.profile-image {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid #646cff;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  margin-bottom: 1rem;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
+.profile-image-placeholder {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  background-color: #e0e0e0;
+  color: #666;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  margin-bottom: 1rem;
+  border: 4px solid #ccc;
+}
+
+/* --- Ensure cards span out evenly and center their own content --- */
+.card-section {
+  background-color: #ffffff;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  border: 1px solid #eaeaea;
+  
+  /* Forces the cards to stretch to the width of the centered container */
+  width: 100%; 
+  max-width: 700px; 
+  box-sizing: border-box;
+}
+
+.card-section h3 {
+  margin-top: 0;
+  margin-bottom: 1.2rem;
+  border-bottom: 2px solid #f0f0f0;
+  padding-bottom: 0.5rem;
+  color: #646cff;
+}
+
+/* Forms */
+.custom-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.form-group label {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+input, textarea {
+  padding: 0.8rem;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+  transition: border-color 0.2s;
+  font-family: inherit;
+}
+
+input:focus, textarea:focus {
+  outline: none;
+  border-color: #646cff;
+  box-shadow: 0 0 0 2px rgba(100, 108, 255, 0.2);
+}
+
+.file-input {
+  border: none;
+  padding: 0;
+}
+
+.inline-form {
+  display: grid;
+  grid-template-columns: 2fr 2fr 1.5fr auto;
+  gap: 10px;
+  margin-top: 1rem;
+  align-items: center;
+}
+
+@media (max-width: 768px) {
+  .inline-form {
+    grid-template-columns: 1fr;
   }
-  to {
-    transform: rotate(360deg);
-  }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+/* Buttons */
+.btn-primary {
+  background-color: #646cff;
+  color: white;
+  padding: 0.8rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  align-self: flex-start;
 }
 
-.card {
-  padding: 2em;
+.btn-primary:hover {
+  background-color: #535bf2;
 }
 
-.read-the-docs {
+.btn-secondary {
+  background-color: #4CAF50;
+  color: white;
+  padding: 0.8rem 1rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.btn-secondary:hover {
+  background-color: #45a049;
+}
+
+.link-btn {
+  background-color: transparent;
+  color: #646cff;
+  border: 1px solid #646cff;
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+
+.link-btn:hover {
+  background-color: #646cff;
+  color: white;
+}
+
+/* Lists */
+.item-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #f8f9fa;
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.item-details {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.item-details strong {
+  font-size: 1.1rem;
+}
+
+.item-details span {
+  font-size: 0.85rem;
+  color: #777;
+  margin-top: 0.2rem;
+}
+
+.empty-text {
   color: #888;
+  font-style: italic;
+  font-size: 0.9rem;
 }
