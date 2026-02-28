@@ -2,9 +2,11 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
-require('dotenv').config();
 const cookieParser = require('cookie-parser');
 const profileRoutes = require('./routes/profileRoutes');
+const bidRoutes = require('./routes/bidRoutes'); // Import bid routes
+require('dotenv').config();
+require('./utils/cronJobs'); // Import cron jobs to run them
 
 const authRoutes = require('./routes/authRoutes');
 const db = require('./config/db'); // Moved import to the top
@@ -36,10 +38,13 @@ app.get('/', (req, res) => {
 app.use(express.static('public')); // Serve static files from "public" directory
 app.use('/api/profile', profileRoutes); // Profile Routes
 
+app.use('/api/bids', bidRoutes); // Bid Routes
+
 // ==========================================
 // 3. START SERVER
 // ==========================================
 const PORT = process.env.PORT || 3000;
+
 app.listen(PORT, async () => {
   try {
     // Test DB Connection
