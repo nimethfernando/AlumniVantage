@@ -8,12 +8,12 @@ exports.register = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // 1. Validation: Check for University Domain
+    //. Validation: Check for University Domain
     if (!email.endsWith('@my.westminster.ac.uk')) {
       return res.status(400).json({ error: "Registration restricted to @westminster.ac.uk emails only." });
     }
 
-    // 2. Validation: Check Password Strength (Basic)
+    // Validation: Check Password Strength (Basic)
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
       if (!passwordRegex.test(password)) {
         return res.status(400).json({ 
@@ -21,24 +21,24 @@ exports.register = async (req, res) => {
         });
       }
 
-    // 3. Check if User Already Exists
+    // Check if User Already Exists
     const existingUser = await User.findByEmail(email);
     if (existingUser) {
       return res.status(400).json({ error: "Email already registered." });
     }
 
-    // 4. Hash the Password (Security Mark: 5/5)
+    // Hash the Password (Security Mark: 5/5)
     const saltRounds = 10;
     const passwordHash = await bcrypt.hash(password, saltRounds);
 
-    // 5. Generate Verification Token
+    // Generate Verification Token
     const verificationToken = crypto.randomBytes(32).toString('hex');
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 10000);
 
-    // 6. Save to Database
+    // Save to Database
     await User.create(email, passwordHash, verificationToken, expiresAt);
 
-    // 7. Send Verification Email
+    // Send Verification Email
     await sendVerificationEmail(email, verificationToken);
 
     res.status(201).json({ 
@@ -76,7 +76,7 @@ exports.login = async (req, res) => {
        return res.status(403).json({ error: "Please verify your email address first." });
     }
 
-    // 4. Generate JWT Token (The "Digital ID Card")
+    // Generate JWT Token (The "Digital ID Card")
     const token = jwt.sign(
       { userId: user.id, role: user.role }, // Payload (Data inside the token)
       process.env.JWT_SECRET,               // Secret Key (from .env)
@@ -90,7 +90,7 @@ exports.login = async (req, res) => {
       maxAge: 3600000 // 1 hour
     });
 
-    // 5. Send Success Response
+    // Send Success Response
     res.json({ 
       message: "Login successful", 
       token: token,
@@ -116,14 +116,14 @@ exports.verifyEmail = async (req, res) => {
   try {
     const { token } = req.params;
 
-    // 1. Find user with this token
+    // Find user with this token
     const user = await User.findByToken(token);
 
     if (!user) {
       return res.status(400).json({ error: "Invalid token." });
     }
 
-    // 2. Check if the token has expired
+    // Check if the token has expired
     const currentTime = new Date();
     const expirationTime = new Date(user.verification_expires_at);
 
@@ -131,7 +131,7 @@ exports.verifyEmail = async (req, res) => {
       return res.status(400).json({ error: "Verification link has expired. Please request a new one." });
     }
 
-    // 3. Mark as Verified in Database
+    // Mark as Verified in Database
     await User.verifyUser(user.id);
 
     res.send("<h1>Email Verified! ✅</h1><p>You can now close this tab and log in.</p>");
