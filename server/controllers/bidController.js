@@ -1,9 +1,15 @@
-// server/controllers/bidController.js
 const Bid = require('../models/bidModel');
 
 exports.placeOrUpdateBid = async (req, res) => {
   const { amount } = req.body;
-  const userId = req.user.id; 
+  
+  // FIX: Changed from req.user.id to req.user.userId to match your JWT payload!
+  const userId = req.user.userId; 
+
+  // Make sure amount was provided
+  if (!amount) {
+    return res.status(400).json({ error: "Please provide a bid amount." });
+  }
 
   try {
     const winCount = await Bid.getMonthlyWinCount(userId);
@@ -32,7 +38,8 @@ exports.placeOrUpdateBid = async (req, res) => {
 };
 
 exports.getBidStatus = async (req, res) => {
-  const userId = req.user.id;
+  const userId = req.user.userId;
+  
   try {
     const existingBid = await Bid.getPendingBidByUser(userId);
     res.status(200).json({ current_bid: existingBid || "No active bids" });
