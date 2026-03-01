@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import '../App.css'; // Make sure this imports your updated CSS
+import '../App.css'; 
+import BiddingSystem from '../components/BiddingSystem'; // Import the new component
 
 const Profile = () => {
   const [profile, setProfile] = useState({ bio: '', linkedin_url: '' });
@@ -12,7 +13,6 @@ const Profile = () => {
   const [certifications, setCertifications] = useState([]);
   const [newCert, setNewCert] = useState({ cert_name: '', course_url: '', completion_date: '' });
 
-  // --- NEW STATES FOR ADDED SECTIONS ---
   const [licenses, setLicenses] = useState([]);
   const [newLicense, setNewLicense] = useState({ license_name: '', awarding_body_url: '', completion_date: '' });
 
@@ -22,7 +22,6 @@ const Profile = () => {
   const [employmentHistory, setEmploymentHistory] = useState([]);
   const [newEmployment, setNewEmployment] = useState({ job_title: '', company_name: '', start_date: '', end_date: '' });
 
-  // Add credentials to axios if using HttpOnly cookies
   axios.defaults.withCredentials = true;
 
   useEffect(() => {
@@ -35,11 +34,9 @@ const Profile = () => {
       if (res.data.profile) setProfile(res.data.profile);
       if (res.data.degrees) setDegrees(res.data.degrees);
       if (res.data.certifications) setCertifications(res.data.certifications);
-      
-      // Fetch new sections
       if (res.data.licenses) setLicenses(res.data.licenses);
-      if (res.data.courses) setShortCourses(res.data.courses); // Adjusted to match your backend controller 'courses' key
-      if (res.data.employment) setEmploymentHistory(res.data.employment); // Adjusted to match your backend controller 'employment' key
+      if (res.data.courses) setShortCourses(res.data.courses); 
+      if (res.data.employment) setEmploymentHistory(res.data.employment); 
     } catch (err) {
       console.error("Failed to fetch profile");
     }
@@ -57,7 +54,7 @@ const Profile = () => {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       alert('Profile Updated Successfully!');
-      fetchProfile(); // Refresh data
+      fetchProfile(); 
     } catch (err) {
       alert('Error updating profile');
     }
@@ -85,7 +82,6 @@ const Profile = () => {
     }
   };
 
-  // --- NEW HANDLERS FOR ADDED SECTIONS ---
   const handleAddLicense = async (e) => {
     e.preventDefault();
     try {
@@ -100,7 +96,7 @@ const Profile = () => {
   const handleAddShortCourse = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('http://localhost:3000/api/profile/courses', newShortCourse); // ensure this matches your backend route
+      await axios.post('http://localhost:3000/api/profile/courses', newShortCourse); 
       setNewShortCourse({ course_name: '', course_url: '', completion_date: '' });
       fetchProfile();
     } catch (err) {
@@ -133,6 +129,8 @@ const Profile = () => {
         )}
         <h2>Alumni Profile</h2>
       </div>
+
+      <BiddingSystem />
 
       {/* Main Profile Form */}
       <div className="card-section">
