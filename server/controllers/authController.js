@@ -55,21 +55,23 @@ exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // 1. Validation: Check if Email and Password are Provided
+    if(!email || !password) {
+      return res.status(400).json({ error: "Please provide both email and password." });
+    }
+
+    // Validation: Check if Email and Password are Provided
     const user = await User.findByEmail(email);
     if (!user) {
       return res.status(401).json({ error: "Invalid email or password" });
     }
 
-    // 2. Check Password
+    // Check Password
     const isMatch = await bcrypt.compare(password, user.password_hash);
     if (!isMatch) {
       return res.status(401).json({ error: "Invalid email or password" });
     }
 
-    // 3. Check if Email is Verified (Task Requirement!)
-    // Note: For testing right now, you might want to comment this out 
-    // if you haven't manually set 'is_verified' to 1 in your database yet.
+    // Check if Email is Verified (Task Requirement!)
     if (!user.is_verified) {
        return res.status(403).json({ error: "Please verify your email address first." });
     }
