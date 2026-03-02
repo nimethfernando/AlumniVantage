@@ -53,6 +53,11 @@ class User {
       [newPasswordHash, id]
     );
   }
+  // Find user by ID
+  static async findById(id) {
+    const [rows] = await pool.execute('SELECT * FROM users WHERE id = ?', [id]);
+    return rows[0];
+  }
 }
 
 module.exports = User;

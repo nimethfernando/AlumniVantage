@@ -45,8 +45,27 @@ const sendResetEmail = async (userEmail, token) => {
   });
 
   console.log("📨 Reset Email sent: %s", info.messageId);
-  // Note: Per your previous request, you can remove the line below to hide the link from console
   console.log("👀 Preview URL: %s", nodemailer.getTestMessageUrl(info)); 
 };
 
-module.exports = { sendVerificationEmail, sendResetEmail };
+// SEND BID RESULT EMAIL
+const sendBidResultEmail = async (userEmail, status) => {
+  const subject = status === 'won' ? "Congratulations! You won the Alumni Feature" : "Bid Update: You didn't win this time";
+  const message = status === 'won' 
+    ? "Your blind bid was the highest! Your profile will be featured on the Alumni board today."
+    : "Unfortunately, your bid was not the highest this time. Better luck next time!";
+
+  const info = await transporter.sendMail({
+    from: '"AlumniVantage Team" <nimeth45@gmail.com>',
+    to: userEmail,
+    subject: subject,
+    html: `
+      <h1>Bid Status: ${status.toUpperCase()}</h1>
+      <p>${message}</p>
+    `,
+  });
+
+  console.log(`📨 Bid Status Email (${status}) sent: %s`, info.messageId);
+};
+
+module.exports = { sendVerificationEmail, sendResetEmail, sendBidResultEmail };
