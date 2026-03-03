@@ -1,4 +1,3 @@
-// client/src/components/BiddingSystem.jsx
 import React, { useState, useEffect } from 'react';
 import './BiddingSystem.css';
 
@@ -7,11 +6,9 @@ const BiddingSystem = () => {
   const [bidAmount, setBidAmount] = useState('');
   const [message, setMessage] = useState({ type: '', text: '' });
   const [loading, setLoading] = useState(false);
-
-  // Fetch the token from localStorage (Update this if you store it differently!)
+  const [remainingSlots, setRemainingSlots] = useState(3); 
   const token = localStorage.getItem('token'); 
 
-  // Fetch bid status on component mount
   useEffect(() => {
     fetchBidStatus();
   }, []);
@@ -31,6 +28,9 @@ const BiddingSystem = () => {
         } else {
           setCurrentBid(data.current_bid);
         }
+        
+        const used = data.features_used || 0;
+        setRemainingSlots(Math.max(0, 3 - used));
       }
     } catch (error) {
       console.error('Error fetching bid:', error);
@@ -73,6 +73,13 @@ const BiddingSystem = () => {
       <div className="bidding-header">
         <h2>Feature Your Profile</h2>
         <p>Blind bid to be displayed at the top of the Alumni board.</p>
+        
+        <div style={{ marginTop: '10px', padding: '8px', backgroundColor: '#f3f4f6', borderRadius: '5px', display: 'inline-block' }}>
+          <span style={{ fontSize: '0.9rem', color: '#374151', fontWeight: 'bold' }}>
+            Features Remaining This Month: <span style={{ color: remainingSlots === 0 ? 'red' : 'green'}}>{remainingSlots} / 3</span>
+          </span>
+        </div>
+
       </div>
 
       <div className="status-card">
@@ -110,12 +117,13 @@ const BiddingSystem = () => {
               value={bidAmount}
               onChange={(e) => setBidAmount(e.target.value)}
               required
+              disabled={remainingSlots === 0}
             />
           </div>
         </div>
 
-        <button type="submit" className="submit-btn" disabled={loading}>
-          {loading ? 'Processing...' : (currentBid ? 'Increase Bid' : 'Place Blind Bid')}
+        <button type="submit" className="submit-btn" disabled={loading || remainingSlots === 0}>
+          {remainingSlots === 0 ? 'Monthly Limit Reached' : (loading ? 'Processing...' : (currentBid ? 'Increase Bid' : 'Place Blind Bid'))}
         </button>
       </form>
 
