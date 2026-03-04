@@ -20,10 +20,9 @@ router.post('/courses', verifyToken, profileController.addCourse);
 router.post('/employment', verifyToken, profileController.addEmployment);
 
 // DELETE Entries
-router.delete('/degree/:id', authMiddleware, profileController.deleteDegree);
-router.delete('/certification/:id', authMiddleware, profileController.deleteCertification);
-router.delete('/license/:id', authMiddleware, profileController.deleteLicense);
-router.delete('/course/:id', authMiddleware, profileController.deleteCourse);
-router.delete('/employment/:id', authMiddleware, profileController.deleteEmployment);
-
+router.delete('/degree/:id', verifyToken, profileController.deleteDegree);
+router.delete('/certification/:id', verifyToken, profileController.deleteCertification);
+router.delete('/license/:id', verifyToken, profileController.deleteLicense);
+router.delete('/course/:id', verifyToken, profileController.deleteCourse);
+router.delete('/employment/:id', verifyToken, profileController.deleteEmployment);
 module.exports = router;
