@@ -147,3 +147,106 @@ exports.addEmployment = async (req, res) => {
     res.status(201).json({ message: "Employment added!" });
   } catch (error) { res.status(500).json({ error: "Failed to add employment" }); }
 };
+
+// --- DELETE ENDPOINTS ---
+
+exports.deleteDegree = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { id } = req.params; // The ID of the degree to delete
+
+    const [result] = await pool.execute(
+      'DELETE FROM degrees WHERE id = ? AND user_id = ?',
+      [id, userId]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Degree not found or you do not have permission to delete it." });
+    }
+
+    res.json({ message: "Degree deleted successfully!" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to delete degree" });
+  }
+};
+
+exports.deleteCertification = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { id } = req.params;
+
+    const [result] = await pool.execute(
+      'DELETE FROM certifications WHERE id = ? AND user_id = ?',
+      [id, userId]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Certification not found." });
+    }
+    res.json({ message: "Certification deleted successfully!" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to delete certification" });
+  }
+};
+
+exports.deleteLicense = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { id } = req.params;
+
+    const [result] = await pool.execute(
+      'DELETE FROM licenses WHERE id = ? AND user_id = ?',
+      [id, userId]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "License not found." });
+    }
+    res.json({ message: "License deleted successfully!" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to delete license" });
+  }
+};
+
+exports.deleteCourse = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { id } = req.params;
+
+    const [result] = await pool.execute(
+      'DELETE FROM short_courses WHERE id = ? AND user_id = ?',
+      [id, userId]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Course not found." });
+    }
+    res.json({ message: "Course deleted successfully!" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to delete course" });
+  }
+};
+
+exports.deleteEmployment = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { id } = req.params;
+
+    const [result] = await pool.execute(
+      'DELETE FROM employment_history WHERE id = ? AND user_id = ?',
+      [id, userId]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "Employment record not found." });
+    }
+    res.json({ message: "Employment record deleted successfully!" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to delete employment record" });
+  }
+};
