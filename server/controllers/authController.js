@@ -33,7 +33,7 @@ exports.register = async (req, res) => {
 
     // Generate Verification Token
     const verificationToken = crypto.randomBytes(32).toString('hex');
-    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 10000);
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
     // Save to Database
     await User.create(email, passwordHash, verificationToken, expiresAt);
