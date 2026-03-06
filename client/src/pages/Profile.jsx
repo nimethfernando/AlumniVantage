@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import '../App.css'; 
-import BiddingSystem from '../components/BiddingSystem'; // Import the new component
+import BiddingSystem from '../components/BiddingSystem';
 
 const Profile = () => {
   const [profile, setProfile] = useState({ bio: '', linkedin_url: '' });
@@ -115,6 +115,57 @@ const Profile = () => {
     }
   };
 
+  // --- DELETE HANDLERS ---
+  const handleDeleteDegree = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this degree?')) return;
+    try {
+      await axios.delete(`http://localhost:3000/api/profile/degree/${id}`);
+      fetchProfile(); 
+    } catch (err) {
+      alert('Error deleting degree');
+    }
+  };
+
+  const handleDeleteCertification = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this certification?')) return;
+    try {
+      await axios.delete(`http://localhost:3000/api/profile/certification/${id}`);
+      fetchProfile();
+    } catch (err) {
+      alert('Error deleting certification');
+    }
+  };
+
+  const handleDeleteLicense = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this license?')) return;
+    try {
+      await axios.delete(`http://localhost:3000/api/profile/license/${id}`);
+      fetchProfile();
+    } catch (err) {
+      alert('Error deleting license');
+    }
+  };
+
+  const handleDeleteShortCourse = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this course?')) return;
+    try {
+      await axios.delete(`http://localhost:3000/api/profile/course/${id}`);
+      fetchProfile();
+    } catch (err) {
+      alert('Error deleting short course');
+    }
+  };
+
+  const handleDeleteEmployment = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this employment record?')) return;
+    try {
+      await axios.delete(`http://localhost:3000/api/profile/employment/${id}`);
+      fetchProfile();
+    } catch (err) {
+      alert('Error deleting employment record');
+    }
+  };
+
   return (
     <div className="profile-container">
       <div className="profile-header">
@@ -173,7 +224,10 @@ const Profile = () => {
                   <strong>{deg.degree_name}</strong>
                   <span>{new Date(deg.completion_date).toLocaleDateString()}</span>
                 </div>
-                <a href={deg.university_url} target="_blank" rel="noopener noreferrer" className="link-btn">University Link</a>
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                  <a href={deg.university_url} target="_blank" rel="noopener noreferrer" className="link-btn">University Link</a>
+                  <button onClick={() => handleDeleteDegree(deg.id)} style={{ backgroundColor: '#dc3545', color: 'white', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '4px', cursor: 'pointer' }}>Delete</button>
+                </div>
               </li>
             ))}
           </ul>
@@ -211,7 +265,10 @@ const Profile = () => {
                   <strong>{cert.cert_name}</strong>
                   <span>{new Date(cert.completion_date).toLocaleDateString()}</span>
                 </div>
-                <a href={cert.course_url} target="_blank" rel="noopener noreferrer" className="link-btn">Course Link</a>
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                  <a href={cert.course_url} target="_blank" rel="noopener noreferrer" className="link-btn">Course Link</a>
+                  <button onClick={() => handleDeleteCertification(cert.id)} style={{ backgroundColor: '#dc3545', color: 'white', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '4px', cursor: 'pointer' }}>Delete</button>
+                </div>
               </li>
             ))}
           </ul>
@@ -249,7 +306,10 @@ const Profile = () => {
                   <strong>{lic.license_name}</strong>
                   <span>{new Date(lic.completion_date).toLocaleDateString()}</span>
                 </div>
-                <a href={lic.awarding_body_url} target="_blank" rel="noopener noreferrer" className="link-btn">Awarding Body</a>
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                  <a href={lic.awarding_body_url} target="_blank" rel="noopener noreferrer" className="link-btn">Awarding Body</a>
+                  <button onClick={() => handleDeleteLicense(lic.id)} style={{ backgroundColor: '#dc3545', color: 'white', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '4px', cursor: 'pointer' }}>Delete</button>
+                </div>
               </li>
             ))}
           </ul>
@@ -287,7 +347,10 @@ const Profile = () => {
                   <strong>{course.course_name}</strong>
                   <span>{new Date(course.completion_date).toLocaleDateString()}</span>
                 </div>
-                <a href={course.course_url} target="_blank" rel="noopener noreferrer" className="link-btn">Course Link</a>
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                  <a href={course.course_url} target="_blank" rel="noopener noreferrer" className="link-btn">Course Link</a>
+                  <button onClick={() => handleDeleteShortCourse(course.id)} style={{ backgroundColor: '#dc3545', color: 'white', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '4px', cursor: 'pointer' }}>Delete</button>
+                </div>
               </li>
             ))}
           </ul>
@@ -328,6 +391,7 @@ const Profile = () => {
                     {new Date(job.start_date).toLocaleDateString()} - {job.end_date ? new Date(job.end_date).toLocaleDateString() : 'Present'}
                   </span>
                 </div>
+                <button onClick={() => handleDeleteEmployment(job.id)} style={{ backgroundColor: '#dc3545', color: 'white', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '4px', cursor: 'pointer' }}>Delete</button>
               </li>
             ))}
           </ul>
