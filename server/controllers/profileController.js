@@ -250,3 +250,111 @@ exports.deleteEmployment = async (req, res) => {
     res.status(500).json({ error: "Failed to delete employment record" });
   }
 };
+// --- UPDATE ENDPOINTS FOR SUB-ITEMS ---
+
+exports.updateDegree = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { id } = req.params;
+    const { degree_name, university_url, completion_date } = req.body;
+
+    // MySQL needs dates in YYYY-MM-DD format, ensure completion_date is formatted correctly if passed as full ISO string
+    const formattedDate = new Date(completion_date).toISOString().split('T')[0];
+
+    const [result] = await pool.execute(
+      'UPDATE degrees SET degree_name = ?, university_url = ?, completion_date = ? WHERE id = ? AND user_id = ?',
+      [degree_name, university_url, formattedDate, id, userId]
+    );
+
+    if (result.affectedRows === 0) return res.status(404).json({ error: "Degree not found or unauthorized." });
+    res.json({ message: "Degree updated successfully!" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to update degree" });
+  }
+};
+
+exports.updateCertification = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { id } = req.params;
+    const { cert_name, course_url, completion_date } = req.body;
+    
+    const formattedDate = new Date(completion_date).toISOString().split('T')[0];
+
+    const [result] = await pool.execute(
+      'UPDATE certifications SET name = ?, credential_url = ?, issue_date = ? WHERE id = ? AND user_id = ?',
+      [cert_name, course_url, formattedDate, id, userId]
+    );
+
+    if (result.affectedRows === 0) return res.status(404).json({ error: "Certification not found." });
+    res.json({ message: "Certification updated successfully!" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to update certification" });
+  }
+};
+
+exports.updateLicense = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { id } = req.params;
+    const { license_name, awarding_body_url, completion_date } = req.body;
+
+    const formattedDate = new Date(completion_date).toISOString().split('T')[0];
+
+    const [result] = await pool.execute(
+      'UPDATE licenses SET license_name = ?, awarding_body_url = ?, completion_date = ? WHERE id = ? AND user_id = ?',
+      [license_name, awarding_body_url, formattedDate, id, userId]
+    );
+
+    if (result.affectedRows === 0) return res.status(404).json({ error: "License not found." });
+    res.json({ message: "License updated successfully!" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to update license" });
+  }
+};
+
+exports.updateCourse = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { id } = req.params;
+    const { course_name, course_url, completion_date } = req.body;
+
+    const formattedDate = new Date(completion_date).toISOString().split('T')[0];
+
+    const [result] = await pool.execute(
+      'UPDATE short_courses SET course_name = ?, course_url = ?, completion_date = ? WHERE id = ? AND user_id = ?',
+      [course_name, course_url, formattedDate, id, userId]
+    );
+
+    if (result.affectedRows === 0) return res.status(404).json({ error: "Course not found." });
+    res.json({ message: "Course updated successfully!" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to update course" });
+  }
+};
+
+exports.updateEmployment = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { id } = req.params;
+    const { company_name, job_title, start_date, end_date } = req.body;
+
+    const formattedStart = new Date(start_date).toISOString().split('T')[0];
+    const formattedEnd = end_date ? new Date(end_date).toISOString().split('T')[0] : null;
+
+    const [result] = await pool.execute(
+      'UPDATE employment_history SET company_name = ?, job_title = ?, start_date = ?, end_date = ? WHERE id = ? AND user_id = ?',
+      [company_name, job_title, formattedStart, formattedEnd, id, userId]
+    );
+
+    if (result.affectedRows === 0) return res.status(404).json({ error: "Employment record not found." });
+    res.json({ message: "Employment updated successfully!" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to update employment" });
+  }
+};

@@ -26,3 +26,10 @@ router.delete('/license/:id', verifyToken, profileController.deleteLicense);
 router.delete('/course/:id', verifyToken, profileController.deleteCourse);
 router.delete('/employment/:id', verifyToken, profileController.deleteEmployment);
 module.exports = router;
+
+// UPDATE Sub-Entries
+router.put('/degree/:id', verifyToken, profileController.updateDegree);
+router.put('/certification/:id', verifyToken, profileController.updateCertification);
+router.put('/license/:id', verifyToken, profileController.updateLicense);
+router.put('/course/:id', verifyToken, profileController.updateCourse);
+router.put('/employment/:id', verifyToken, profileController.updateEmployment);

@@ -22,6 +22,13 @@ const Profile = () => {
   const [employmentHistory, setEmploymentHistory] = useState([]);
   const [newEmployment, setNewEmployment] = useState({ job_title: '', company_name: '', start_date: '', end_date: '' });
 
+  // --- EDIT STATES ---
+  const [editingDegree, setEditingDegree] = useState(null);
+  const [editingCert, setEditingCert] = useState(null);
+  const [editingLicense, setEditingLicense] = useState(null);
+  const [editingCourse, setEditingCourse] = useState(null);
+  const [editingEmployment, setEditingEmployment] = useState(null);
+
   axios.defaults.withCredentials = true;
 
   useEffect(() => {
@@ -33,7 +40,9 @@ const Profile = () => {
       const res = await axios.get('http://localhost:3000/api/profile');
       if (res.data.profile) setProfile(res.data.profile);
       if (res.data.degrees) setDegrees(res.data.degrees);
-      if (res.data.certifications) setCertifications(res.data.certifications);
+      if (res.data.certifications) {
+        setCertifications(res.data.certifications.map(c => ({...c, cert_name: c.name, course_url: c.credential_url})));
+      }
       if (res.data.licenses) setLicenses(res.data.licenses);
       if (res.data.courses) setShortCourses(res.data.courses); 
       if (res.data.employment) setEmploymentHistory(res.data.employment); 
@@ -166,6 +175,52 @@ const Profile = () => {
     }
   };
 
+  // --- UPDATE HANDLERS ---
+  const handleUpdateDegree = async (e, id) => {
+    e.preventDefault();
+    try {
+      await axios.put(`http://localhost:3000/api/profile/degree/${id}`, editingDegree);
+      setEditingDegree(null); fetchProfile();
+    } catch (err) { alert('Error updating degree'); }
+  };
+
+  const handleUpdateCert = async (e, id) => {
+    e.preventDefault();
+    try {
+      await axios.put(`http://localhost:3000/api/profile/certification/${id}`, editingCert);
+      setEditingCert(null); fetchProfile();
+    } catch (err) { alert('Error updating certification'); }
+  };
+
+  const handleUpdateLicense = async (e, id) => {
+    e.preventDefault();
+    try {
+      await axios.put(`http://localhost:3000/api/profile/license/${id}`, editingLicense);
+      setEditingLicense(null); fetchProfile();
+    } catch (err) { alert('Error updating license'); }
+  };
+
+  const handleUpdateCourse = async (e, id) => {
+    e.preventDefault();
+    try {
+      await axios.put(`http://localhost:3000/api/profile/course/${id}`, editingCourse);
+      setEditingCourse(null); fetchProfile();
+    } catch (err) { alert('Error updating course'); }
+  };
+
+  const handleUpdateEmployment = async (e, id) => {
+    e.preventDefault();
+    try {
+      await axios.put(`http://localhost:3000/api/profile/employment/${id}`, editingEmployment);
+      setEditingEmployment(null); fetchProfile();
+    } catch (err) { alert('Error updating employment'); }
+  };
+
+  const formatDateForInput = (dateString) => {
+    if (!dateString) return '';
+    return new Date(dateString).toISOString().split('T')[0];
+  };
+
   return (
     <div className="profile-container">
       <div className="profile-header">
@@ -219,15 +274,28 @@ const Profile = () => {
         {degrees.length > 0 ? (
           <ul className="item-list">
             {degrees.map((deg, index) => (
-              <li key={index} className="list-item">
-                <div className="item-details">
-                  <strong>{deg.degree_name}</strong>
-                  <span>{new Date(deg.completion_date).toLocaleDateString()}</span>
-                </div>
-                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                  <a href={deg.university_url} target="_blank" rel="noopener noreferrer" className="link-btn">University Link</a>
-                  <button onClick={() => handleDeleteDegree(deg.id)} style={{ backgroundColor: '#dc3545', color: 'white', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '4px', cursor: 'pointer' }}>Delete</button>
-                </div>
+              <li key={index} className="list-item" style={{flexDirection: 'column', alignItems: 'flex-start'}}>
+                {editingDegree?.id === deg.id ? (
+                  <form className="inline-form" onSubmit={(e) => handleUpdateDegree(e, deg.id)} style={{width: '100%', marginBottom: '10px'}}>
+                    <input type="text" value={editingDegree.degree_name} onChange={e => setEditingDegree({...editingDegree, degree_name: e.target.value})} required />
+                    <input type="url" value={editingDegree.university_url} onChange={e => setEditingDegree({...editingDegree, university_url: e.target.value})} required />
+                    <input type="date" value={formatDateForInput(editingDegree.completion_date)} onChange={e => setEditingDegree({...editingDegree, completion_date: e.target.value})} required />
+                    <button type="submit" className="btn-primary" style={{padding: '0.4rem'}}>Save</button>
+                    <button type="button" onClick={() => setEditingDegree(null)} className="btn-secondary" style={{padding: '0.4rem'}}>Cancel</button>
+                  </form>
+                ) : (
+                  <div style={{display:'flex', justifyContent:'space-between', width:'100%'}}>
+                    <div className="item-details">
+                      <strong>{deg.degree_name}</strong>
+                      <span>{new Date(deg.completion_date).toLocaleDateString()}</span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                      <a href={deg.university_url} target="_blank" rel="noopener noreferrer" className="link-btn">University Link</a>
+                      <button onClick={() => setEditingDegree(deg)} style={{ backgroundColor: '#28a745', color: 'white', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '4px', cursor: 'pointer' }}>Edit</button>
+                      <button onClick={() => handleDeleteDegree(deg.id)} style={{ backgroundColor: '#dc3545', color: 'white', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '4px', cursor: 'pointer' }}>Delete</button>
+                    </div>
+                  </div>
+                )}
               </li>
             ))}
           </ul>
@@ -260,15 +328,28 @@ const Profile = () => {
         {certifications.length > 0 ? (
           <ul className="item-list">
             {certifications.map((cert, index) => (
-              <li key={index} className="list-item">
-                <div className="item-details">
-                  <strong>{cert.cert_name}</strong>
-                  <span>{new Date(cert.completion_date).toLocaleDateString()}</span>
-                </div>
-                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                  <a href={cert.course_url} target="_blank" rel="noopener noreferrer" className="link-btn">Course Link</a>
-                  <button onClick={() => handleDeleteCertification(cert.id)} style={{ backgroundColor: '#dc3545', color: 'white', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '4px', cursor: 'pointer' }}>Delete</button>
-                </div>
+              <li key={index} className="list-item" style={{flexDirection: 'column', alignItems: 'flex-start'}}>
+                {editingCert?.id === cert.id ? (
+                  <form className="inline-form" onSubmit={(e) => handleUpdateCert(e, cert.id)} style={{width: '100%', marginBottom: '10px'}}>
+                    <input type="text" value={editingCert.cert_name} onChange={e => setEditingCert({...editingCert, cert_name: e.target.value})} required />
+                    <input type="url" value={editingCert.course_url} onChange={e => setEditingCert({...editingCert, course_url: e.target.value})} required />
+                    <input type="date" value={formatDateForInput(editingCert.completion_date || cert.issue_date)} onChange={e => setEditingCert({...editingCert, completion_date: e.target.value})} required />
+                    <button type="submit" className="btn-primary" style={{padding: '0.4rem'}}>Save</button>
+                    <button type="button" onClick={() => setEditingCert(null)} className="btn-secondary" style={{padding: '0.4rem'}}>Cancel</button>
+                  </form>
+                ) : (
+                  <div style={{display:'flex', justifyContent:'space-between', width:'100%'}}>
+                    <div className="item-details">
+                      <strong>{cert.cert_name}</strong>
+                      <span>{new Date(cert.completion_date || cert.issue_date).toLocaleDateString()}</span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                      <a href={cert.course_url} target="_blank" rel="noopener noreferrer" className="link-btn">Course Link</a>
+                      <button onClick={() => setEditingCert(cert)} style={{ backgroundColor: '#28a745', color: 'white', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '4px', cursor: 'pointer' }}>Edit</button>
+                      <button onClick={() => handleDeleteCertification(cert.id)} style={{ backgroundColor: '#dc3545', color: 'white', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '4px', cursor: 'pointer' }}>Delete</button>
+                    </div>
+                  </div>
+                )}
               </li>
             ))}
           </ul>
@@ -301,15 +382,28 @@ const Profile = () => {
         {licenses.length > 0 ? (
           <ul className="item-list">
             {licenses.map((lic, index) => (
-              <li key={index} className="list-item">
-                <div className="item-details">
-                  <strong>{lic.license_name}</strong>
-                  <span>{new Date(lic.completion_date).toLocaleDateString()}</span>
-                </div>
-                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                  <a href={lic.awarding_body_url} target="_blank" rel="noopener noreferrer" className="link-btn">Awarding Body</a>
-                  <button onClick={() => handleDeleteLicense(lic.id)} style={{ backgroundColor: '#dc3545', color: 'white', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '4px', cursor: 'pointer' }}>Delete</button>
-                </div>
+              <li key={index} className="list-item" style={{flexDirection: 'column', alignItems: 'flex-start'}}>
+                {editingLicense?.id === lic.id ? (
+                  <form className="inline-form" onSubmit={(e) => handleUpdateLicense(e, lic.id)} style={{width: '100%', marginBottom: '10px'}}>
+                    <input type="text" value={editingLicense.license_name} onChange={e => setEditingLicense({...editingLicense, license_name: e.target.value})} required />
+                    <input type="url" value={editingLicense.awarding_body_url} onChange={e => setEditingLicense({...editingLicense, awarding_body_url: e.target.value})} required />
+                    <input type="date" value={formatDateForInput(editingLicense.completion_date)} onChange={e => setEditingLicense({...editingLicense, completion_date: e.target.value})} required />
+                    <button type="submit" className="btn-primary" style={{padding: '0.4rem'}}>Save</button>
+                    <button type="button" onClick={() => setEditingLicense(null)} className="btn-secondary" style={{padding: '0.4rem'}}>Cancel</button>
+                  </form>
+                ) : (
+                  <div style={{display:'flex', justifyContent:'space-between', width:'100%'}}>
+                    <div className="item-details">
+                      <strong>{lic.license_name}</strong>
+                      <span>{new Date(lic.completion_date).toLocaleDateString()}</span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                      <a href={lic.awarding_body_url} target="_blank" rel="noopener noreferrer" className="link-btn">Awarding Body</a>
+                      <button onClick={() => setEditingLicense(lic)} style={{ backgroundColor: '#28a745', color: 'white', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '4px', cursor: 'pointer' }}>Edit</button>
+                      <button onClick={() => handleDeleteLicense(lic.id)} style={{ backgroundColor: '#dc3545', color: 'white', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '4px', cursor: 'pointer' }}>Delete</button>
+                    </div>
+                  </div>
+                )}
               </li>
             ))}
           </ul>
@@ -342,15 +436,28 @@ const Profile = () => {
         {shortCourses.length > 0 ? (
           <ul className="item-list">
             {shortCourses.map((course, index) => (
-              <li key={index} className="list-item">
-                <div className="item-details">
-                  <strong>{course.course_name}</strong>
-                  <span>{new Date(course.completion_date).toLocaleDateString()}</span>
-                </div>
-                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                  <a href={course.course_url} target="_blank" rel="noopener noreferrer" className="link-btn">Course Link</a>
-                  <button onClick={() => handleDeleteShortCourse(course.id)} style={{ backgroundColor: '#dc3545', color: 'white', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '4px', cursor: 'pointer' }}>Delete</button>
-                </div>
+              <li key={index} className="list-item" style={{flexDirection: 'column', alignItems: 'flex-start'}}>
+                {editingCourse?.id === course.id ? (
+                  <form className="inline-form" onSubmit={(e) => handleUpdateCourse(e, course.id)} style={{width: '100%', marginBottom: '10px'}}>
+                    <input type="text" value={editingCourse.course_name} onChange={e => setEditingCourse({...editingCourse, course_name: e.target.value})} required />
+                    <input type="url" value={editingCourse.course_url} onChange={e => setEditingCourse({...editingCourse, course_url: e.target.value})} required />
+                    <input type="date" value={formatDateForInput(editingCourse.completion_date)} onChange={e => setEditingCourse({...editingCourse, completion_date: e.target.value})} required />
+                    <button type="submit" className="btn-primary" style={{padding: '0.4rem'}}>Save</button>
+                    <button type="button" onClick={() => setEditingCourse(null)} className="btn-secondary" style={{padding: '0.4rem'}}>Cancel</button>
+                  </form>
+                ) : (
+                  <div style={{display:'flex', justifyContent:'space-between', width:'100%'}}>
+                    <div className="item-details">
+                      <strong>{course.course_name}</strong>
+                      <span>{new Date(course.completion_date).toLocaleDateString()}</span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                      <a href={course.course_url} target="_blank" rel="noopener noreferrer" className="link-btn">Course Link</a>
+                      <button onClick={() => setEditingCourse(course)} style={{ backgroundColor: '#28a745', color: 'white', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '4px', cursor: 'pointer' }}>Edit</button>
+                      <button onClick={() => handleDeleteShortCourse(course.id)} style={{ backgroundColor: '#dc3545', color: 'white', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '4px', cursor: 'pointer' }}>Delete</button>
+                    </div>
+                  </div>
+                )}
               </li>
             ))}
           </ul>
@@ -383,15 +490,31 @@ const Profile = () => {
         {employmentHistory.length > 0 ? (
           <ul className="item-list">
             {employmentHistory.map((job, index) => (
-              <li key={index} className="list-item">
-                <div className="item-details">
-                  <strong>{job.job_title}</strong>
-                  <span>{job.company_name}</span>
-                  <span style={{color: '#646cff'}}>
-                    {new Date(job.start_date).toLocaleDateString()} - {job.end_date ? new Date(job.end_date).toLocaleDateString() : 'Present'}
-                  </span>
-                </div>
-                <button onClick={() => handleDeleteEmployment(job.id)} style={{ backgroundColor: '#dc3545', color: 'white', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '4px', cursor: 'pointer' }}>Delete</button>
+              <li key={index} className="list-item" style={{flexDirection: 'column', alignItems: 'flex-start'}}>
+                {editingEmployment?.id === job.id ? (
+                  <form className="inline-form" onSubmit={(e) => handleUpdateEmployment(e, job.id)} style={{width: '100%', marginBottom: '10px', flexWrap: 'wrap'}}>
+                    <input type="text" value={editingEmployment.job_title} onChange={e => setEditingEmployment({...editingEmployment, job_title: e.target.value})} required style={{flex: 1, minWidth: '150px'}}/>
+                    <input type="text" value={editingEmployment.company_name} onChange={e => setEditingEmployment({...editingEmployment, company_name: e.target.value})} required style={{flex: 1, minWidth: '150px'}}/>
+                    <input type="date" value={formatDateForInput(editingEmployment.start_date)} onChange={e => setEditingEmployment({...editingEmployment, start_date: e.target.value})} required />
+                    <input type="date" value={formatDateForInput(editingEmployment.end_date)} onChange={e => setEditingEmployment({...editingEmployment, end_date: e.target.value})} />
+                    <button type="submit" className="btn-primary" style={{padding: '0.4rem'}}>Save</button>
+                    <button type="button" onClick={() => setEditingEmployment(null)} className="btn-secondary" style={{padding: '0.4rem'}}>Cancel</button>
+                  </form>
+                ) : (
+                  <div style={{display:'flex', justifyContent:'space-between', width:'100%'}}>
+                    <div className="item-details">
+                      <strong>{job.job_title}</strong>
+                      <span>{job.company_name}</span>
+                      <span style={{color: '#646cff'}}>
+                        {new Date(job.start_date).toLocaleDateString()} - {job.end_date ? new Date(job.end_date).toLocaleDateString() : 'Present'}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                      <button onClick={() => setEditingEmployment(job)} style={{ backgroundColor: '#28a745', color: 'white', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '4px', cursor: 'pointer' }}>Edit</button>
+                      <button onClick={() => handleDeleteEmployment(job.id)} style={{ backgroundColor: '#dc3545', color: 'white', border: 'none', padding: '0.4rem 0.8rem', borderRadius: '4px', cursor: 'pointer' }}>Delete</button>
+                    </div>
+                  </div>
+                )}
               </li>
             ))}
           </ul>
