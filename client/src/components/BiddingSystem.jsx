@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import './BiddingSystem.css';
 
 const BiddingSystem = () => {
@@ -7,7 +8,8 @@ const BiddingSystem = () => {
   const [message, setMessage] = useState({ type: '', text: '' });
   const [loading, setLoading] = useState(false);
   const [remainingSlots, setRemainingSlots] = useState(3); 
-  const token = localStorage.getItem('token'); 
+  
+  axios.defaults.withCredentials = true;
 
   useEffect(() => {
     fetchBidStatus();
@@ -15,23 +17,18 @@ const BiddingSystem = () => {
 
   const fetchBidStatus = async () => {
     try {
-      const response = await fetch('http://localhost:3000/api/bids/status', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      const data = await response.json();
+      const response = await axios.get('http://localhost:3000/api/bids/status');
+      const data = response.data; 
       
-      if (response.ok) {
-        if (data.current_bid === "No active bids") {
-          setCurrentBid(null);
-        } else {
-          setCurrentBid(data.current_bid);
-        }
-        
-        const used = data.features_used || 0;
-        setRemainingSlots(Math.max(0, 3 - used));
+      if (data.current_bid === "No active bids") {
+        setCurrentBid(null);
+      } else {
+        setCurrentBid(data.current_bid);
       }
+      
+      const used = data.features_used || 0;
+      setRemainingSlots(Math.max(0, 3 - used));
+      
     } catch (error) {
       console.error('Error fetching bid:', error);
     }
@@ -43,26 +40,19 @@ const BiddingSystem = () => {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:3000/api/bids', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ amount: parseFloat(bidAmount) })
+      const response = await axios.post('http://localhost:3000/api/bids', { 
+        amount: parseFloat(bidAmount) 
       });
 
-      const data = await response.json();
+      const data = response.data;
 
-      if (!response.ok) {
-        setMessage({ type: 'error', text: data.message || data.error });
-      } else {
-        setMessage({ type: 'success', text: data.message });
-        setBidAmount('');
-        fetchBidStatus(); // Refresh the current bid display
-      }
+      setMessage({ type: 'success', text: data.message });
+      setBidAmount('');
+      fetchBidStatus(); // Refresh the current bid display
+
     } catch (error) {
-      setMessage({ type: 'error', text: 'Failed to connect to the server.' });
+      const errorMsg = error.response?.data?.message || error.response?.data?.error || 'Failed to connect to the server.';
+      setMessage({ type: 'error', text: errorMsg });
     } finally {
       setLoading(false);
     }
