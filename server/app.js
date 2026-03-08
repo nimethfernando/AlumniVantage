@@ -1,12 +1,14 @@
+import axios from 'axios';
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
 const profileRoutes = require('./routes/profileRoutes');
-const bidRoutes = require('./routes/bidRoutes'); // Import bid routes
+const bidRoutes = require('./routes/bidRoutes');
 require('dotenv').config();
-require('./utils/cronJobs'); // Import cron jobs to run them
+require('./utils/cronJobs'); 
+
 
 const authRoutes = require('./routes/authRoutes');
 const db = require('./config/db'); // Moved import to the top
@@ -34,6 +36,19 @@ app.use('/api/auth', authRoutes); // Auth Routes
 app.get('/', (req, res) => {
   res.json({ message: 'Welcome to the AlumniVantage API' });
 });
+// 3. If the server ever responds with a 401 (Unauthorized/Expired Token), force a logout
+axios.interceptors.response.use(
+  response => response,
+  error => {
+    if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+      alert("Your session has expired. Please log in again.");
+      // Clear local storage / redirect to login
+      localStorage.removeItem('token');
+      window.location.href = '/login'; 
+    }
+    return Promise.reject(error);
+  }
+);
 
 app.use(express.static('public')); // Serve static files from "public" directory
 app.use('/api/profile', profileRoutes); // Profile Routes
@@ -41,7 +56,7 @@ app.use('/api/profile', profileRoutes); // Profile Routes
 app.use('/api/bids', bidRoutes); // Bid Routes
 
 // ==========================================
-// 3. START SERVER
+// 4. START SERVER
 // ==========================================
 const PORT = process.env.PORT || 3000;
 
