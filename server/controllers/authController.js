@@ -2,24 +2,11 @@ const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const User = require('../models/userModel');
 const jwt = require('jsonwebtoken');
-const { sendVerificationEmail ,sendResetEmail } = require('../utils/emailService');
+const { sendVerificationEmail, sendResetEmail } = require('../utils/emailService');
 
 exports.register = async (req, res) => {
   try {
     const { email, password } = req.body;
-
-    //. Validation: Check for University Domain
-    if (!email.endsWith('@my.westminster.ac.uk')) {
-      return res.status(400).json({ error: "Registration restricted to @westminster.ac.uk emails only." });
-    }
-
-    // Validation: Check Password Strength (Basic)
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-      if (!passwordRegex.test(password)) {
-        return res.status(400).json({ 
-          error: "Password must be at least 8 characters long, contain 1 uppercase letter, 1 number, and 1 special character." 
-        });
-      }
 
     // Check if User Already Exists
     const existingUser = await User.findByEmail(email);
@@ -47,19 +34,19 @@ exports.register = async (req, res) => {
     });
 
   } catch (error) {
-    console.error(error);
+    console.error("Registration Error:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
+
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    if(!email || !password) {
-      return res.status(400).json({ error: "Please provide both email and password." });
-    }
+    // NOTE: `if(!email || !password)` check removed because 
+    // express-validator handles it in authRoutes.js!
 
-    // Validation: Check if Email and Password are Provided
+    // Find User
     const user = await User.findByEmail(email);
     if (!user) {
       return res.status(401).json({ error: "Invalid email or password" });
