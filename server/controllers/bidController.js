@@ -1,4 +1,5 @@
 const Bid = require('../models/bidModel');
+const pool = require('../config/db'); // Added to run custom queries for status & limits
 
 exports.placeOrUpdateBid = async (req, res) => {
   const { amount } = req.body;
@@ -10,9 +11,15 @@ exports.placeOrUpdateBid = async (req, res) => {
   }
 
   try {
+    // 1. Check if user attended an event to determine their monthly limit (3 or 4)
+    const [userRows] = await pool.execute('SELECT attended_event FROM users WHERE id = ?', [userId]);
+    const attendedEvent = userRows.length > 0 && userRows[0].attended_event ? true : false;
+    const maxBids = attendedEvent ? 4 : 3;
+
+    // 2. Enforce the dynamic limit
     const winCount = await Bid.getMonthlyWinCount(userId);
-    if (winCount >= 3) {
-      return res.status(403).json({ message: "Monthly limit of 3 features reached." });
+    if (winCount >= maxBids) {
+      return res.status(403).json({ message: `Monthly limit of ${maxBids} features reached.` });
     }
 
     const existingBid = await Bid.getPendingBidByUser(userId);
@@ -41,9 +48,28 @@ exports.getBidStatus = async (req, res) => {
   try {
     const existingBid = await Bid.getPendingBidByUser(userId);
     const winCount = await Bid.getMonthlyWinCount(userId);
+    
+    // 1. Calculate max features for the UI display
+    const [userRows] = await pool.execute('SELECT attended_event FROM users WHERE id = ?', [userId]);
+    const attendedEvent = userRows.length > 0 && userRows[0].attended_event ? true : false;
+    const maxBids = attendedEvent ? 4 : 3;
+
+    // 2. Check if the user is currently the highest bidder (Winning/Losing feedback)
+    let isWinning = false;
+    if (existingBid) {
+      const [highestBid] = await pool.execute(
+          'SELECT MAX(bid_amount) as max_bid FROM bids WHERE status = "pending"'
+      );
+      
+      if (highestBid[0].max_bid && parseFloat(existingBid.bid_amount) >= parseFloat(highestBid[0].max_bid)) {
+          isWinning = true;
+      }
+    }
+
     res.status(200).json({ 
-      current_bid: existingBid || "No active bids",
-      features_used : winCount 
+      current_bid: existingBid ? { ...existingBid, isWinning } : "No active bids",
+      features_used : winCount,
+      max_features: maxBids // Send max limit to the frontend
     });
   } catch (error) {
     res.status(500).json({ error: error.message });

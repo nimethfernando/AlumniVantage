@@ -1,8 +1,15 @@
 const pool = require('../config/db');
 
+// --- HELPER FUNCTION FOR URL VALIDATION ---
+const isValidUrl = (url) => {
+  if (!url) return true; // Skip if empty (let DB handle required fields)
+  const urlRegex = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/;
+  return urlRegex.test(url);
+};
+
 exports.getProfile = async (req, res) => {
   try {
-    const userId = req.user.userId; // Assuming you have a JWT middleware that sets req.user
+    const userId = req.user.userId; 
     
     // Fetch Main Profile
     const [profile] = await pool.execute('SELECT * FROM profiles WHERE user_id = ?', [userId]);
@@ -16,8 +23,6 @@ exports.getProfile = async (req, res) => {
     const [employment] = await pool.execute('SELECT * FROM employment_history WHERE user_id = ? ORDER BY start_date DESC', [userId]);
     // Fetch Licenses
     const [licenses] = await pool.execute('SELECT * FROM licenses WHERE user_id = ?', [userId]);
-
-
 
     res.json({
       profile: profile[0] || {},
@@ -38,6 +43,11 @@ exports.updateProfile = async (req, res) => {
     const userId = req.user.userId;
     const { bio, linkedin_url } = req.body;
     let profile_image_url = null;
+
+    // Backend URL Validation
+    if (linkedin_url && !isValidUrl(linkedin_url)) {
+      return res.status(400).json({ error: "Invalid LinkedIn URL format." });
+    }
 
     if (req.file) {
       profile_image_url = `/uploads/${req.file.filename}`;
@@ -79,6 +89,10 @@ exports.addDegree = async (req, res) => {
     const userId = req.user.userId;
     const { degree_name, university_url, completion_date } = req.body;
 
+    if (university_url && !isValidUrl(university_url)) {
+      return res.status(400).json({ error: "Invalid University URL format." });
+    }
+
     await pool.execute(
       'INSERT INTO degrees (user_id, degree_name, university_url, completion_date) VALUES (?, ?, ?, ?)',
       [userId, degree_name, university_url, completion_date]
@@ -93,11 +107,12 @@ exports.addDegree = async (req, res) => {
 exports.addCertification = async (req, res) => {
     try {
         const userId = req.user.userId;
-        
-        // 1. Destructure the exact keys sent by React
         const { cert_name, course_url, completion_date } = req.body;
 
-        // 2. Map them to your database variables. Pass `null` for missing fields to avoid the undefined error.
+        if (course_url && !isValidUrl(course_url)) {
+          return res.status(400).json({ error: "Invalid Course URL format." });
+        }
+
         const name = cert_name;
         const issuing_organization = null; 
         const issue_date = completion_date;
@@ -115,9 +130,15 @@ exports.addCertification = async (req, res) => {
         res.status(500).json({ error: "Failed to add certification" });
     }
 };
+
 exports.addLicense = async (req, res) => {
   try {
     const { license_name, awarding_body_url, completion_date } = req.body;
+
+    if (awarding_body_url && !isValidUrl(awarding_body_url)) {
+      return res.status(400).json({ error: "Invalid Awarding Body URL format." });
+    }
+
     await pool.execute(
       'INSERT INTO licenses (user_id, license_name, awarding_body_url, completion_date) VALUES (?, ?, ?, ?)',
       [req.user.userId, license_name, awarding_body_url, completion_date]
@@ -129,6 +150,11 @@ exports.addLicense = async (req, res) => {
 exports.addCourse = async (req, res) => {
   try {
     const { course_name, course_url, completion_date } = req.body;
+
+    if (course_url && !isValidUrl(course_url)) {
+      return res.status(400).json({ error: "Invalid Course URL format." });
+    }
+
     await pool.execute(
       'INSERT INTO short_courses (user_id, course_name, course_url, completion_date) VALUES (?, ?, ?, ?)',
       [req.user.userId, course_name, course_url, completion_date]
@@ -153,7 +179,7 @@ exports.addEmployment = async (req, res) => {
 exports.deleteDegree = async (req, res) => {
   try {
     const userId = req.user.userId;
-    const { id } = req.params; // The ID of the degree to delete
+    const { id } = req.params; 
 
     const [result] = await pool.execute(
       'DELETE FROM degrees WHERE id = ? AND user_id = ?',
@@ -250,6 +276,7 @@ exports.deleteEmployment = async (req, res) => {
     res.status(500).json({ error: "Failed to delete employment record" });
   }
 };
+
 // --- UPDATE ENDPOINTS FOR SUB-ITEMS ---
 
 exports.updateDegree = async (req, res) => {
@@ -258,7 +285,10 @@ exports.updateDegree = async (req, res) => {
     const { id } = req.params;
     const { degree_name, university_url, completion_date } = req.body;
 
-    // MySQL needs dates in YYYY-MM-DD format, ensure completion_date is formatted correctly if passed as full ISO string
+    if (university_url && !isValidUrl(university_url)) {
+      return res.status(400).json({ error: "Invalid University URL format." });
+    }
+
     const formattedDate = new Date(completion_date).toISOString().split('T')[0];
 
     const [result] = await pool.execute(
@@ -280,6 +310,10 @@ exports.updateCertification = async (req, res) => {
     const { id } = req.params;
     const { cert_name, course_url, completion_date } = req.body;
     
+    if (course_url && !isValidUrl(course_url)) {
+      return res.status(400).json({ error: "Invalid Course URL format." });
+    }
+
     const formattedDate = new Date(completion_date).toISOString().split('T')[0];
 
     const [result] = await pool.execute(
@@ -301,6 +335,10 @@ exports.updateLicense = async (req, res) => {
     const { id } = req.params;
     const { license_name, awarding_body_url, completion_date } = req.body;
 
+    if (awarding_body_url && !isValidUrl(awarding_body_url)) {
+      return res.status(400).json({ error: "Invalid Awarding Body URL format." });
+    }
+
     const formattedDate = new Date(completion_date).toISOString().split('T')[0];
 
     const [result] = await pool.execute(
@@ -321,6 +359,10 @@ exports.updateCourse = async (req, res) => {
     const userId = req.user.userId;
     const { id } = req.params;
     const { course_name, course_url, completion_date } = req.body;
+
+    if (course_url && !isValidUrl(course_url)) {
+      return res.status(400).json({ error: "Invalid Course URL format." });
+    }
 
     const formattedDate = new Date(completion_date).toISOString().split('T')[0];
 

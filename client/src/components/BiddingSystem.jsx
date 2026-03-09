@@ -8,6 +8,7 @@ const BiddingSystem = () => {
   const [message, setMessage] = useState({ type: '', text: '' });
   const [loading, setLoading] = useState(false);
   const [remainingSlots, setRemainingSlots] = useState(3); 
+  const [maxSlots, setMaxSlots] = useState(3);
   
   axios.defaults.withCredentials = true;
 
@@ -27,7 +28,9 @@ const BiddingSystem = () => {
       }
       
       const used = data.features_used || 0;
-      setRemainingSlots(Math.max(0, 3 - used));
+      const maxLimit = data.max_features || 3;
+      setMaxSlots(maxLimit);
+      setRemainingSlots(Math.max(0, maxLimit - used));
       
     } catch (error) {
       console.error('Error fetching bid:', error);
@@ -66,24 +69,35 @@ const BiddingSystem = () => {
         
         <div style={{ marginTop: '10px', padding: '8px', backgroundColor: '#f3f4f6', borderRadius: '5px', display: 'inline-block' }}>
           <span style={{ fontSize: '0.9rem', color: '#374151', fontWeight: 'bold' }}>
-            Features Remaining This Month: <span style={{ color: remainingSlots === 0 ? 'red' : 'green'}}>{remainingSlots} / 3</span>
+            Features Remaining This Month: <span style={{ color: remainingSlots === 0 ? 'red' : 'green'}}>{remainingSlots} / {maxSlots}</span>
           </span>
         </div>
-
       </div>
 
       <div className="status-card">
         {currentBid ? (
           <>
-            <span className={`status-badge status-${currentBid.status}`}>
-              {currentBid.status.toUpperCase()}
+            <span 
+              className={`status-badge`} 
+              style={{ 
+                backgroundColor: currentBid.isWinning ? '#28a745' : '#dc3545', 
+                color: 'white', 
+                padding: '4px 8px', 
+                borderRadius: '4px', 
+                fontWeight: 'bold',
+                fontSize: '0.8rem'
+              }}
+            >
+              {currentBid.isWinning ? 'WINNING' : 'OUTBID'}
             </span>
             <p style={{ margin: '0.5rem 0', color: '#6b7280', fontSize: '0.9rem' }}>Your Current Bid</p>
             <h3 className="bid-amount-display">${parseFloat(currentBid.bid_amount).toFixed(2)}</h3>
           </>
         ) : (
           <>
-            <span className="status-badge status-none">NO ACTIVE BIDS</span>
+            <span className="status-badge status-none" style={{ backgroundColor: '#6c757d', color: 'white', padding: '4px 8px', borderRadius: '4px', fontSize: '0.8rem' }}>
+              NO ACTIVE BIDS
+            </span>
             <p style={{ margin: '0.5rem 0', color: '#6b7280', fontSize: '0.9rem' }}>
               Place a bid to participate in tonight's auction!
             </p>
