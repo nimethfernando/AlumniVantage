@@ -3,7 +3,7 @@ const pool = require('../config/db');
 const User = require('../models/userModel'); // Import User model to get email addresses
 const { sendBidResultEmail } = require('./emailService'); // Import your new email function
 
-cron.schedule('0 0 * * *', async () => {
+cron.schedule('0 18 * * *', async () => {
     console.log('Running midnight winner selection...');
     const connection = await pool.getConnection();
     
