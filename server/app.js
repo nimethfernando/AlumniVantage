@@ -15,6 +15,9 @@ const bidRoutes = require('./routes/bidRoutes');
 const db = require('./config/db'); 
 require('./utils/cronJobs'); // Starts the background bidding worker
 
+// IMPORT YOUR NEW API LOGGER MIDDLEWARE
+const apiLogger = require('./middleware/apiLogger');
+
 // Initialize App
 const app = express();
 
@@ -36,6 +39,9 @@ app.use(morgan('dev'));  // Log requests to console
 // Serve uploaded images from the "public/uploads" directory
 app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 app.use(express.static('public')); // Serve static files from "public" directory
+
+// APPLY THE GLOBAL API LOGGER HERE
+app.use(apiLogger);
 
 // ==========================================
 // 2. ROUTES
