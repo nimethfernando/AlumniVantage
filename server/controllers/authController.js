@@ -3,6 +3,7 @@ const crypto = require('crypto');
 const User = require('../models/userModel');
 const jwt = require('jsonwebtoken');
 const { sendVerificationEmail, sendResetEmail } = require('../utils/emailService');
+const pool = require('../config/db');
 
 exports.register = async (req, res) => {
   try {
@@ -94,9 +95,29 @@ exports.login = async (req, res) => {
   }
 };
 
-exports.logout = (req, res) => {
-  res.clearCookie('token');
-  res.json({ message: "Logged out successfully" });
+exports.logout = async (req, res) => {
+  try {
+    // Grab the token before we destroy the cookie
+    const token = 
+      req.cookies.token || 
+      (req.headers.authorization && req.headers.authorization.split(' ')[1]);
+
+    // If a token exists, add it to the blacklist in the database
+    if (token) {
+      await pool.execute(
+        'INSERT IGNORE INTO token_blacklist (token) VALUES (?)', 
+        [token]
+      );
+    }
+
+    // Clear the cookie
+    res.clearCookie('token');
+    res.json({ message: "Logged out successfully" });
+
+  } catch (error) {
+    console.error("Logout Error:", error);
+    res.status(500).json({ error: "Error during logout" });
+  }
 };
 
 exports.verifyEmail = async (req, res) => {
