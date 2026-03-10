@@ -1,10 +1,16 @@
 const pool = require('../config/db');
 
 // --- HELPER FUNCTION FOR URL VALIDATION ---
-const isValidUrl = (url) => {
-  if (!url) return true; // Skip if empty (let DB handle required fields)
-  const urlRegex = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/;
-  return urlRegex.test(url);
+const isValidUrl = (urlString) => {
+  if (!urlString) return true; // Skip if empty (let DB handle required fields)
+  try {
+    // This is NodeJS's built-in URL parser. 
+    // If it's a valid link, it succeeds. If it's garbage text, it throws an error.
+    new URL(urlString); 
+    return true;
+  } catch (error) {
+    return false;
+  }
 };
 
 exports.getProfile = async (req, res) => {
@@ -138,13 +144,17 @@ exports.addLicense = async (req, res) => {
     if (awarding_body_url && !isValidUrl(awarding_body_url)) {
       return res.status(400).json({ error: "Invalid Awarding Body URL format." });
     }
+    const formattedDate = completion_date ? new Date(completion_date).toISOString().split('T')[0] : null;
 
     await pool.execute(
       'INSERT INTO licenses (user_id, license_name, awarding_body_url, completion_date) VALUES (?, ?, ?, ?)',
-      [req.user.userId, license_name, awarding_body_url, completion_date]
+      [req.user.userId, license_name, awarding_body_url, formattedDate]
     );
     res.status(201).json({ message: "License added!" });
-  } catch (error) { res.status(500).json({ error: "Failed to add license" }); }
+  } catch (error) { 
+    console.error("Add License Error:", error); 
+    res.status(500).json({ error: "Failed to add license" }); 
+  }
 };
 
 exports.addCourse = async (req, res) => {
@@ -154,24 +164,35 @@ exports.addCourse = async (req, res) => {
     if (course_url && !isValidUrl(course_url)) {
       return res.status(400).json({ error: "Invalid Course URL format." });
     }
-
+    const formattedDate = completion_date ? new Date(completion_date).toISOString().split('T')[0] : null;
     await pool.execute(
       'INSERT INTO short_courses (user_id, course_name, course_url, completion_date) VALUES (?, ?, ?, ?)',
-      [req.user.userId, course_name, course_url, completion_date]
+      [req.user.userId, course_name, course_url, formattedDate]
     );
     res.status(201).json({ message: "Course added!" });
-  } catch (error) { res.status(500).json({ error: "Failed to add course" }); }
+  } catch (error) { 
+    console.error("Add Course Error:", error); 
+    res.status(500).json({ error: "Failed to add course" }); 
+  }
 };
 
 exports.addEmployment = async (req, res) => {
   try {
     const { company_name, job_title, start_date, end_date } = req.body;
+
+    // 1. Format the dates to YYYY-MM-DD
+    const formattedStart = new Date(start_date).toISOString().split('T')[0];
+    const formattedEnd = end_date ? new Date(end_date).toISOString().split('T')[0] : null;
     await pool.execute(
-      'INSERT INTO employment_history (user_id, company_name, job_title, start_date, end_date) VALUES (?, ?, ?, ?, ?)',
-      [req.user.userId, company_name, job_title, start_date, end_date || null]
+      'INSERT INTO employment_history (user_id, company, role, start_date, end_date) VALUES (?, ?, ?, ?, ?)',
+      [req.user.userId, company_name, job_title, formattedStart, formattedEnd]
     );
     res.status(201).json({ message: "Employment added!" });
-  } catch (error) { res.status(500).json({ error: "Failed to add employment" }); }
+
+  } catch (error) { 
+    console.error("Add Employment Error:", error); 
+    res.status(500).json({ error: "Failed to add employment" }); 
+  }
 };
 
 // --- DELETE ENDPOINTS ---
@@ -389,7 +410,7 @@ exports.updateEmployment = async (req, res) => {
     const formattedEnd = end_date ? new Date(end_date).toISOString().split('T')[0] : null;
 
     const [result] = await pool.execute(
-      'UPDATE employment_history SET company_name = ?, job_title = ?, start_date = ?, end_date = ? WHERE id = ? AND user_id = ?',
+      'UPDATE employment_history SET company = ?, role = ?, start_date = ?, end_date = ? WHERE id = ? AND user_id = ?',
       [company_name, job_title, formattedStart, formattedEnd, id, userId]
     );
 

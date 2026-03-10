@@ -45,7 +45,13 @@ const Profile = () => {
       }
       if (res.data.licenses) setLicenses(res.data.licenses);
       if (res.data.courses) setShortCourses(res.data.courses); 
-      if (res.data.employment) setEmploymentHistory(res.data.employment); 
+      if (res.data.employment) {
+        setEmploymentHistory(res.data.employment.map(emp => ({
+          ...emp,
+          job_title: emp.role,
+          company_name: emp.company
+        })));
+      }
     } catch (err) {
       console.error("Failed to fetch profile");
     }
@@ -94,7 +100,7 @@ const Profile = () => {
   const handleAddLicense = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('http://localhost:3000/api/profile/licenses', newLicense);
+      await axios.post('http://localhost:3000/api/profile/licenses', newLicense, {withCredentials: true});
       setNewLicense({ license_name: '', awarding_body_url: '', completion_date: '' });
       fetchProfile();
     } catch (err) {
@@ -105,7 +111,7 @@ const Profile = () => {
   const handleAddShortCourse = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('http://localhost:3000/api/profile/courses', newShortCourse); 
+      await axios.post('http://localhost:3000/api/profile/courses', newShortCourse, {withCredentials: true}); 
       setNewShortCourse({ course_name: '', course_url: '', completion_date: '' });
       fetchProfile();
     } catch (err) {
@@ -116,10 +122,14 @@ const Profile = () => {
   const handleAddEmployment = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('http://localhost:3000/api/profile/employment', newEmployment);
+      await axios.post('http://localhost:3000/api/profile/employment', 
+        newEmployment,
+      {withCredentials: true}
+      );
       setNewEmployment({ job_title: '', company_name: '', start_date: '', end_date: '' });
       fetchProfile();
     } catch (err) {
+      console.error(err);
       alert('Error adding employment history');
     }
   };
