@@ -3,6 +3,17 @@ const router = express.Router();
 const authController = require('../controllers/authController');
 const { body } = require('express-validator');
 const validateRequest = require('../middleware/validateRequest');
+const rateLimit = require('express-rate-limit');
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: {
+    error: "Too many requests from this IP, please try again after 15 minutes."
+  },
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+});
 
 const registerValidationRules = [
   body('email')
@@ -57,11 +68,11 @@ const resetPasswordValidationRules = [
 ];
 
 // All your auth routes:
-router.post('/register', authController.register);
-router.post('/login', authController.login); // <--- IS THIS LINE HERE?
-router.get('/verify/:token', authController.verifyEmail);
-router.post('/logout', authController.logout);
-router.post('/forgot-password', authController.forgotPassword);
-router.post('/reset-password/:token', authController.resetPassword);
+router.post('/register',registerValidationRules, validateRequest, authController.register);
+router.post('/login', loginValidationRules, validateRequest, authController.login);
+router.get('/verify/:token',forgotPasswordValidationRules, validateRequest, authController.verifyEmail);
+router.post('/logout', logoutValidationRules, validateRequest, authController.logout);
+router.post('/forgot-password', forgotPasswordValidationRules, validateRequest, authController.forgotPassword);
+router.post('/reset-password/:token', resetPasswordValidationRules, validateRequest, authController.resetPassword);
 
 module.exports = router;
