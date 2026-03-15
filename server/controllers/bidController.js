@@ -75,3 +75,41 @@ exports.getBidStatus = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+exports.getBidHistory = async (req, res) => {
+  const userId = req.user.userId;
+
+  try {
+    const history = await Bid.getBidHistoryByUser(userId);
+    res.status(200).json({
+      message: "Bidding history retrieved successfully",
+      history: history
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.cancelBid = async (req, res) => {
+  const userId = req.user.userId;
+
+  try {
+    // First, check if they actually have a pending bid
+    const existingBid = await Bid.getPendingBidByUser(userId);
+
+    if (!existingBid) {
+      return res.status(404).json({ message: "No active pending bid found to cancel." });
+    }
+
+    // Cancel the bid
+    const isCanceled = await Bid.cancelBid(existingBid.id, userId);
+
+    if (isCanceled) {
+      res.status(200).json({ message: "Bid canceled successfully." });
+    } else {
+      res.status(400).json({ message: "Could not cancel bid. It may have already been processed." });
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
