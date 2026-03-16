@@ -1,97 +1,77 @@
-/* --- Profile Page Styling --- */
-
-/* --- Center the main container --- */
-.profile-container {
-  max-width: 800px;
-  margin: 2rem auto;
-  padding: 20px;
-  font-family: inherit;
-  color: #333;
-  
-  /* Flexbox rules to perfectly center the content inside */
+/* Home / Landing Page Styling */
+.home-container {
   display: flex;
-  flex-direction: column;
-  align-items: center; 
-}
-
-/* For Dark mode support (matches Vite's default setup) */
-@media (prefers-color-scheme: dark) {
-  .profile-container {
-    color: #f9f9f9;
-  }
-  .card-section {
-    background-color: #2a2a2a !important;
-    border: 1px solid #444 !important;
-  }
-  .list-item {
-    background-color: #333 !important;
-    border: 1px solid #444 !important;
-  }
-  input, textarea {
-    background-color: #1a1a1a !important;
-    color: #fff !important;
-    border: 1px solid #555 !important;
-  }
-}
-
-/* Ensure the header text and image are centered */
-.profile-header {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-bottom: 2rem;
-  width: 100%;
-  text-align: center;
-}
-
-.profile-image {
-  width: 150px;
-  height: 150px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 4px solid #646cff;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-  margin-bottom: 1rem;
-}
-
-.profile-image-placeholder {
-  width: 150px;
-  height: 150px;
-  border-radius: 50%;
-  background-color: #e0e0e0;
-  color: #666;
-  display: flex;
-  align-items: center;
   justify-content: center;
-  font-weight: bold;
-  margin-bottom: 1rem;
-  border: 4px solid #ccc;
+  align-items: center;
+  min-height: 100vh;
+  width: 100vw;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  margin: -20px; /* Offset default body margins if necessary */
 }
 
-/* --- Ensure cards span out evenly and center their own content --- */
-.card-section {
-  background-color: #ffffff;
-  border-radius: 12px;
-  padding: 1.5rem;
+.hero-section {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  max-width: 600px;
+}
+
+.hero-content h1 {
+  font-size: 2.5rem;
+  color: #2c3e50;
+  margin-bottom: 1rem;
+}
+
+.hero-content p {
+  font-size: 1.1rem;
+  color: #555;
   margin-bottom: 2rem;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-  border: 1px solid #eaeaea;
-  
-  /* Forces the cards to stretch to the width of the centered container */
-  width: 100%; 
-  max-width: 700px; 
+  line-height: 1.6;
+}
+
+.home-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+/* Authentication Pages (Login, Register, Forgot Password) */
+.auth-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  width: 100vw;
+  background-color: #f0f2f5;
+}
+
+.auth-card {
+  background: white;
+  padding: 2.5rem;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  width: 100%;
+  max-width: 400px;
   box-sizing: border-box;
 }
 
-.card-section h3 {
+.auth-card h2 {
   margin-top: 0;
-  margin-bottom: 1.2rem;
-  border-bottom: 2px solid #f0f0f0;
-  padding-bottom: 0.5rem;
-  color: #646cff;
+  margin-bottom: 0.5rem;
+  color: #1a1a1a;
+  text-align: center;
 }
 
-/* Forms */
+.auth-subtitle {
+  text-align: center;
+  color: #666;
+  margin-bottom: 2rem;
+  font-size: 0.95rem;
+}
+
+/* Form Elements */
 .custom-form {
   display: flex;
   flex-direction: column;
@@ -106,128 +86,137 @@
 
 .form-group label {
   font-weight: 600;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.4rem;
+  font-size: 0.85rem;
+  color: #444;
+}
+
+input {
+  padding: 0.8rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  background-color: #fafafa;
+}
+
+input:focus {
+  outline: none;
+  border-color: #646cff;
+  background-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(100, 108, 255, 0.15);
+}
+
+.full-width {
+  width: 100%;
+  padding: 0.9rem;
+  font-size: 1rem;
+  margin-top: 0.5rem;
+}
+
+/* Error Messages */
+.error-message {
+  background-color: #fee2e2;
+  color: #dc2626;
+  padding: 0.75rem;
+  border-radius: 6px;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+  text-align: center;
+  border: 1px solid #f87171;
+}
+
+/* Links & Footer */
+.auth-footer-links {
+  margin-top: 1.5rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
   font-size: 0.9rem;
 }
 
-input, textarea {
-  padding: 0.8rem;
+.text-link {
+  color: #646cff;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.text-link:hover {
+  color: #535bf2;
+  text-decoration: underline;
+}
+
+.font-bold {
+  font-weight: 600;
+}
+
+/* Shared Button Styles */
+.btn-primary, .btn-secondary {
+  display: inline-block;
+  text-align: center;
+  text-decoration: none;
   border-radius: 8px;
-  border: 1px solid #ccc;
-  font-size: 1rem;
-  transition: border-color 0.2s;
-  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-input:focus, textarea:focus {
-  outline: none;
-  border-color: #646cff;
-  box-shadow: 0 0 0 2px rgba(100, 108, 255, 0.2);
-}
-
-.file-input {
-  border: none;
-  padding: 0;
-}
-
-.inline-form {
-  display: grid;
-  grid-template-columns: 2fr 2fr 1.5fr auto;
-  gap: 10px;
-  margin-top: 1rem;
-  align-items: center;
-}
-
-@media (max-width: 768px) {
-  .inline-form {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* Buttons */
 .btn-primary {
   background-color: #646cff;
   color: white;
-  padding: 0.8rem 1.5rem;
   border: none;
-  border-radius: 8px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  align-self: flex-start;
 }
 
-.btn-primary:hover {
+.btn-primary:hover:not(:disabled) {
   background-color: #535bf2;
+  transform: translateY(-1px);
+}
+
+.btn-primary:disabled {
+  background-color: #a5a9ff;
+  cursor: not-allowed;
 }
 
 .btn-secondary {
-  background-color: #4CAF50;
-  color: white;
-  padding: 0.8rem 1rem;
-  border: none;
-  border-radius: 8px;
-  font-weight: bold;
-  cursor: pointer;
+  background-color: white;
+  color: #2c3e50;
+  border: 2px solid #e2e8f0;
 }
 
 .btn-secondary:hover {
-  background-color: #45a049;
+  background-color: #f8fafc;
+  border-color: #cbd5e1;
 }
 
-.link-btn {
-  background-color: transparent;
-  color: #646cff;
-  border: 1px solid #646cff;
-  padding: 0.4rem 0.8rem;
-  border-radius: 6px;
-  font-size: 0.85rem;
-  text-decoration: none;
-}
-
-.link-btn:hover {
-  background-color: #646cff;
-  color: white;
-}
-
-/* Lists */
-.item-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.list-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color: #f8f9fa;
-  padding: 1rem;
-  border-radius: 8px;
-  border: 1px solid #e9ecef;
-}
-
-.item-details {
-  display: flex;
-  flex-direction: column;
-  text-align: left;
-}
-
-.item-details strong {
-  font-size: 1.1rem;
-}
-
-.item-details span {
-  font-size: 0.85rem;
-  color: #777;
-  margin-top: 0.2rem;
-}
-
-.empty-text {
-  color: #888;
-  font-style: italic;
-  font-size: 0.9rem;
+/* Dark Mode Overrides */
+@media (prefers-color-scheme: dark) {
+  .home-container, .auth-container {
+    background: #1a1a1a;
+  }
+  .hero-section, .auth-card {
+    background: #242424;
+    border: 1px solid #333;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  }
+  .hero-content h1, .auth-card h2 {
+    color: #f1f1f1;
+  }
+  .hero-content p, .auth-subtitle, .form-group label {
+    color: #a1a1a1;
+  }
+  input {
+    background-color: #121212;
+    border-color: #444;
+    color: white;
+  }
+  .btn-secondary {
+    background-color: transparent;
+    color: white;
+    border-color: #444;
+  }
+  .btn-secondary:hover {
+    background-color: #333;
+    border-color: #555;
+  }
 }
