@@ -1,37 +1,68 @@
 import { useState } from 'react';
 import axios from 'axios';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import '../App.css';
 
 const ResetPassword = () => {
   const { token } = useParams(); // Grabs token from URL
   const [password, setPassword] = useState('');
-  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
+    setError('');
+    setSuccess('');
+    
     try {
       await axios.post(`http://localhost:3000/api/auth/reset-password/${token}`, { newPassword: password });
-      alert('Password Reset Successful! logging you in...');
-      navigate('/login');
+      setSuccess('Password Reset Successful! Redirecting to login...');
+      
+      // Give the user a second to read the success message before redirecting
+      setTimeout(() => {
+        navigate('/login');
+      }, 2000);
+      
     } catch (err) {
-      setMessage(err.response?.data?.error || 'Error resetting password');
+      setError(err.response?.data?.error || 'Error resetting password. The link might be expired.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="container">
-      <h2>Reset Password</h2>
-      {message && <p style={{color:'red'}}>{message}</p>}
-      <form onSubmit={handleSubmit}>
-        <input 
-          type="password" 
-          placeholder="New Password" 
-          onChange={(e) => setPassword(e.target.value)} 
-          required 
-        />
-        <button type="submit">Change Password</button>
-      </form>
+    <div className="auth-container">
+      <div className="auth-card">
+        <h2>Set New Password</h2>
+        <p className="auth-subtitle">Create a strong new password for your account</p>
+        
+        {error && <div className="error-message">{error}</div>}
+        {success && <div className="success-message">{success}</div>}
+        
+        <form onSubmit={handleSubmit} className="custom-form">
+          <div className="form-group">
+            <label>New Password</label>
+            <input 
+              type="password" 
+              placeholder="••••••••" 
+              value={password}
+              onChange={(e) => setPassword(e.target.value)} 
+              required 
+            />
+          </div>
+          
+          <button type="submit" className="btn-primary full-width" disabled={isLoading || success !== ''}>
+            {isLoading ? 'Updating...' : 'Change Password'}
+          </button>
+        </form>
+        
+        <div className="auth-footer-links">
+          <Link to="/login" className="text-link">Back to Login</Link>
+        </div>
+      </div>
     </div>
   );
 };
