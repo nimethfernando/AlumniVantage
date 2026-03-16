@@ -1,3 +1,4 @@
+// src/pages/Register.jsx
 import { useState } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
@@ -16,13 +17,21 @@ const Register = () => {
     setError('');
     setSuccess('');
     
+    // NEW EMAIL VALIDATION CHECK
+    const lowerEmail = email.toLowerCase();
+    if (!lowerEmail.endsWith('@my.westminster.ac.uk') && !lowerEmail.endsWith('@westminster.ac.uk')) {
+      setError('Please use a valid Westminster University email address (@my.westminster.ac.uk).');
+      setIsLoading(false);
+      return; // Stop the function here so it doesn't try to register
+    }
+    
     try {
       await axios.post('http://localhost:3000/api/auth/register', { email, password });
       setSuccess('Success! Check your terminal (or email) for the verification link.');
-      setEmail(''); // Clear the form on success
+      setEmail(''); 
       setPassword('');
     } catch (err) {
-      setError(err.response?.data?.error || 'Registration failed');
+      setError(err.response?.data?.error || 'Registration failed. This email might already exist.');
     } finally {
       setIsLoading(false);
     }
@@ -34,7 +43,6 @@ const Register = () => {
         <h2>Create an Account</h2>
         <p className="auth-subtitle">Join AlumniVantage today</p>
         
-        {/* Display Error or Success messages */}
         {error && <div className="error-message">{error}</div>}
         {success && <div className="success-message">{success}</div>}
         
