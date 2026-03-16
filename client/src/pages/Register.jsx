@@ -1,4 +1,3 @@
-// src/pages/Register.jsx
 import { useState } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
@@ -7,6 +6,7 @@ import '../App.css';
 const Register = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -17,12 +17,11 @@ const Register = () => {
     setError('');
     setSuccess('');
     
-    // NEW EMAIL VALIDATION CHECK
     const lowerEmail = email.toLowerCase();
     if (!lowerEmail.endsWith('@my.westminster.ac.uk') && !lowerEmail.endsWith('@westminster.ac.uk')) {
       setError('Please use a valid Westminster University email address (@my.westminster.ac.uk).');
       setIsLoading(false);
-      return; // Stop the function here so it doesn't try to register
+      return;
     }
     
     try {
@@ -31,7 +30,7 @@ const Register = () => {
       setEmail(''); 
       setPassword('');
     } catch (err) {
-      setError(err.response?.data?.error || 'Registration failed. This email might already exist.');
+      setError(err.response?.data?.error || 'Registration failed.');
     } finally {
       setIsLoading(false);
     }
@@ -42,38 +41,31 @@ const Register = () => {
       <div className="auth-card">
         <h2>Create an Account</h2>
         <p className="auth-subtitle">Join AlumniVantage today</p>
-        
         {error && <div className="error-message">{error}</div>}
         {success && <div className="success-message">{success}</div>}
-        
         <form onSubmit={handleSubmit} className="custom-form">
           <div className="form-group">
             <label>Email Address</label>
-            <input 
-              type="email" 
-              placeholder="you@my.westminster.ac.uk" 
-              value={email}
-              onChange={e => setEmail(e.target.value)} 
-              required
-            />
+            <input type="email" placeholder="you@my.westminster.ac.uk" value={email} onChange={e => setEmail(e.target.value)} required />
           </div>
-          
           <div className="form-group">
             <label>Password</label>
             <input 
-              type="password" 
+              type={showPassword ? "text" : "password"} 
               placeholder="••••••••" 
               value={password}
               onChange={e => setPassword(e.target.value)} 
               required
             />
+            <div className="show-password-container">
+              <input type="checkbox" id="show-password" checked={showPassword} onChange={() => setShowPassword(!showPassword)} />
+              <label htmlFor="show-password">Show Password</label>
+            </div>
           </div>
-          
           <button type="submit" className="btn-primary full-width" disabled={isLoading}>
             {isLoading ? 'Registering...' : 'Register'}
           </button>
         </form>
-
         <div className="auth-footer-links">
           <p>Already have an account? <Link to="/login" className="text-link font-bold">Sign In</Link></p>
         </div>

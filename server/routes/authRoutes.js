@@ -22,12 +22,13 @@ const registerValidationRules = [
     .isEmail().withMessage('Please provide a valid email format.')
     .normalizeEmail() // Sanitization: lowercases and standardizes the email
     .custom((value) => {
-      // Domain Validation
-      if (!value.endsWith('@my.westminster.ac.uk')) {
-        throw new Error('Registration restricted to @my.westminster.ac.uk emails only.');
-      }
-      return true;
+        const lowerValue = value.toLowerCase();
+        if (!lowerValue.endsWith('@my.westminster.ac.uk') && !lowerValue.endsWith('@westminster.ac.uk')) {
+          throw new Error('Registration restricted to Westminster University emails only.');
+        }
+        return true;
     }),
+
   body('password')
     .trim()
     .notEmpty().withMessage('Password is required.')
