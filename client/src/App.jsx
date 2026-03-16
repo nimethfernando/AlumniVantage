@@ -3,13 +3,14 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, AuthContext } from './context/AuthContext';
 import { useContext } from 'react';
 import axios from 'axios';
+import Home from './pages/home';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import Profile from './pages/Profile';
 
-// If the server responds with a 401 (Unauthorized) or 403 (Forbidden/Expired Token), force a logout
+
 axios.interceptors.response.use(
   response => response,
   error => {
@@ -22,7 +23,6 @@ axios.interceptors.response.use(
   }
 );
 
-// A "Guard" component that blocks non-logged-in users
 const PrivateRoute = ({ children }) => {
   const { user } = useContext(AuthContext);
   return user ? children : <Navigate to="/login" />;
@@ -33,6 +33,7 @@ function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
+          <Route path="/" element={<Home />} /> 
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -47,7 +48,8 @@ function App() {
             } 
           />
           
-          <Route path="/" element={<Navigate to="/login" />} />
+          {/* Fallback route */}
+          <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>
