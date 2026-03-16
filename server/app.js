@@ -5,6 +5,7 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
 const path = require('path');
+const xss = require('xss-clean'); 
 
 // Import Routes
 const authRoutes = require('./routes/authRoutes');
@@ -24,7 +25,14 @@ const app = express();
 // ==========================================
 // 1. MIDDLEWARE (Must come BEFORE routes)
 // ==========================================
+app.use(helmet());       // Secure HTTP headers (Best practice: put Helmet as high up as possible)
+
 app.use(express.json()); // Parse JSON bodies
+app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies (Good practice for standard form submissions)
+
+// 2. APPLY XSS-CLEAN HERE (Must be exactly here, after express.json)
+app.use(xss()); // Sanitizes user input in req.body, req.query, and req.params
+
 app.use(cookieParser()); // Parse cookies
 
 // CORS setup
@@ -33,7 +41,6 @@ app.use(cors({
   credentials: true // Allow cookies to be sent
 }));
 
-app.use(helmet());       // Secure HTTP headers
 app.use(morgan('dev'));  // Log requests to console
 
 // Serve uploaded images from the "public/uploads" directory
