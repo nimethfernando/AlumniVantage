@@ -71,7 +71,7 @@ const resetPasswordValidationRules = [
 router.post('/register',registerValidationRules, validateRequest, authController.register);
 router.post('/login', loginValidationRules, validateRequest, authController.login);
 router.get('/verify/:token',forgotPasswordValidationRules, validateRequest, authController.verifyEmail);
-router.post('/logout', logoutValidationRules, validateRequest, authController.logout);
+router.post('/logout', authController.logout);
 router.post('/forgot-password', forgotPasswordValidationRules, validateRequest, authController.forgotPassword);
 router.post('/reset-password/:token', resetPasswordValidationRules, validateRequest, authController.resetPassword);
 
