@@ -12,13 +12,24 @@ import Profile from './pages/Profile';
 
 
 axios.interceptors.response.use(
-  response => response,
-  error => {
+  (response) => response,
+  (error) => {
+    // 1. Safely get the requested URL
+    const requestUrl = error.config?.url || '';
+    
+    // 2. If the user is trying to login or register, IGNORE the interceptor completely!
+    // This allows the Login/Register components to show their own red error boxes.
+    if (requestUrl.includes('login') || requestUrl.includes('register')) {
+      return Promise.reject(error);
+    }
+
+    // 3. For all OTHER routes (like /profile), if we get a 401/403, force logout
     if (error.response && (error.response.status === 401 || error.response.status === 403)) {
       alert("Your session has expired. Please log in again.");
       localStorage.removeItem('token');
       window.location.href = '/login'; 
     }
+    
     return Promise.reject(error);
   }
 );
