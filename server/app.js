@@ -5,12 +5,12 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
 const path = require('path');
-const xss = require('xss-clean'); 
 
 // Import Routes
 const authRoutes = require('./routes/authRoutes');
 const profileRoutes = require('./routes/profileRoutes');
 const bidRoutes = require('./routes/bidRoutes');
+const publicRoutes = require('./routes/publicRoutes'); // For the featured alumnus endpoint
 
 // Import Database and Background Jobs
 const db = require('./config/db'); 
@@ -30,8 +30,6 @@ app.use(helmet());       // Secure HTTP headers (Best practice: put Helmet as hi
 app.use(express.json()); // Parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies (Good practice for standard form submissions)
 
-// 2. APPLY XSS-CLEAN HERE (Must be exactly here, after express.json)
-app.use(xss()); // Sanitizes user input in req.body, req.query, and req.params
 
 app.use(cookieParser()); // Parse cookies
 
@@ -61,6 +59,7 @@ app.get('/', (req, res) => {
 app.use('/api/auth', authRoutes); // Auth Routes
 app.use('/api/profile', profileRoutes); // Profile Routes
 app.use('/api/bids', bidRoutes); // Bid Routes
+app.use('/api/public', publicRoutes); // Public Routes (e.g., featured alumnus)
 
 // ==========================================
 // 3. START SERVER
