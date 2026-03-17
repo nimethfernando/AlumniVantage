@@ -6,6 +6,10 @@ const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
 const path = require('path');
 
+// 1. IMPORT NEW SECURITY PACKAGES
+const rateLimit = require('express-rate-limit');
+const csrf = require('csurf');
+
 // Import Routes
 const authRoutes = require('./routes/authRoutes');
 const profileRoutes = require('./routes/profileRoutes');
@@ -25,13 +29,23 @@ const app = express();
 // ==========================================
 // 1. MIDDLEWARE (Must come BEFORE routes)
 // ==========================================
-app.use(helmet());       // Secure HTTP headers (Best practice: put Helmet as high up as possible)
+// UPGRADED HELMET: Content Security Policy (CSP)
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'"], 
+            styleSrc: ["'self'", "'unsafe-inline'"], 
+            imgSrc: ["'self'", "data:", "http://localhost:3000", "http://localhost:5173"], 
+            connectSrc: ["'self'", "http://localhost:3000", "http://localhost:5173"],
+        },
+    },
+    crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
 
 app.use(express.json()); // Parse JSON bodies
-app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies (Good practice for standard form submissions)
-
-
-app.use(cookieParser()); // Parse cookies
+app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
+app.use(cookieParser()); // Parse cookies (CRITICAL: Must come before csurf)
 
 // CORS setup
 app.use(cors({
@@ -48,6 +62,32 @@ app.use(express.static('public')); // Serve static files from "public" directory
 // APPLY THE GLOBAL API LOGGER HERE
 app.use(apiLogger);
 
+// SECURITY: CSRF PROTECTION & RATE LIMITING
+// CSRF Protection Middleware
+const csrfProtection = csrf({ 
+    cookie: {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict'
+    } 
+});
+
+// Apply CSRF to all routes below (GET requests pass freely, POST/PUT/DELETE require a token)
+app.use(csrfProtection);
+
+// Endpoint for the React frontend to grab the CSRF token
+app.get('/api/csrf-token', (req, res) => {
+    res.json({ csrfToken: req.csrfToken() });
+});
+
+// Rate Limiter for Sensitive Endpoints
+const apiLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // Limit each IP to 100 requests per window
+    message: { error: 'Too many requests from this IP, please try again after 15 minutes' }
+});
+
+
 // ==========================================
 // 2. ROUTES
 // ==========================================
@@ -57,9 +97,18 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api/auth', authRoutes); // Auth Routes
-app.use('/api/profile', profileRoutes); // Profile Routes
-app.use('/api/bids', bidRoutes); // Bid Routes
+app.use('/api/profile', apiLimiter, profileRoutes); // 👈 Protected by Rate Limiter
+app.use('/api/bids', apiLimiter, bidRoutes); // 👈 Protected by Rate Limiter
 app.use('/api/public', publicRoutes); // Public Routes (e.g., featured alumnus)
+
+// ==========================================
+// CSRF ERROR HANDLER (Makes errors look clean)
+// ==========================================
+app.use((err, req, res, next) => {
+  if (err.code !== 'EBADCSRFTOKEN') return next(err);
+  // Handle CSRF token errors
+  res.status(403).json({ error: 'Form tampered with or session expired. Invalid CSRF token.' });
+});
 
 // ==========================================
 // 3. START SERVER
