@@ -1,4 +1,4 @@
-require('dotenv').config(); // Load environment variables first
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -6,7 +6,11 @@ const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
 const path = require('path');
 
-// 1. IMPORT NEW SECURITY PACKAGES
+// Swagger Documentation
+const swaggerUi = require('swagger-ui-express');
+const swaggerDocument = require('./swagger.json');
+
+// Security Packages
 const rateLimit = require('express-rate-limit');
 const csrf = require('csurf');
 
@@ -14,20 +18,19 @@ const csrf = require('csurf');
 const authRoutes = require('./routes/authRoutes');
 const profileRoutes = require('./routes/profileRoutes');
 const bidRoutes = require('./routes/bidRoutes');
-const publicRoutes = require('./routes/publicRoutes'); // For the featured alumnus endpoint
+const publicRoutes = require('./routes/publicRoutes'); 
 
 // Import Database and Background Jobs
 const db = require('./config/db'); 
-require('./utils/cronJobs'); // Starts the background bidding worker
+require('./utils/cronJobs'); 
 
-// IMPORT YOUR NEW API LOGGER MIDDLEWARE
+// Import Global API Logger
 const apiLogger = require('./middleware/apiLogger');
 
-// Initialize App
 const app = express();
 
 // ==========================================
-// 1. MIDDLEWARE (Must come BEFORE routes)
+// 1. GLOBAL MIDDLEWARE
 // ==========================================
 // UPGRADED HELMET: Content Security Policy (CSP)
 app.use(helmet({
@@ -43,26 +46,27 @@ app.use(helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 
-app.use(express.json()); // Parse JSON bodies
-app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
-app.use(cookieParser()); // Parse cookies (CRITICAL: Must come before csurf)
+app.use(express.json()); 
+app.use(express.urlencoded({ extended: true })); 
+app.use(cookieParser()); 
 
 // CORS setup
 app.use(cors({
-  origin: 'http://localhost:5173', // Frontend URL
-  credentials: true // Allow cookies to be sent
+  origin: 'http://localhost:5173', 
+  credentials: true 
 }));
 
-app.use(morgan('dev'));  // Log requests to console
+app.use(morgan('dev'));  
 
-// Serve uploaded images from the "public/uploads" directory
+// Serve uploaded images and static files
 app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
-app.use(express.static('public')); // Serve static files from "public" directory
+app.use(express.static('public')); 
 
-// APPLY THE GLOBAL API LOGGER HERE
 app.use(apiLogger);
 
-// SECURITY: CSRF PROTECTION & RATE LIMITING
+// ==========================================
+// 2. SECURITY: CSRF PROTECTION & RATE LIMITING
+// ==========================================
 // CSRF Protection Middleware
 const csrfProtection = csrf({ 
     cookie: {
@@ -72,10 +76,9 @@ const csrfProtection = csrf({
     } 
 });
 
-// Apply CSRF to all routes below (GET requests pass freely, POST/PUT/DELETE require a token)
 app.use(csrfProtection);
 
-// Endpoint for the React frontend to grab the CSRF token
+// Endpoint for React to grab the CSRF token
 app.get('/api/csrf-token', (req, res) => {
     res.json({ csrfToken: req.csrfToken() });
 });
@@ -87,37 +90,38 @@ const apiLimiter = rateLimit({
     message: { error: 'Too many requests from this IP, please try again after 15 minutes' }
 });
 
+// ==========================================
+// 3. ROUTES & SWAGGER
+// ==========================================
+// Serve the Swagger UI Documentation
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-// ==========================================
-// 2. ROUTES
-// ==========================================
 // Basic Test Route
 app.get('/', (req, res) => {
   res.json({ message: 'Welcome to the AlumniVantage API' });
 });
 
-app.use('/api/auth', authRoutes); // Auth Routes
+app.use('/api/auth', authRoutes); 
 app.use('/api/profile', apiLimiter, profileRoutes); // 👈 Protected by Rate Limiter
 app.use('/api/bids', apiLimiter, bidRoutes); // 👈 Protected by Rate Limiter
-app.use('/api/public', publicRoutes); // Public Routes (e.g., featured alumnus)
+app.use('/api/public', publicRoutes); // Public Developer API
 
 // ==========================================
-// CSRF ERROR HANDLER (Makes errors look clean)
+// 4. ERROR HANDLING
 // ==========================================
+// CSRF Error Handler
 app.use((err, req, res, next) => {
   if (err.code !== 'EBADCSRFTOKEN') return next(err);
-  // Handle CSRF token errors
   res.status(403).json({ error: 'Form tampered with or session expired. Invalid CSRF token.' });
 });
 
 // ==========================================
-// 3. START SERVER
+// 5. START SERVER
 // ==========================================
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, async () => {
   try {
-    // Test DB Connection
     await db.query('SELECT 1');
     console.log(`Database Connected & Server running on http://localhost:${PORT}`);
   } catch (err) {

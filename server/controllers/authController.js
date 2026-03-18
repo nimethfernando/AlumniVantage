@@ -44,9 +44,6 @@ exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // NOTE: `if(!email || !password)` check removed because 
-    // express-validator handles it in authRoutes.js!
-
     // Find User
     const user = await User.findByEmail(email);
     if (!user) {
@@ -155,17 +152,32 @@ exports.forgotPassword = async (req, res) => {
     const { email } = req.body;
     const user = await User.findByEmail(email);
 
+    // SECURITY BEST PRACTICE: Standardize the message so attackers can't guess emails
+    const standardMessage = "If that email exists, a reset link has been sent.";
+
     if (!user) {
-      return res.json({ message: "If that email exists, a reset link has been sent." });
+      return res.json({ message: standardMessage });
     }
 
     const resetToken = crypto.randomBytes(32).toString('hex');
     await User.saveResetToken(email, resetToken);
 
-    // CALL THE EMAIL SERVICE HERE
+    // ==========================================
+    // ACTION 1: THE DEV HACK (Print to console)
+    // ==========================================
+    if (process.env.NODE_ENV !== 'production') {
+        console.log("\n============================================");
+        console.log(`🔑 DEV RESET TOKEN FOR ${email}:`);
+        console.log(resetToken);
+        console.log("============================================\n");
+    }
+
+    // ==========================================
+    // ACTION 2: THE REAL FEATURE (Send the email)
+    // ==========================================
     await sendResetEmail(email, resetToken);
 
-    res.json({ message: "Password reset link sent to your email." });
+    res.json({ message: standardMessage });
 
   } catch (error) {
     console.error(error);
@@ -175,7 +187,9 @@ exports.forgotPassword = async (req, res) => {
 
 exports.resetPassword = async (req, res) => {
   try {
-    const { token } = req.params;
+    // NOTE: Express Validator passes parameters via req.params, but depending on your setup 
+    // it might be in req.body. Checking both just in case!
+    const token = req.params.token || req.body.token; 
     const { newPassword } = req.body;
 
     const user = await User.findByResetToken(token);

@@ -1,0 +1,264 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "AlumniVantage API",
+    "version": "1.0.0",
+    "description": "API documentation for the Phantasmagoria Alumni Influencer Platform. Includes public AR endpoints and secure authenticated routes."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Development Server"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-api-key",
+        "description": "Developer API Key required for AR Client public routes."
+      },
+      "cookieAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "token",
+        "description": "Standard JWT authentication stored in an httpOnly cookie."
+      },
+      "csrfAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "CSRF-Token",
+        "description": "CSRF Token required for all POST, PUT, and DELETE requests."
+      }
+    }
+  },
+  "paths": {
+    "/": {
+      "get": {
+        "summary": "API Health Check",
+        "tags": ["General"],
+        "responses": {
+          "200": { "description": "Welcome to the AlumniVantage API" }
+        }
+      }
+    },
+    "/api/csrf-token": {
+      "get": {
+        "summary": "Fetch CSRF Token",
+        "description": "Retrieves a CSRF token to be used in the headers of subsequent state-changing requests.",
+        "tags": ["Security"],
+        "responses": {
+          "200": { "description": "Successfully retrieved CSRF token." }
+        }
+      }
+    },
+    "/api/public/featured-alumnus": {
+      "get": {
+        "summary": "Get today's featured alumnus",
+        "description": "Retrieves the profile of the alumnus who won the daily bid. Designed for the AR Client.",
+        "tags": ["Public Developer API"],
+        "security": [ { "ApiKeyAuth": [] } ],
+        "responses": {
+          "200": { "description": "Successfully retrieved the featured alumnus." },
+          "401": { "description": "Access denied. API Key is missing." }
+        }
+      }
+    },
+    "/api/auth/register": {
+      "post": {
+        "summary": "Register a new user",
+        "tags": ["Authentication"],
+        "security": [ { "csrfAuth": [] } ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "first_name": { "type": "string" },
+                  "last_name": { "type": "string" },
+                  "email": { "type": "string" },
+                  "password": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "User successfully registered." }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "summary": "User Login",
+        "tags": ["Authentication"],
+        "security": [ { "csrfAuth": [] } ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": { "type": "string" },
+                  "password": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Successfully logged in. JWT set in cookie." }
+        }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "summary": "User Logout",
+        "description": "Clears the JWT authentication cookie.",
+        "tags": ["Authentication"],
+        "security": [ { "csrfAuth": [] } ],
+        "responses": {
+          "200": { "description": "Successfully logged out." }
+        }
+      }
+    },
+    "/api/auth/forgot-password": {
+      "post": {
+        "summary": "Request Password Reset",
+        "tags": ["Authentication"],
+        "security": [ { "csrfAuth": [] } ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Password reset email sent." }
+        }
+      }
+    },
+    "/api/auth/reset-password/{token}": {
+      "post": {
+        "summary": "Reset Password",
+        "description": "Submit the token received via terminal/email to create a new password.",
+        "tags": ["Authentication"],
+        "security": [
+          { "csrfAuth": [] }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Paste the 🔑 DEV RESET TOKEN from your terminal here"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "newPassword": { 
+                    "type": "string",
+                    "example": "NewStrongPass123!"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Password successfully reset." },
+          "400": { "description": "Invalid or expired reset token." }
+        }
+      }
+    },
+    "/api/profile": {
+      "get": {
+        "summary": "Get Current User Profile",
+        "tags": ["Profiles"],
+        "security": [ { "cookieAuth": [] } ],
+        "responses": {
+          "200": { "description": "Profile data retrieved successfully." }
+        }
+      },
+      "put": {
+        "summary": "Update User Profile",
+        "tags": ["Profiles"],
+        "security": [
+          { "cookieAuth": [] },
+          { "csrfAuth": [] }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "bio": { "type": "string" },
+                  "linkedin_url": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Profile updated successfully." }
+        }
+      }
+    },
+    "/api/bids": {
+      "get": {
+        "summary": "Get current bid status",
+        "tags": ["Bidding System"],
+        "security": [ { "cookieAuth": [] } ],
+        "responses": {
+          "200": { "description": "Successfully fetched bidding information." }
+        }
+      },
+      "post": {
+        "summary": "Submit a new bid",
+        "tags": ["Bidding System"],
+        "security": [
+          { "cookieAuth": [] },
+          { "csrfAuth": [] }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "bid_amount": { "type": "number" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Bid successfully placed." },
+          "429": { "description": "Too many requests. Rate limit exceeded." }
+        }
+      }
+    }
+  }
+}

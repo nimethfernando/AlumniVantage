@@ -1,18 +1,18 @@
 const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
-const { body } = require('express-validator');
+const { body, param } = require('express-validator');
 const validateRequest = require('../middleware/validateRequest');
 const rateLimit = require('express-rate-limit');
 
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  windowMs: 15 * 60 * 1000, 
+  max: 100, 
   message: {
     error: "Too many requests from this IP, please try again after 15 minutes."
   },
-  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  standardHeaders: true, 
+  legacyHeaders: false, 
 });
 
 const registerValidationRules = [
@@ -20,7 +20,7 @@ const registerValidationRules = [
     .trim()
     .notEmpty().withMessage('Email is required.')
     .isEmail().withMessage('Please provide a valid email format.')
-    .normalizeEmail() // Sanitization: lowercases and standardizes the email
+    .normalizeEmail() 
     .custom((value) => {
         const lowerValue = value.toLowerCase();
         if (!lowerValue.endsWith('@my.westminster.ac.uk') && !lowerValue.endsWith('@westminster.ac.uk')) {
@@ -28,14 +28,13 @@ const registerValidationRules = [
         }
         return true;
     }),
-
   body('password')
     .trim()
     .notEmpty().withMessage('Password is required.')
     .isLength({ min: 8 }).withMessage('Password must be at least 8 characters long.')
     .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/)
     .withMessage('Password must contain 1 uppercase letter, 1 number, and 1 special character.')
-    .escape() // Sanitization: Escapes HTML characters to prevent XSS
+    .escape() 
 ];
 
 const loginValidationRules = [
@@ -59,6 +58,8 @@ const forgotPasswordValidationRules = [
 ];
 
 const resetPasswordValidationRules = [
+  param('token')
+    .notEmpty().withMessage('Token parameter is required.'),
   body('newPassword')
     .trim()
     .notEmpty().withMessage('New password is required.')
@@ -68,10 +69,12 @@ const resetPasswordValidationRules = [
     .escape()
 ];
 
-// All your auth routes:
-router.post('/register',registerValidationRules, validateRequest, authController.register);
+// Apply the rate limiter to all auth routes
+router.use(authLimiter);
+
+router.post('/register', registerValidationRules, validateRequest, authController.register);
 router.post('/login', loginValidationRules, validateRequest, authController.login);
-router.get('/verify/:token',forgotPasswordValidationRules, validateRequest, authController.verifyEmail);
+router.get('/verify/:token', validateRequest, authController.verifyEmail);
 router.post('/logout', authController.logout);
 router.post('/forgot-password', forgotPasswordValidationRules, validateRequest, authController.forgotPassword);
 router.post('/reset-password/:token', resetPasswordValidationRules, validateRequest, authController.resetPassword);
