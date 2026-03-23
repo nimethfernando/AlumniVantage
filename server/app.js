@@ -102,8 +102,8 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api/auth', authRoutes); 
-app.use('/api/profile', apiLimiter, profileRoutes); // 👈 Protected by Rate Limiter
-app.use('/api/bids', apiLimiter, bidRoutes); // 👈 Protected by Rate Limiter
+app.use('/api/profile', apiLimiter, profileRoutes); // Protected by Rate Limiter
+app.use('/api/bids', apiLimiter, bidRoutes); // Protected by Rate Limiter
 app.use('/api/public', publicRoutes); // Public Developer API
 
 // ==========================================
