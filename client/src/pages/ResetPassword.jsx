@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import axios from 'axios';
+import api from '../api/axiosConfig';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import '../App.css';
 
@@ -19,7 +19,7 @@ const ResetPassword = () => {
     setSuccess('');
     
     try {
-      await axios.post(`http://localhost:3000/api/auth/reset-password/${token}`, { newPassword: password });
+      await api.post(`/api/auth/reset-password/${token}`, { newPassword: password });
       setSuccess('Password Reset Successful! Redirecting to login...');
       
       // Give the user a second to read the success message before redirecting

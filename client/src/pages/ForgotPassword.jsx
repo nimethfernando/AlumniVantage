@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import axios from 'axios';
+import api from '../api/axiosConfig';
 import { Link } from 'react-router-dom';
 import '../App.css'; // Make sure CSS is imported
 
@@ -16,7 +16,7 @@ const ForgotPassword = () => {
     setSuccess('');
     
     try {
-      const res = await axios.post('http://localhost:3000/api/auth/forgot-password', { email });
+      const res = await api.post('/api/auth/forgot-password', { email });
       setSuccess(res.data.message || 'Password reset link sent to your email.');
       setEmail(''); // Clear input on success
     } catch (err) {

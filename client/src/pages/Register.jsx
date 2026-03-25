@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import axios from 'axios';
+import api from '../api/axiosConfig';
 import { Link } from 'react-router-dom';
-import '../App.css'; 
+import '../App.css';
 
 const Register = () => {
   const [email, setEmail] = useState('');
@@ -16,18 +16,21 @@ const Register = () => {
     setIsLoading(true);
     setError('');
     setSuccess('');
-    
+
     const lowerEmail = email.toLowerCase();
-    if (!lowerEmail.endsWith('@my.westminster.ac.uk') && !lowerEmail.endsWith('@westminster.ac.uk')) {
+    if (
+      !lowerEmail.endsWith('@my.westminster.ac.uk') &&
+      !lowerEmail.endsWith('@westminster.ac.uk')
+    ) {
       setError('Please use a valid Westminster University email address (@my.westminster.ac.uk).');
       setIsLoading(false);
       return;
     }
-    
+
     try {
-      await axios.post('http://localhost:3000/api/auth/register', { email, password });
+      await api.post('/api/auth/register', { email, password });
       setSuccess('Success! Check your terminal (or email) for the verification link.');
-      setEmail(''); 
+      setEmail('');
       setPassword('');
     } catch (err) {
       setError(err.response?.data?.error || 'Registration failed.');
@@ -46,28 +49,47 @@ const Register = () => {
         <form onSubmit={handleSubmit} className="custom-form">
           <div className="form-group">
             <label>Email Address</label>
-            <input type="email" placeholder="you@my.westminster.ac.uk" value={email} onChange={e => setEmail(e.target.value)} required />
+            <input
+              type="email"
+              placeholder="you@my.westminster.ac.uk"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
           </div>
+
           <div className="form-group">
             <label>Password</label>
-            <input 
-              type={showPassword ? "text" : "password"} 
-              placeholder="••••••••" 
+            <input
+              type={showPassword ? 'text' : 'password'}
+              placeholder="••••••••"
               value={password}
-              onChange={e => setPassword(e.target.value)} 
+              onChange={(e) => setPassword(e.target.value)}
               required
             />
             <div className="show-password-container">
-              <input type="checkbox" id="show-password" checked={showPassword} onChange={() => setShowPassword(!showPassword)} />
+              <input
+                type="checkbox"
+                id="show-password"
+                checked={showPassword}
+                onChange={() => setShowPassword(!showPassword)}
+              />
               <label htmlFor="show-password">Show Password</label>
             </div>
           </div>
+
           <button type="submit" className="btn-primary full-width" disabled={isLoading}>
             {isLoading ? 'Registering...' : 'Register'}
           </button>
         </form>
+
         <div className="auth-footer-links">
-          <p>Already have an account? <Link to="/login" className="text-link font-bold">Sign In</Link></p>
+          <p>
+            Already have an account?{' '}
+            <Link to="/login" className="text-link font-bold">
+              Sign In
+            </Link>
+          </p>
         </div>
       </div>
     </div>

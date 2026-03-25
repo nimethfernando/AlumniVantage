@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api/axiosConfig';
 import '../App.css'; 
 import BiddingSystem from '../components/BiddingSystem';
 
@@ -29,15 +29,13 @@ const Profile = () => {
   const [editingCourse, setEditingCourse] = useState(null);
   const [editingEmployment, setEditingEmployment] = useState(null);
 
-  axios.defaults.withCredentials = true;
-
   useEffect(() => {
     fetchProfile();
   }, []);
 
   const fetchProfile = async () => {
     try {
-      const res = await axios.get('http://localhost:3000/api/profile');
+      const res = await api.get('/api/profile');
       if (res.data.profile) setProfile(res.data.profile);
       if (res.data.degrees) setDegrees(res.data.degrees);
       if (res.data.certifications) {
@@ -65,7 +63,7 @@ const Profile = () => {
     if (image) formData.append('profile_image', image);
 
     try {
-      await axios.post('http://localhost:3000/api/profile', formData, {
+      await api.post('/api/profile', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       alert('Profile Updated Successfully!');
@@ -78,7 +76,7 @@ const Profile = () => {
   const handleAddDegree = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('http://localhost:3000/api/profile/degrees', newDegree);
+      await api.post('/api/profile/degrees', newDegree);
       setNewDegree({ degree_name: '', university_url: '', completion_date: '' }); 
       fetchProfile(); 
     } catch (err) {
@@ -89,7 +87,7 @@ const Profile = () => {
   const handleAddCertification = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('http://localhost:3000/api/profile/certifications', newCert);
+      await api.post('/api/profile/certifications', newCert);
       setNewCert({ cert_name: '', course_url: '', completion_date: '' }); 
       fetchProfile(); 
     } catch (err) {
@@ -100,7 +98,7 @@ const Profile = () => {
   const handleAddLicense = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('http://localhost:3000/api/profile/licenses', newLicense, {withCredentials: true});
+      await api.post('/api/profile/licenses', newLicense);
       setNewLicense({ license_name: '', awarding_body_url: '', completion_date: '' });
       fetchProfile();
     } catch (err) {
@@ -111,7 +109,7 @@ const Profile = () => {
   const handleAddShortCourse = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('http://localhost:3000/api/profile/courses', newShortCourse, {withCredentials: true}); 
+      await api.post('/api/profile/courses', newShortCourse);
       setNewShortCourse({ course_name: '', course_url: '', completion_date: '' });
       fetchProfile();
     } catch (err) {
@@ -122,10 +120,7 @@ const Profile = () => {
   const handleAddEmployment = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('http://localhost:3000/api/profile/employment', 
-        newEmployment,
-      {withCredentials: true}
-      );
+    await api.post('/api/profile/employment', newEmployment);
       setNewEmployment({ job_title: '', company_name: '', start_date: '', end_date: '' });
       fetchProfile();
     } catch (err) {
@@ -138,7 +133,7 @@ const Profile = () => {
   const handleDeleteDegree = async (id) => {
     if (!window.confirm('Are you sure you want to delete this degree?')) return;
     try {
-      await axios.delete(`http://localhost:3000/api/profile/degree/${id}`);
+      await api.delete(`/api/profile/degree/${id}`);
       fetchProfile(); 
     } catch (err) {
       alert('Error deleting degree');
@@ -148,7 +143,7 @@ const Profile = () => {
   const handleDeleteCertification = async (id) => {
     if (!window.confirm('Are you sure you want to delete this certification?')) return;
     try {
-      await axios.delete(`http://localhost:3000/api/profile/certification/${id}`);
+      await api.delete(`/api/profile/certification/${id}`);
       fetchProfile();
     } catch (err) {
       alert('Error deleting certification');
@@ -158,7 +153,7 @@ const Profile = () => {
   const handleDeleteLicense = async (id) => {
     if (!window.confirm('Are you sure you want to delete this license?')) return;
     try {
-      await axios.delete(`http://localhost:3000/api/profile/license/${id}`);
+      await api.delete(`/api/profile/license/${id}`);
       fetchProfile();
     } catch (err) {
       alert('Error deleting license');
@@ -168,7 +163,7 @@ const Profile = () => {
   const handleDeleteShortCourse = async (id) => {
     if (!window.confirm('Are you sure you want to delete this course?')) return;
     try {
-      await axios.delete(`http://localhost:3000/api/profile/course/${id}`);
+      await api.delete(`/api/profile/course/${id}`);
       fetchProfile();
     } catch (err) {
       alert('Error deleting short course');
@@ -178,7 +173,7 @@ const Profile = () => {
   const handleDeleteEmployment = async (id) => {
     if (!window.confirm('Are you sure you want to delete this employment record?')) return;
     try {
-      await axios.delete(`http://localhost:3000/api/profile/employment/${id}`);
+      await api.delete(`/api/profile/employment/${id}`);
       fetchProfile();
     } catch (err) {
       alert('Error deleting employment record');
@@ -189,7 +184,7 @@ const Profile = () => {
   const handleUpdateDegree = async (e, id) => {
     e.preventDefault();
     try {
-      await axios.put(`http://localhost:3000/api/profile/degree/${id}`, editingDegree);
+      await api.put(`/api/profile/degree/${id}`, editingDegree);
       setEditingDegree(null); fetchProfile();
     } catch (err) { alert('Error updating degree'); }
   };
@@ -197,7 +192,7 @@ const Profile = () => {
   const handleUpdateCert = async (e, id) => {
     e.preventDefault();
     try {
-      await axios.put(`http://localhost:3000/api/profile/certification/${id}`, editingCert);
+      await api.put(`/api/profile/certification/${id}`, editingCert);
       setEditingCert(null); fetchProfile();
     } catch (err) { alert('Error updating certification'); }
   };
@@ -205,7 +200,7 @@ const Profile = () => {
   const handleUpdateLicense = async (e, id) => {
     e.preventDefault();
     try {
-      await axios.put(`http://localhost:3000/api/profile/license/${id}`, editingLicense);
+      await api.put(`/api/profile/license/${id}`, editingLicense);
       setEditingLicense(null); fetchProfile();
     } catch (err) { alert('Error updating license'); }
   };
@@ -213,7 +208,7 @@ const Profile = () => {
   const handleUpdateCourse = async (e, id) => {
     e.preventDefault();
     try {
-      await axios.put(`http://localhost:3000/api/profile/course/${id}`, editingCourse);
+      await api.put(`/api/profile/course/${id}`, editingCourse);
       setEditingCourse(null); fetchProfile();
     } catch (err) { alert('Error updating course'); }
   };
@@ -221,7 +216,7 @@ const Profile = () => {
   const handleUpdateEmployment = async (e, id) => {
     e.preventDefault();
     try {
-      await axios.put(`http://localhost:3000/api/profile/employment/${id}`, editingEmployment);
+      await api.put(`/api/profile/employment/${id}`, editingEmployment);
       setEditingEmployment(null); fetchProfile();
     } catch (err) { alert('Error updating employment'); }
   };
