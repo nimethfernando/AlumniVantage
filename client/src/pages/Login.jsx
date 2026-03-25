@@ -1,13 +1,13 @@
 import { useState, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
-import axios from 'axios';
+import api from '../api/axiosConfig'; 
 import { useNavigate, Link } from 'react-router-dom';
 import '../App.css'; 
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false); // New state
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useContext(AuthContext);
@@ -18,10 +18,7 @@ const Login = () => {
     setIsLoading(true);
     setError('');
     try {
-      const res = await axios.post('http://localhost:3000/api/auth/login', 
-        { email, password },
-        { withCredentials: true }
-      );
+      const res = await api.post('/api/auth/login', { email, password });
       login(res.data.token); 
       navigate('/profile');  
     } catch (err) {
@@ -36,7 +33,7 @@ const Login = () => {
       <div className="auth-card">
         <h2>Welcome Back</h2>
         <p className="auth-subtitle">Sign in to continue to AlumniVantage</p>
-        {error && <div className="error-message">{error}</div>}
+        {error && <div className="error-message" style={{ color: 'red', marginBottom: '10px' }}>{error}</div>}
         <form onSubmit={handleSubmit} className="custom-form">
           <div className="form-group">
             <label>Email Address</label>
@@ -45,7 +42,7 @@ const Login = () => {
           <div className="form-group">
             <label>Password</label>
             <input 
-              type={showPassword ? "text" : "password"} // Dynamic type
+              type={showPassword ? "text" : "password"} 
               placeholder="••••••••" 
               value={password} 
               onChange={(e) => setPassword(e.target.value)} 
