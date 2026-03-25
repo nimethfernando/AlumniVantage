@@ -26,7 +26,6 @@ axios.interceptors.response.use(
     // 3. For all OTHER routes (like /profile), if we get a 401/403, force logout
     if (error.response && (error.response.status === 401 || error.response.status === 403)) {
       alert("Your session has expired. Please log in again.");
-      localStorage.removeItem('token');
       window.location.href = '/login'; 
     }
     

@@ -1,6 +1,6 @@
 // src/context/AuthContext.jsx
 import { createContext, useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api/axiosConfig';
 
 export const AuthContext = createContext();
 
@@ -9,25 +9,34 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // When the app starts, check if we have a token saved
-    const token = localStorage.getItem('token');
-    if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      setUser({ token }); 
-    }
-    setLoading(false);
+    // Check if user is authenticated using cookie
+    const checkAuth = async () => {
+      try {
+        await api.get('/api/profile');
+        setUser({ authenticated: true });
+      } catch (err) {
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkAuth();
   }, []);
 
-  const login = (token) => {
-    localStorage.setItem('token', token);
-    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-    setUser({ token });
+  const login = () => {
+    // cookie already set by backend
+    setUser({ authenticated: true });
   };
 
-  const logout = () => {
-    localStorage.removeItem('token');
-    delete axios.defaults.headers.common['Authorization'];
-    setUser(null);
+  const logout = async () => {
+    try {
+      await api.post('/api/auth/logout');
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setUser(null);
+    }
   };
 
   return (
