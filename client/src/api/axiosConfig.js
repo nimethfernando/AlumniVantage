@@ -1,20 +1,19 @@
 // src/api/axiosConfig.js
 import axios from 'axios';
 
+const BASE_URL = 'http://localhost:3000';
 const api = axios.create({
-  baseURL: 'http://localhost:3000',
-  withCredentials: true // Required to send cookies (like the JWT and CSRF session)
+  baseURL: BASE_URL,
+  withCredentials: true
 });
 
 // Intercept POST/PUT/DELETE requests to attach the CSRF token
 api.interceptors.request.use(async (config) => {
   if (['post', 'put', 'delete', 'patch'].includes(config.method)) {
     try {
-      // Ask the backend for a fresh token
-      const response = await axios.get('http://localhost:3000/api/csrf-token', {
+      const response = await axios.get(`${BASE_URL}/api/csrf-token`, {
         withCredentials: true
       });
-      // Attach the token to the header exactly as defined in your swagger.json
       config.headers['CSRF-Token'] = response.data.csrfToken;
     } catch (error) {
       console.error("Failed to fetch CSRF token", error);
