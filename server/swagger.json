@@ -31,6 +31,187 @@
         "name": "CSRF-Token",
         "description": "CSRF Token required for all POST, PUT, and DELETE requests."
       }
+    },
+    "schemas": {
+      "RegisterRequest": {
+        "type": "object",
+        "required": ["first_name", "last_name", "email", "password"],
+        "properties": {
+          "first_name": {
+            "type": "string",
+            "example": "Nimeth"
+          },
+          "last_name": {
+            "type": "string",
+            "example": "Fernando"
+          },
+          "email": {
+            "type": "string",
+            "example": "w1953182@my.westminster.ac.uk"
+          },
+          "password": {
+            "type": "string",
+            "example": "NewStrongPass123!"
+          }
+        }
+      },
+      "LoginRequest": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "w1953182@my.westminster.ac.uk"
+          },
+          "password": {
+            "type": "string",
+            "example": "NewStrongPass123!"
+          }
+        }
+      },
+      "ForgotPasswordRequest": {
+        "type": "object",
+        "required": ["email"],
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "w1953182@my.westminster.ac.uk"
+          }
+        }
+      },
+      "ResetPasswordRequest": {
+        "type": "object",
+        "required": ["newPassword"],
+        "properties": {
+          "newPassword": {
+            "type": "string",
+            "example": "NewStrongPass123!"
+          }
+        }
+      },
+      "ProfileUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "bio": {
+            "type": "string",
+            "example": "Software Engineering undergraduate interested in backend systems."
+          },
+          "linkedin_url": {
+            "type": "string",
+            "example": "https://linkedin.com/in/nimeth"
+          }
+        }
+      },
+      "DegreeRequest": {
+        "type": "object",
+        "required": ["degree_name", "completion_date"],
+        "properties": {
+          "degree_name": {
+            "type": "string",
+            "example": "BEng Software Engineering"
+          },
+          "university_url": {
+            "type": "string",
+            "example": "https://www.westminster.ac.uk"
+          },
+          "completion_date": {
+            "type": "string",
+            "format": "date",
+            "example": "2026-06-30"
+          }
+        }
+      },
+      "CertificationRequest": {
+        "type": "object",
+        "required": ["cert_name", "completion_date"],
+        "properties": {
+          "cert_name": {
+            "type": "string",
+            "example": "Azure Fundamentals"
+          },
+          "course_url": {
+            "type": "string",
+            "example": "https://learn.microsoft.com"
+          },
+          "completion_date": {
+            "type": "string",
+            "format": "date",
+            "example": "2025-11-10"
+          }
+        }
+      },
+      "LicenseRequest": {
+        "type": "object",
+        "required": ["license_name", "completion_date"],
+        "properties": {
+          "license_name": {
+            "type": "string",
+            "example": "Professional Cloud Architect"
+          },
+          "awarding_body_url": {
+            "type": "string",
+            "example": "https://cloud.google.com"
+          },
+          "completion_date": {
+            "type": "string",
+            "format": "date",
+            "example": "2025-12-15"
+          }
+        }
+      },
+      "CourseRequest": {
+        "type": "object",
+        "required": ["course_name", "completion_date"],
+        "properties": {
+          "course_name": {
+            "type": "string",
+            "example": "Advanced Node.js"
+          },
+          "course_url": {
+            "type": "string",
+            "example": "https://udemy.com"
+          },
+          "completion_date": {
+            "type": "string",
+            "format": "date",
+            "example": "2025-09-20"
+          }
+        }
+      },
+      "EmploymentRequest": {
+        "type": "object",
+        "required": ["job_title", "company_name", "start_date"],
+        "properties": {
+          "job_title": {
+            "type": "string",
+            "example": "Software Engineer Intern"
+          },
+          "company_name": {
+            "type": "string",
+            "example": "Orel IT"
+          },
+          "start_date": {
+            "type": "string",
+            "format": "date",
+            "example": "2025-01-01"
+          },
+          "end_date": {
+            "type": "string",
+            "format": "date",
+            "example": "2025-06-30"
+          }
+        }
+      },
+      "BidRequest": {
+        "type": "object",
+        "required": ["amount"],
+        "properties": {
+          "amount": {
+            "type": "number",
+            "example": 250
+          }
+        }
+      }
     }
   },
   "paths": {
@@ -39,7 +220,9 @@
         "summary": "API Health Check",
         "tags": ["General"],
         "responses": {
-          "200": { "description": "Welcome to the AlumniVantage API" }
+          "200": {
+            "description": "Welcome to the AlumniVantage API"
+          }
         }
       }
     },
@@ -49,7 +232,9 @@
         "description": "Retrieves a CSRF token to be used in the headers of subsequent state-changing requests.",
         "tags": ["Security"],
         "responses": {
-          "200": { "description": "Successfully retrieved CSRF token." }
+          "200": {
+            "description": "Successfully retrieved CSRF token."
+          }
         }
       }
     },
@@ -58,10 +243,18 @@
         "summary": "Get today's featured alumnus",
         "description": "Retrieves the profile of the alumnus who won the daily bid. Designed for the AR Client.",
         "tags": ["Public Developer API"],
-        "security": [ { "ApiKeyAuth": [] } ],
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
         "responses": {
-          "200": { "description": "Successfully retrieved the featured alumnus." },
-          "401": { "description": "Access denied. API Key is missing." }
+          "200": {
+            "description": "Successfully retrieved the featured alumnus."
+          },
+          "401": {
+            "description": "Access denied. API Key is missing."
+          }
         }
       }
     },
@@ -69,25 +262,28 @@
       "post": {
         "summary": "Register a new user",
         "tags": ["Authentication"],
-        "security": [ { "csrfAuth": [] } ],
+        "security": [
+          {
+            "csrfAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "first_name": { "type": "string" },
-                  "last_name": { "type": "string" },
-                  "email": { "type": "string" },
-                  "password": { "type": "string" }
-                }
+                "$ref": "#/components/schemas/RegisterRequest"
               }
             }
           }
         },
         "responses": {
-          "201": { "description": "User successfully registered." }
+          "201": {
+            "description": "User successfully registered."
+          },
+          "400": {
+            "description": "Validation failed."
+          }
         }
       }
     },
@@ -95,23 +291,28 @@
       "post": {
         "summary": "User Login",
         "tags": ["Authentication"],
-        "security": [ { "csrfAuth": [] } ],
+        "security": [
+          {
+            "csrfAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "email": { "type": "string" },
-                  "password": { "type": "string" }
-                }
+                "$ref": "#/components/schemas/LoginRequest"
               }
             }
           }
         },
         "responses": {
-          "200": { "description": "Successfully logged in. JWT set in cookie." }
+          "200": {
+            "description": "Successfully logged in. JWT set in cookie."
+          },
+          "401": {
+            "description": "Invalid email or password."
+          }
         }
       }
     },
@@ -120,9 +321,40 @@
         "summary": "User Logout",
         "description": "Clears the JWT authentication cookie.",
         "tags": ["Authentication"],
-        "security": [ { "csrfAuth": [] } ],
+        "security": [
+          {
+            "csrfAuth": []
+          }
+        ],
         "responses": {
-          "200": { "description": "Successfully logged out." }
+          "200": {
+            "description": "Successfully logged out."
+          }
+        }
+      }
+    },
+    "/api/auth/verify/{token}": {
+      "get": {
+        "summary": "Verify Email Address",
+        "tags": ["Authentication"],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Email verification token"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Email successfully verified."
+          },
+          "400": {
+            "description": "Invalid or expired verification token."
+          }
         }
       }
     },
@@ -130,22 +362,25 @@
       "post": {
         "summary": "Request Password Reset",
         "tags": ["Authentication"],
-        "security": [ { "csrfAuth": [] } ],
+        "security": [
+          {
+            "csrfAuth": []
+          }
+        ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "email": { "type": "string" }
-                }
+                "$ref": "#/components/schemas/ForgotPasswordRequest"
               }
             }
           }
         },
         "responses": {
-          "200": { "description": "Password reset email sent." }
+          "200": {
+            "description": "Password reset email sent."
+          }
         }
       }
     },
@@ -155,7 +390,9 @@
         "description": "Submit the token received via terminal/email to create a new password.",
         "tags": ["Authentication"],
         "security": [
-          { "csrfAuth": [] }
+          {
+            "csrfAuth": []
+          }
         ],
         "parameters": [
           {
@@ -165,7 +402,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "Paste the 🔑 DEV RESET TOKEN from your terminal here"
+            "description": "Reset token"
           }
         ],
         "requestBody": {
@@ -173,20 +410,18 @@
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "newPassword": { 
-                    "type": "string",
-                    "example": "NewStrongPass123!"
-                  }
-                }
+                "$ref": "#/components/schemas/ResetPasswordRequest"
               }
             }
           }
         },
         "responses": {
-          "200": { "description": "Password successfully reset." },
-          "400": { "description": "Invalid or expired reset token." }
+          "200": {
+            "description": "Password successfully reset."
+          },
+          "400": {
+            "description": "Invalid or expired reset token."
+          }
         }
       }
     },
@@ -194,69 +429,577 @@
       "get": {
         "summary": "Get Current User Profile",
         "tags": ["Profiles"],
-        "security": [ { "cookieAuth": [] } ],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
         "responses": {
-          "200": { "description": "Profile data retrieved successfully." }
+          "200": {
+            "description": "Profile data retrieved successfully."
+          }
         }
       },
-      "put": {
+      "post": {
         "summary": "Update User Profile",
         "tags": ["Profiles"],
         "security": [
-          { "cookieAuth": [] },
-          { "csrfAuth": [] }
+          {
+            "cookieAuth": []
+          },
+          {
+            "csrfAuth": []
+          }
         ],
         "requestBody": {
           "required": true,
           "content": {
-            "application/json": {
+            "multipart/form-data": {
               "schema": {
                 "type": "object",
                 "properties": {
-                  "bio": { "type": "string" },
-                  "linkedin_url": { "type": "string" }
+                  "bio": {
+                    "type": "string"
+                  },
+                  "linkedin_url": {
+                    "type": "string"
+                  },
+                  "profile_image": {
+                    "type": "string",
+                    "format": "binary"
+                  }
                 }
               }
             }
           }
         },
         "responses": {
-          "200": { "description": "Profile updated successfully." }
+          "200": {
+            "description": "Profile updated successfully."
+          }
+        }
+      }
+    },
+    "/api/profile/degrees": {
+      "post": {
+        "summary": "Add Degree",
+        "tags": ["Profiles"],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "csrfAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DegreeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Degree added successfully."
+          }
+        }
+      }
+    },
+    "/api/profile/degree/{id}": {
+      "put": {
+        "summary": "Update Degree",
+        "tags": ["Profiles"],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "csrfAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DegreeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Degree updated successfully."
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete Degree",
+        "tags": ["Profiles"],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "csrfAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Degree deleted successfully."
+          }
+        }
+      }
+    },
+    "/api/profile/certifications": {
+      "post": {
+        "summary": "Add Certification",
+        "tags": ["Profiles"],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "csrfAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CertificationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Certification added successfully."
+          }
+        }
+      }
+    },
+    "/api/profile/certification/{id}": {
+      "put": {
+        "summary": "Update Certification",
+        "tags": ["Profiles"],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "csrfAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CertificationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Certification updated successfully."
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete Certification",
+        "tags": ["Profiles"],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "csrfAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Certification deleted successfully."
+          }
+        }
+      }
+    },
+    "/api/profile/licenses": {
+      "post": {
+        "summary": "Add License",
+        "tags": ["Profiles"],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "csrfAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LicenseRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "License added successfully."
+          }
+        }
+      }
+    },
+    "/api/profile/license/{id}": {
+      "put": {
+        "summary": "Update License",
+        "tags": ["Profiles"],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "csrfAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LicenseRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "License updated successfully."
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete License",
+        "tags": ["Profiles"],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "csrfAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "License deleted successfully."
+          }
+        }
+      }
+    },
+    "/api/profile/courses": {
+      "post": {
+        "summary": "Add Professional Course",
+        "tags": ["Profiles"],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "csrfAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CourseRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Course added successfully."
+          }
+        }
+      }
+    },
+    "/api/profile/course/{id}": {
+      "put": {
+        "summary": "Update Professional Course",
+        "tags": ["Profiles"],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "csrfAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CourseRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Course updated successfully."
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete Professional Course",
+        "tags": ["Profiles"],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "csrfAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Course deleted successfully."
+          }
+        }
+      }
+    },
+    "/api/profile/employment": {
+      "post": {
+        "summary": "Add Employment History",
+        "tags": ["Profiles"],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "csrfAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmploymentRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Employment record added successfully."
+          }
+        }
+      }
+    },
+    "/api/profile/employment/{id}": {
+      "put": {
+        "summary": "Update Employment History",
+        "tags": ["Profiles"],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "csrfAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EmploymentRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Employment record updated successfully."
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete Employment History",
+        "tags": ["Profiles"],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "csrfAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Employment record deleted successfully."
+          }
+        }
+      }
+    },
+    "/api/bids/status": {
+      "get": {
+        "summary": "Get current bid status",
+        "tags": ["Bidding System"],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully fetched bidding information."
+          }
         }
       }
     },
     "/api/bids": {
-      "get": {
-        "summary": "Get current bid status",
-        "tags": ["Bidding System"],
-        "security": [ { "cookieAuth": [] } ],
-        "responses": {
-          "200": { "description": "Successfully fetched bidding information." }
-        }
-      },
       "post": {
         "summary": "Submit a new bid",
         "tags": ["Bidding System"],
         "security": [
-          { "cookieAuth": [] },
-          { "csrfAuth": [] }
+          {
+            "cookieAuth": []
+          },
+          {
+            "csrfAuth": []
+          }
         ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "bid_amount": { "type": "number" }
-                }
+                "$ref": "#/components/schemas/BidRequest"
               }
             }
           }
         },
         "responses": {
-          "201": { "description": "Bid successfully placed." },
-          "429": { "description": "Too many requests. Rate limit exceeded." }
+          "201": {
+            "description": "Bid successfully placed."
+          },
+          "429": {
+            "description": "Too many requests. Rate limit exceeded."
+          }
         }
       }
     }
