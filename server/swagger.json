@@ -322,6 +322,43 @@
         }
       }
     },
+    "/api/dev/api-keys/{id}/revoke": {
+      "put": {
+        "summary": "Revoke an API key",
+        "description": "Marks an API key as revoked so it can no longer be used.",
+        "tags": ["Developer API Keys"],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "csrfAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "ID of the API key to revoke"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "API key revoked successfully."
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "API key not found"
+          }
+        }
+      }
+    },
     "/api/auth/register": {
       "post": {
         "summary": "Register a new user",

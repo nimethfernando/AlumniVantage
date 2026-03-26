@@ -37,3 +37,18 @@ exports.getApiKeys = async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch API keys' });
   }
 };
+
+exports.revokeApiKey = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    await db.query(
+      "UPDATE api_keys SET is_revoked = 1 WHERE id = ?",
+      [id]
+    );
+
+    res.json({ message: "API key revoked successfully" });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to revoke API key" });
+  }
+};
