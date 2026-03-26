@@ -89,6 +89,15 @@
           }
         }
       },
+      "GenerateApiKeyRequest": {
+        "type": "object",
+        "properties": {
+          "client_name": {
+            "type": "string",
+            "example": "Eastminster AR Client"
+          }
+        }
+      },
       "ProfileUpdateRequest": {
         "type": "object",
         "properties": {
@@ -99,6 +108,10 @@
           "linkedin_url": {
             "type": "string",
             "example": "https://linkedin.com/in/nimeth"
+          },
+          "profile_image": {
+            "type": "string",
+            "format": "binary"
           }
         }
       },
@@ -254,6 +267,39 @@
           },
           "401": {
             "description": "Access denied. API Key is missing."
+          }
+        }
+      }
+    },
+    "/api/dev/api-keys": {
+      "post": {
+        "summary": "Generate API Key",
+        "description": "Creates a new developer API key for public client access.",
+        "tags": ["Developer API Keys"],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "csrfAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateApiKeyRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "API key generated successfully."
+          },
+          "401": {
+            "description": "Unauthorized. Login required."
           }
         }
       }

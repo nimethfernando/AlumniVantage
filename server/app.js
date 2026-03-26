@@ -5,6 +5,7 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
 const path = require('path');
+const apiKeyRoutes = require('./routes/apiKeyRoutes');
 
 // Swagger Documentation
 const swaggerUi = require('swagger-ui-express');
@@ -105,6 +106,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/profile', apiLimiter, profileRoutes); // Protected by Rate Limiter
 app.use('/api/bids', apiLimiter, bidRoutes); // Protected by Rate Limiter
 app.use('/api/public', publicRoutes); // Public Developer API
+app.use('/api/dev', apiKeyRoutes); // API Key Management Routes
 
 // ==========================================
 // 4. ERROR HANDLING
