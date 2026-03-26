@@ -6,5 +6,6 @@ const verifyToken = require('../middleware/authMiddleware');
 router.post('/api-keys', verifyToken, apiKeyController.generateApiKey);
 router.get('/api-keys', verifyToken, apiKeyController.getApiKeys);
 router.put('/api-keys/:id/revoke', verifyToken, apiKeyController.revokeApiKey);
+router.get('/api-keys/stats', verifyToken, apiKeyController.getApiKeyStats);
 
 module.exports = router;

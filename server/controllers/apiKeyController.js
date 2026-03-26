@@ -52,3 +52,25 @@ exports.revokeApiKey = async (req, res) => {
     res.status(500).json({ error: "Failed to revoke API key" });
   }
 };
+
+exports.getApiKeyStats = async (req, res) => {
+  try {
+    const [rows] = await pool.execute(`
+      SELECT 
+        id,
+        client_name,
+        usage_count,
+        last_used_at,
+        is_revoked,
+        created_at
+      FROM api_keys
+      ORDER BY created_at DESC
+    `);
+
+    res.json(rows);
+
+  } catch (error) {
+    console.error("STATS ERROR:", error);
+    res.status(500).json({ error: "Failed to fetch API key statistics" });
+  }
+};

@@ -322,6 +322,26 @@
         }
       }
     },
+    "/api/dev/api-keys/stats": {
+      "get": {
+        "summary": "View API Key Statistics",
+        "description": "Retrieves usage statistics for developer API keys, including last used time and usage count.",
+        "tags": ["Developer API Keys"],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved API key statistics."
+          },
+          "401": {
+            "description": "Unauthorized. Login required."
+          }
+        }
+      }
+    },
     "/api/dev/api-keys/{id}/revoke": {
       "put": {
         "summary": "Revoke an API key",
