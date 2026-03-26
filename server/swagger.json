@@ -302,6 +302,24 @@
             "description": "Unauthorized. Login required."
           }
         }
+      },
+      "get": {
+        "summary": "View API Keys List",
+        "description": "Retrieves the list of developer API keys.",
+        "tags": ["Developer API Keys"],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved API keys list."
+          },
+          "401": {
+            "description": "Unauthorized. Login required."
+          }
+        }
       }
     },
     "/api/auth/register": {
