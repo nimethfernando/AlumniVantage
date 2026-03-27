@@ -10,5 +10,7 @@ router.use(verifyToken);
 
 router.post('/', bidController.placeOrUpdateBid);
 router.get('/status', bidController.getBidStatus);
+router.get('/history', bidController.getBidHistory);
+router.delete('/cancel', bidController.cancelBid);
 
 module.exports = router;

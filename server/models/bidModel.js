@@ -1,11 +1,15 @@
 const pool = require('../config/db');
 
 class Bid {
+
   // Check how many features the user won this month
   static async getMonthlyWinCount(userId) {
     const [rows] = await pool.execute(`
-      SELECT COUNT(*) as count FROM featured_profiles 
-      WHERE user_id = ? AND MONTH(won_date) = MONTH(CURRENT_DATE()) AND YEAR(won_date) = YEAR(CURRENT_DATE())
+      SELECT COUNT(*) as count 
+      FROM featured_profiles 
+      WHERE user_id = ? 
+      AND MONTH(won_date) = MONTH(CURRENT_DATE()) 
+      AND YEAR(won_date) = YEAR(CURRENT_DATE())
     `, [userId]);
     return rows[0].count;
   }
@@ -31,10 +35,41 @@ class Bid {
   // Update a bid (only if the new amount is higher)
   static async increaseBid(bidId, newAmount) {
     const [result] = await pool.execute(
-      'UPDATE bids SET bid_amount = ? WHERE id = ? AND bid_amount < ? AND status = "pending"',
+      `UPDATE bids 
+       SET bid_amount = ? 
+       WHERE id = ? 
+       AND bid_amount < ? 
+       AND status = "pending"`,
       [newAmount, bidId, newAmount]
     );
     return result.affectedRows > 0;
   }
+
+  // Get bidding history for a user
+  static async getBidHistoryByUser(userId) {
+    const [rows] = await pool.execute(
+      `SELECT id, bid_amount, status, created_at
+       FROM bids
+       WHERE user_id = ?
+       ORDER BY created_at DESC`,
+      [userId]
+    );
+
+    return rows;
+  }
+
+  // Cancel pending bid
+static async cancelBid(bidId, userId) {
+  const [result] = await pool.execute(
+    `UPDATE bids 
+     SET status = 'cancelled'
+     WHERE id = ? 
+     AND user_id = ? 
+     AND status = 'pending'`,
+    [bidId, userId]
+  );
+
+  return result.affectedRows > 0;
+}
 }
 module.exports = Bid;
