@@ -26,7 +26,7 @@ exports.generateApiKey = async (req, res) => {
 exports.getApiKeys = async (req, res) => {
   try {
     const [rows] = await db.query(
-      `SELECT id, client_name, scope, created_at, is_revoked
+      `SELECT id, client_name, created_at
        FROM api_keys
        ORDER BY created_at DESC`
     );
@@ -42,10 +42,13 @@ exports.revokeApiKey = async (req, res) => {
   try {
     const { id } = req.params;
 
-    await db.query(
+    const [result] = await db.query(
       'UPDATE api_keys SET is_revoked = 1 WHERE id = ?',
       [id]
     );
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'API key not found' });
+    }
 
     res.json({ message: 'API key revoked successfully' });
   } catch (error) {
@@ -54,23 +57,30 @@ exports.revokeApiKey = async (req, res) => {
   }
 };
 
-exports.getApiKeyStats = async (req, res) => {
+// NEW: Get API key statistics by ID
+exports.getApiKeyStatsById = async (req, res) => {
   try {
+    const { id } = req.params;
+
     const [rows] = await db.query(
       `SELECT 
-         id,
-         client_name,
-         usage_count,
-         last_used_at,
-         is_revoked,
-         created_at
+          client_name,
+          api_key,
+          is_revoked,
+          created_at,
+          last_used_at
        FROM api_keys
-       ORDER BY created_at DESC`
+       WHERE id = ?`,
+      [id]
     );
 
-    res.status(200).json(rows);
+    if (rows.length === 0) {
+      return res.status(404).json({ error: 'API key not found' });
+    }
+
+    res.status(200).json(rows[0]);
   } catch (error) {
-    console.error('STATS ERROR:', error);
+    console.error('Get API key stats by ID error:', error);
     res.status(500).json({ error: 'Failed to fetch API key statistics' });
   }
 };

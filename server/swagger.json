@@ -254,6 +254,52 @@
             "example": 250
           }
         }
+      },
+      "ApiKeyListItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 1
+          },
+          "client_name": {
+            "type": "string",
+            "example": "Eastminster AR Client"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-03-28T10:30:00.000Z"
+          }
+        }
+      },
+      "ApiKeyStatsItem": {
+        "type": "object",
+        "properties": {
+          "client_name": {
+            "type": "string",
+            "example": "Eastminster AR Client"
+          },
+          "api_key": {
+            "type": "string",
+            "example": "dev_key_a1b2c3d4e5f6g7h8"
+          },
+          "is_revoked": {
+            "type": "boolean",
+            "example": false
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-03-28T10:30:00.000Z"
+          },
+          "last_used_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "example": "2026-03-28T12:45:00.000Z"
+          }
+        }
       }
     }
   },
@@ -343,7 +389,7 @@
       },
       "get": {
         "summary": "View API Keys List",
-        "description": "Retrieves the list of developer API keys.",
+        "description": "Retrieves the list of developer API keys showing ID, name, and created date.",
         "tags": [
           "Developer API Keys"
         ],
@@ -354,7 +400,24 @@
         ],
         "responses": {
           "200": {
-            "description": "Successfully retrieved API keys list."
+            "description": "Successfully retrieved API keys list.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ApiKeyListItem"
+                  }
+                },
+                "example": [
+                  {
+                    "id": 1,
+                    "client_name": "Eastminster AR Client",
+                    "created_at": "2026-03-28T10:30:00.000Z"
+                  }
+                ]
+              }
+            }
           },
           "401": {
             "description": "Unauthorized. Login required."
@@ -362,10 +425,10 @@
         }
       }
     },
-    "/api/dev/api-keys/stats": {
+    "/api/dev/api-keys/{id}/stats": {
       "get": {
-        "summary": "View API Key Statistics",
-        "description": "Retrieves usage statistics for developer API keys, including last used time and usage count.",
+        "summary": "View API Key Statistics by ID",
+        "description": "Retrieves statistics for a specific API key using its ID.",
         "tags": [
           "Developer API Keys"
         ],
@@ -374,12 +437,40 @@
             "cookieAuth": []
           }
         ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "ID of the API key"
+          }
+        ],
         "responses": {
           "200": {
-            "description": "Successfully retrieved API key statistics."
+            "description": "Successfully retrieved API key statistics.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiKeyStatsItem"
+                },
+                "example": {
+                  "client_name": "Eastminster AR Client",
+                  "api_key": "dev_key_a1b2c3d4e5f6g7h8",
+                  "is_revoked": false,
+                  "created_at": "2026-03-28T10:30:00.000Z",
+                  "last_used_at": "2026-03-28T12:45:00.000Z"
+                }
+              }
+            }
           },
           "401": {
             "description": "Unauthorized. Login required."
+          },
+          "404": {
+            "description": "API key not found."
           }
         }
       }
