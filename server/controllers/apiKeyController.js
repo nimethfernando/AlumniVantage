@@ -43,34 +43,34 @@ exports.revokeApiKey = async (req, res) => {
     const { id } = req.params;
 
     await db.query(
-      "UPDATE api_keys SET is_revoked = 1 WHERE id = ?",
+      'UPDATE api_keys SET is_revoked = 1 WHERE id = ?',
       [id]
     );
 
-    res.json({ message: "API key revoked successfully" });
+    res.json({ message: 'API key revoked successfully' });
   } catch (error) {
-    res.status(500).json({ error: "Failed to revoke API key" });
+    console.error('Revoke API key error:', error);
+    res.status(500).json({ error: 'Failed to revoke API key' });
   }
 };
 
 exports.getApiKeyStats = async (req, res) => {
   try {
-    const [rows] = await pool.execute(`
-      SELECT 
-        id,
-        client_name,
-        usage_count,
-        last_used_at,
-        is_revoked,
-        created_at
-      FROM api_keys
-      ORDER BY created_at DESC
-    `);
+    const [rows] = await db.query(
+      `SELECT 
+         id,
+         client_name,
+         usage_count,
+         last_used_at,
+         is_revoked,
+         created_at
+       FROM api_keys
+       ORDER BY created_at DESC`
+    );
 
-    res.json(rows);
-
+    res.status(200).json(rows);
   } catch (error) {
-    console.error("STATS ERROR:", error);
-    res.status(500).json({ error: "Failed to fetch API key statistics" });
+    console.error('STATS ERROR:', error);
+    res.status(500).json({ error: 'Failed to fetch API key statistics' });
   }
 };
