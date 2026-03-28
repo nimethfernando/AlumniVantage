@@ -15,7 +15,7 @@ exports.register = async (req, res) => {
       return res.status(400).json({ error: "Email already registered." });
     }
 
-    // Hash the Password (Security Mark: 5/5)
+    // Hash the Password
     const saltRounds = 10;
     const passwordHash = await bcrypt.hash(password, saltRounds);
 
@@ -26,12 +26,23 @@ exports.register = async (req, res) => {
     // Save to Database
     await User.create(email, passwordHash, verificationToken, expiresAt);
 
-    // Send Verification Email
+    // ==========================================
+    // ACTION 1: DEV PRINT TOKEN (LIKE RESET TOKEN)
+    // ==========================================
+    if (process.env.NODE_ENV !== 'production') {
+        console.log("\n============================================");
+        console.log(`🔑 DEV VERIFY TOKEN FOR ${email}:`);
+        console.log(verificationToken);
+        console.log("============================================\n");
+    }
+
+    // ==========================================
+    // ACTION 2: SEND EMAIL
+    // ==========================================
     await sendVerificationEmail(email, verificationToken);
 
     res.status(201).json({ 
-      message: "Registration successful! Please verify your email.",
-      verificationToken: verificationToken // Returning this for testing purposes
+      message: "Registration successful! Please verify your email."
     });
 
   } catch (error) {
