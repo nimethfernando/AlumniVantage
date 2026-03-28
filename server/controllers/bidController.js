@@ -25,7 +25,7 @@ exports.placeOrUpdateBid = async (req, res) => {
     const existingBid = await Bid.getPendingBidByUser(userId);
 
     if (existingBid) {
-      if (amount <= existingBid.bid_amount) {
+      if (parseFloat(amount) <= parseFloat(existingBid.bid_amount)) {
         return res.status(400).json({ message: "New bid must be higher than your current bid." });
       }
       
@@ -33,6 +33,7 @@ exports.placeOrUpdateBid = async (req, res) => {
       if (updated) {
         return res.status(200).json({ message: "Bid increased successfully." });
       }
+      return res.status(400).json({ message: "Unable to increase bid." });
     } else {
       await Bid.placeBid(userId, amount);
       return res.status(201).json({ message: "Blind bid placed successfully." });
@@ -56,20 +57,25 @@ exports.getBidStatus = async (req, res) => {
 
     // 2. Check if the user is currently the highest bidder (Winning/Losing feedback)
     let isWinning = false;
+    let bidStatus = "not winning";
     if (existingBid) {
       const [highestBid] = await pool.execute(
           'SELECT MAX(bid_amount) as max_bid FROM bids WHERE status = "pending"'
       );
       
-      if (highestBid[0].max_bid && parseFloat(existingBid.bid_amount) >= parseFloat(highestBid[0].max_bid)) {
+      const maxBid = highestBid[0].max_bid || 0;
+      if (maxBid && parseFloat(existingBid.bid_amount) >= parseFloat(maxBid)) {
           isWinning = true;
+          bidStatus = "winning";
       }
     }
 
     res.status(200).json({ 
-      current_bid: existingBid ? { ...existingBid, isWinning } : "No active bids",
-      features_used : winCount,
-      max_features: maxBids // Send max limit to the frontend
+      current_bid: existingBid ? { id: existingBid.id, user_id: existingBid.user_id, bid_amount: existingBid.bid_amount, created_at: existingBid.created_at, updated_at: existingBid.updated_at } : null,
+      bid_status: bidStatus,
+      isWinning,
+      features_used: winCount,
+      max_features: maxBids
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
