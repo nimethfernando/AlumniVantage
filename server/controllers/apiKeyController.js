@@ -57,18 +57,21 @@ exports.revokeApiKey = async (req, res) => {
   }
 };
 
-// NEW: Get API key statistics by ID
+// Get API key statistics by ID
 exports.getApiKeyStatsById = async (req, res) => {
   try {
     const { id } = req.params;
 
     const [rows] = await db.query(
       `SELECT 
+          id,
           client_name,
           api_key,
+          scope,
           is_revoked,
           created_at,
-          last_used_at
+          last_used_at,
+          usage_count
        FROM api_keys
        WHERE id = ?`,
       [id]
