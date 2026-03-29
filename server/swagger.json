@@ -697,7 +697,7 @@
       "get": {
         "summary": "Get Current User Profile",
         "tags": [
-          "Profiles"
+          "Profile"
         ],
         "security": [
           {
@@ -711,9 +711,9 @@
         }
       },
       "post": {
-        "summary": "Update User Profile",
+        "summary": "Create or Update User Profile",
         "tags": [
-          "Profiles"
+          "Profile"
         ],
         "security": [
           {
@@ -747,16 +747,35 @@
         },
         "responses": {
           "200": {
-            "description": "Profile updated successfully."
+            "description": "Profile created or updated successfully."
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete User Profile",
+        "tags": [
+          "Profile"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "csrfAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Profile deleted successfully."
           }
         }
       }
     },
     "/api/profile/degrees": {
       "post": {
-        "summary": "Add Degree",
+        "summary": "Create Degree",
         "tags": [
-          "Profiles"
+          "Degrees"
         ],
         "security": [
           {
@@ -784,10 +803,36 @@
       }
     },
     "/api/profile/degree/{id}": {
+      "get": {
+        "summary": "Get Degree by ID",
+        "tags": [
+          "Degrees"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Degree retrieved successfully."
+          }
+        }
+      },
       "put": {
         "summary": "Update Degree",
         "tags": [
-          "Profiles"
+          "Degrees"
         ],
         "security": [
           {
@@ -826,7 +871,7 @@
       "delete": {
         "summary": "Delete Degree",
         "tags": [
-          "Profiles"
+          "Degrees"
         ],
         "security": [
           {
@@ -855,9 +900,9 @@
     },
     "/api/profile/certifications": {
       "post": {
-        "summary": "Add Certification",
+        "summary": "Create Certification",
         "tags": [
-          "Profiles"
+          "Certifications"
         ],
         "security": [
           {
@@ -885,10 +930,36 @@
       }
     },
     "/api/profile/certification/{id}": {
+      "get": {
+        "summary": "Get Certification by ID",
+        "tags": [
+          "Certifications"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Certification retrieved successfully."
+          }
+        }
+      },
       "put": {
         "summary": "Update Certification",
         "tags": [
-          "Profiles"
+          "Certifications"
         ],
         "security": [
           {
@@ -927,7 +998,7 @@
       "delete": {
         "summary": "Delete Certification",
         "tags": [
-          "Profiles"
+          "Certifications"
         ],
         "security": [
           {
@@ -956,9 +1027,9 @@
     },
     "/api/profile/licenses": {
       "post": {
-        "summary": "Add License",
+        "summary": "Create License",
         "tags": [
-          "Profiles"
+          "Licenses"
         ],
         "security": [
           {
@@ -986,10 +1057,36 @@
       }
     },
     "/api/profile/license/{id}": {
+      "get": {
+        "summary": "Get License by ID",
+        "tags": [
+          "Licenses"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "License retrieved successfully."
+          }
+        }
+      },
       "put": {
         "summary": "Update License",
         "tags": [
-          "Profiles"
+          "Licenses"
         ],
         "security": [
           {
@@ -1028,7 +1125,7 @@
       "delete": {
         "summary": "Delete License",
         "tags": [
-          "Profiles"
+          "Licenses"
         ],
         "security": [
           {
@@ -1057,9 +1154,9 @@
     },
     "/api/profile/courses": {
       "post": {
-        "summary": "Add Professional Course",
+        "summary": "Create Professional Course",
         "tags": [
-          "Profiles"
+          "Courses"
         ],
         "security": [
           {
@@ -1087,10 +1184,36 @@
       }
     },
     "/api/profile/course/{id}": {
+      "get": {
+        "summary": "Get Course by ID",
+        "tags": [
+          "Courses"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Course retrieved successfully."
+          }
+        }
+      },
       "put": {
         "summary": "Update Professional Course",
         "tags": [
-          "Profiles"
+          "Courses"
         ],
         "security": [
           {
@@ -1129,7 +1252,7 @@
       "delete": {
         "summary": "Delete Professional Course",
         "tags": [
-          "Profiles"
+          "Courses"
         ],
         "security": [
           {
@@ -1158,9 +1281,9 @@
     },
     "/api/profile/employment": {
       "post": {
-        "summary": "Add Employment History",
+        "summary": "Create Employment History",
         "tags": [
-          "Profiles"
+          "Employment"
         ],
         "security": [
           {
@@ -1188,10 +1311,36 @@
       }
     },
     "/api/profile/employment/{id}": {
+      "get": {
+        "summary": "Get Employment History by ID",
+        "tags": [
+          "Employment"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Employment record retrieved successfully."
+          }
+        }
+      },
       "put": {
         "summary": "Update Employment History",
         "tags": [
-          "Profiles"
+          "Employment"
         ],
         "security": [
           {
@@ -1230,7 +1379,7 @@
       "delete": {
         "summary": "Delete Employment History",
         "tags": [
-          "Profiles"
+          "Employment"
         ],
         "security": [
           {
