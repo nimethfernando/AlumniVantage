@@ -1,6 +1,5 @@
 const nodemailer = require('nodemailer');
 
-
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -11,7 +10,8 @@ const transporter = nodemailer.createTransport({
 
  //SEND VERIFICATION EMAIL
 const sendVerificationEmail = async (userEmail, token) => {
-  const verificationUrl = `http://localhost:3000/api/auth/verify/${token}`;
+  const backendUrl = process.env.BACKEND_URL || 'http://localhost:3000';
+  const verificationUrl = `${backendUrl}/api/auth/verify/${token}`;
 
   const info = await transporter.sendMail({
     from: '"AlumniVantage Team" <nimeth45@gmail.com>',
@@ -30,7 +30,8 @@ const sendVerificationEmail = async (userEmail, token) => {
 
 // SEND RESET EMAIL
 const sendResetEmail = async (userEmail, token) => {
-  const resetUrl = `http://localhost:5173/reset-password/${token}`;
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+  const resetUrl = `${frontendUrl}/reset-password/${token}`;
 
   const info = await transporter.sendMail({
     from: '"AlumniVantage Team" <nimeth45@gmail.com>',

@@ -7,8 +7,8 @@
   },
   "servers": [
     {
-      "url": "http://localhost:3000",
-      "description": "Development Server"
+      "url": "BACKEND_URL_FROM_ENV",
+      "description": "Environment-based Server"
     }
   ],
   "components": {
@@ -303,7 +303,6 @@
             "type": "integer",
             "example": 12
           }
-
         }
       }
     }
@@ -503,8 +502,7 @@
             "required": true,
             "schema": {
               "type": "integer"
-            },
-            "description": "ID of the API key to revoke"
+            }
           }
         ],
         "responses": {

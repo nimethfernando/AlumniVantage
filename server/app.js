@@ -5,11 +5,11 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
 const path = require('path');
+const fs = require('fs');
 const apiKeyRoutes = require('./routes/apiKeyRoutes');
 
 // Swagger Documentation
 const swaggerUi = require('swagger-ui-express');
-const swaggerDocument = require('./swagger.json');
 
 // Security Packages
 const rateLimit = require('express-rate-limit');
@@ -30,6 +30,14 @@ const apiLogger = require('./middleware/apiLogger');
 
 const app = express();
 
+const PORT = process.env.PORT || 3000;
+const FRONTEND_URL = process.env.FRONTEND_URL;
+const BACKEND_URL = process.env.BACKEND_URL;
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || '')
+  .split(',')
+  .map(origin => origin.trim())
+  .filter(Boolean);
+
 // ==========================================
 // 1. GLOBAL MIDDLEWARE
 // ==========================================
@@ -38,10 +46,13 @@ app.use(helmet({
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
-            scriptSrc: ["'self'"], 
+            scriptSrc: ["'self'", "'unsafe-inline'"], 
             styleSrc: ["'self'", "'unsafe-inline'"], 
-            imgSrc: ["'self'", "data:", "http://localhost:3000", "http://localhost:5173"], 
-            connectSrc: ["'self'", "http://localhost:3000", "http://localhost:5173"],
+            imgSrc: ["'self'", 'data:', FRONTEND_URL, BACKEND_URL].filter(Boolean), 
+            connectSrc: ["'self'", FRONTEND_URL, BACKEND_URL].filter(Boolean),
+            fontSrc: ["'self'", 'https:', 'data:'],
+            objectSrc: ["'none'"],
+            frameAncestors: ["'self'"]
         },
     },
     crossOriginResourcePolicy: { policy: "cross-origin" }
@@ -53,14 +64,22 @@ app.use(cookieParser());
 
 // CORS setup
 app.use(cors({
-  origin: 'http://localhost:5173', 
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true); // allow Postman / Swagger / server-to-server
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error('Not allowed by CORS'));
+  },
   credentials: true 
 }));
 
 app.use(morgan('dev'));  
 
 // Serve uploaded images and static files
-app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(express.static('public')); 
 
 app.use(apiLogger);
@@ -94,8 +113,20 @@ const apiLimiter = rateLimit({
 // ==========================================
 // 3. ROUTES & SWAGGER
 // ==========================================
+// Load swagger dynamically and replace localhost URL
+const swaggerPath = path.join(__dirname, 'swagger.json');
+const swaggerDocument = JSON.parse(fs.readFileSync(swaggerPath, 'utf8'));
+
+if (swaggerDocument.servers && swaggerDocument.servers.length > 0) {
+  swaggerDocument.servers[0].url = BACKEND_URL || `http://localhost:${PORT}`;
+}
+
 // Serve the Swagger UI Documentation
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument, {
+  swaggerOptions: {
+    withCredentials: true
+  }
+}));
 
 // Basic Test Route
 app.get('/', (req, res) => {
@@ -120,12 +151,12 @@ app.use((err, req, res, next) => {
 // ==========================================
 // 5. START SERVER
 // ==========================================
-const PORT = process.env.PORT || 3000;
-
 app.listen(PORT, async () => {
   try {
     await db.query('SELECT 1');
-    console.log(`Database Connected & Server running on http://localhost:${PORT}`);
+    console.log(`Database Connected & Server running on port ${PORT}`);
+    console.log(`Frontend URL: ${FRONTEND_URL}`);
+    console.log(`Backend URL: ${BACKEND_URL}`);
   } catch (err) {
     console.error(' Database Connection Failed:', err.message);
   }
