@@ -8,6 +8,7 @@ const verifyToken = require('../middleware/authMiddleware');
 // Apply auth middleware to all bid routes
 router.use(verifyToken); 
 
+router.get('/tomorrow', bidController.getTomorrowSlot);
 router.post('/', bidController.placeOrUpdateBid);
 router.get('/status', bidController.getBidStatus);
 router.get('/history', bidController.getBidHistory);

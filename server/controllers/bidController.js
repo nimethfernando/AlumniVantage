@@ -1,6 +1,74 @@
 const Bid = require('../models/bidModel');
 const pool = require('../config/db'); // Added to run custom queries for status & limits
 
+exports.getTomorrowSlot = async (req, res) => {
+  const userId = req.user.userId;
+
+  try {
+    const now = new Date();
+    const cutoff = new Date(now);
+    cutoff.setHours(18, 0, 0, 0);
+
+    let slotDate = new Date(now);
+
+    if (now >= cutoff) {
+      // after 6PM → day after tomorrow
+      slotDate.setDate(slotDate.getDate() + 2);
+    } else {
+      // before 6PM → tomorrow
+      slotDate.setDate(slotDate.getDate() + 1);
+    }
+
+    const slot_date = slotDate.toISOString().split('T')[0];
+    const cutoffTime = cutoff.toISOString();
+
+    // Check if the user already has a pending bid
+    const existingBid = await Bid.getPendingBidByUser(userId);
+
+    // Monthly feature usage info
+    const winCount = await Bid.getMonthlyWinCount(userId);
+
+    // Check user event attendance to determine monthly limit
+    const [userRows] = await pool.execute(
+      'SELECT attended_event FROM users WHERE id = ?',
+      [userId]
+    );
+
+    const attendedEvent =
+      userRows.length > 0 && userRows[0].attended_event ? true : false;
+
+    const maxBids = attendedEvent ? 4 : 3;
+
+    // Slot is open only before 6 PM
+    const isOpen = now < cutoff;
+
+    return res.status(200).json({
+      slot_date: slot_date,
+      bidding_closes_at: cutoffTime,
+      slot_status: isOpen ? 'open' : 'closed',
+      already_bid: !!existingBid,
+      current_bid: existingBid
+        ? {
+            id: existingBid.id,
+            bid_amount: existingBid.bid_amount,
+            status: existingBid.status,
+            created_at: existingBid.created_at,
+            updated_at: existingBid.updated_at
+          }
+        : null,
+      features_used: winCount,
+      max_features: maxBids,
+      remaining_features: Math.max(maxBids - winCount, 0),
+      message: isOpen
+        ? 'Bidding is open for tomorrow’s featured alumni slot.'
+        : 'Bidding for tomorrow’s slot is closed after 6:00 PM.'
+    });
+  } catch (error) {
+    console.error('Get tomorrow slot error:', error);
+    res.status(500).json({ error: 'Failed to fetch tomorrow slot details' });
+  }
+};
+
 exports.placeOrUpdateBid = async (req, res) => {
   const { amount } = req.body;
   const userId = req.user.userId; 
