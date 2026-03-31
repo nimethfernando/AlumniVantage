@@ -12,7 +12,7 @@ cron.schedule('0 18 * * *', async () => {
     try {
         await connection.beginTransaction();
 
-        // FIX 1 & 2: Added JOIN to get emails instantly (fixes N+1), and added 'id ASC' for tie-breakers
+        // Added JOIN to get emails instantly (fixes N+1), and added 'id ASC' for tie-breakers
         const [bids] = await connection.execute(`
             SELECT b.*, u.email 
             FROM bids b
@@ -36,9 +36,9 @@ cron.schedule('0 18 * * *', async () => {
                 [winningBid.id]
             );
 
-            // Insert the winner into featured_profiles
+            // Insert the winner into featured_profiles as inactive first
             await connection.execute(
-                'INSERT INTO featured_profiles (user_id, won_date) VALUES (?, CURRENT_DATE())',
+                'INSERT INTO featured_profiles (user_id, won_date, is_active) VALUES (?, CURRENT_DATE(), 0)',
                 [winningBid.user_id]
             );
             
@@ -73,6 +73,27 @@ cron.schedule('0 18 * * *', async () => {
         connection.release();
     }
 }, {
-    // Set the timezone to ensure it runs at 6 PM London time
-    timezone: "Europe/London"
+    // Set the timezone to ensure it runs at 6 PM Sri Lanka time
+    timezone: "Asia/Colombo"
+});
+
+// Midnight Sri Lanka Time
+// - Activate the winner profile for display
+cron.schedule('0 0 * * *', async () => {
+    console.log('Running midnight activation...');
+
+    try {
+        await pool.execute(`
+            UPDATE featured_profiles
+            SET is_active = 1
+            WHERE won_date = CURRENT_DATE()
+              AND (is_active = 0 OR is_active IS NULL)
+        `);
+
+        console.log('Winner activated for today.');
+    } catch (error) {
+        console.error('Midnight activation error:', error);
+    }
+}, {
+    timezone: 'Asia/Colombo'
 });
