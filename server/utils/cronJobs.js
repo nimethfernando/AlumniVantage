@@ -12,13 +12,14 @@ cron.schedule('0 18 * * *', async () => {
     try {
         await connection.beginTransaction();
 
-        // Added JOIN to get emails instantly (fixes N+1), and added 'id ASC' for tie-breakers
+        // Added JOIN to get emails instantly (fixes N+1)
+        // Added appearance_count ASC for fairer tie-breaking, falling back to id ASC
         const [bids] = await connection.execute(`
-            SELECT b.*, u.email 
+            SELECT b.*, u.email, u.appearance_count
             FROM bids b
             JOIN users u ON b.user_id = u.id
             WHERE b.status = "pending" 
-            ORDER BY b.bid_amount DESC, b.id ASC
+            ORDER BY b.bid_amount DESC, u.appearance_count ASC, b.id ASC
         `);
 
         if (bids.length > 0) {
@@ -39,6 +40,12 @@ cron.schedule('0 18 * * *', async () => {
             // Insert the winner into featured_profiles as inactive first
             await connection.execute(
                 'INSERT INTO featured_profiles (user_id, won_date, is_active) VALUES (?, CURRENT_DATE(), 0)',
+                [winningBid.user_id]
+            );
+
+            // Update appearance count
+            await connection.execute(
+                'UPDATE users SET appearance_count = appearance_count + 1 WHERE id = ?',
                 [winningBid.user_id]
             );
             
@@ -93,6 +100,21 @@ cron.schedule('0 0 * * *', async () => {
         console.log('Winner activated for today.');
     } catch (error) {
         console.error('Midnight activation error:', error);
+    }
+}, {
+    timezone: 'Asia/Colombo'
+});
+
+// Monthly Reset: 1st of every month at midnight Sri Lanka Time
+// - Resets the appearance count for all users to 0
+cron.schedule('0 0 1 * *', async () => {
+    console.log('Running monthly appearance count reset...');
+    
+    try {
+        await pool.execute('UPDATE users SET appearance_count = 0');
+        console.log('Appearance counts reset successfully.');
+    } catch (error) {
+        console.error('Monthly reset error:', error);
     }
 }, {
     timezone: 'Asia/Colombo'
