@@ -44,6 +44,80 @@ exports.getProfile = async (req, res) => {
   }
 };
 
+exports.getProfileCompletionStatus = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+
+    // Fetch main profile
+    const [profileRows] = await pool.execute(
+      'SELECT * FROM profiles WHERE user_id = ?',
+      [userId]
+    );
+
+    const profile = profileRows[0] || {};
+
+    // Fetch related sections
+    const [degrees] = await pool.execute(
+      'SELECT id FROM degrees WHERE user_id = ? LIMIT 1',
+      [userId]
+    );
+
+    const [certifications] = await pool.execute(
+      'SELECT id FROM certifications WHERE user_id = ? LIMIT 1',
+      [userId]
+    );
+
+    const [licenses] = await pool.execute(
+      'SELECT id FROM licenses WHERE user_id = ? LIMIT 1',
+      [userId]
+    );
+
+    const [courses] = await pool.execute(
+      'SELECT id FROM short_courses WHERE user_id = ? LIMIT 1',
+      [userId]
+    );
+
+    const [employment] = await pool.execute(
+      'SELECT id FROM employment_history WHERE user_id = ? LIMIT 1',
+      [userId]
+    );
+
+    const checklist = [
+      { key: 'bio', completed: !!(profile.bio && profile.bio.trim()) },
+      { key: 'linkedin_url', completed: !!(profile.linkedin_url && profile.linkedin_url.trim()) },
+      { key: 'profile_image', completed: !!(profile.profile_image_url && profile.profile_image_url.trim()) },
+      { key: 'degrees', completed: degrees.length > 0 },
+      { key: 'certifications', completed: certifications.length > 0 },
+      { key: 'licenses', completed: licenses.length > 0 },
+      { key: 'courses', completed: courses.length > 0 },
+      { key: 'employment', completed: employment.length > 0 }
+    ];
+
+    const completed = checklist
+      .filter(item => item.completed)
+      .map(item => item.key);
+
+    const missing = checklist
+      .filter(item => !item.completed)
+      .map(item => item.key);
+
+    const completion_percentage = Math.round(
+      (completed.length / checklist.length) * 100
+    );
+
+    res.status(200).json({
+      completion_percentage,
+      completed,
+      missing,
+      total_sections: checklist.length,
+      completed_sections: completed.length
+    });
+  } catch (error) {
+    console.error('Get profile completion status error:', error);
+    res.status(500).json({ error: 'Failed to fetch profile completion status' });
+  }
+};
+
 exports.updateProfile = async (req, res) => {
   try {
     const userId = req.user.userId;

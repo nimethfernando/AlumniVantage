@@ -775,6 +775,28 @@
         }
       }
     },
+    "/api/profile/completion": {
+      "get": {
+        "summary": "Get Profile Completion Status",
+        "description": "Calculates the user's profile completion percentage and lists completed and missing profile sections.",
+        "tags": [
+          "Profile"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Profile completion status retrieved successfully."
+          },
+          "401": {
+            "description": "Unauthorized"
+          }
+        }
+      }
+    },
     "/api/profile/degrees": {
       "post": {
         "summary": "Create Degree",

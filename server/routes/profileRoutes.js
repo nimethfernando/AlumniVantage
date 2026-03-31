@@ -44,6 +44,7 @@ const employmentRules = [
 
 // ROUTES
 router.get('/', verifyToken, profileController.getProfile);
+router.get('/completion', verifyToken, profileController.getProfileCompletionStatus); // <-- NEW ROUTE ADDED HERE
 
 router.post('/', verifyToken, upload.single('profile_image'), profileRules, validateRequest, profileController.updateProfile);
 
