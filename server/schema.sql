@@ -1,9 +1,9 @@
 -- ========================================
 -- DROP DATABASE (for clean testing)
 -- ========================================
-DROP DATABASE IF EXISTS alumni_influencer;
-CREATE DATABASE alumni_influencer;
-USE alumni_influencer;
+DROP DATABASE IF EXISTS alumni_vantage;
+CREATE DATABASE alumni_vantage;
+USE alumni_vantage;
 
 -- ========================================
 -- USERS TABLE
