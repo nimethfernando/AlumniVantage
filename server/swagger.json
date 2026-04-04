@@ -831,11 +831,9 @@
             "description": "Degree added successfully."
           }
         }
-      }
-    },
-    "/api/profile/degree/{id}": {
+      },
       "get": {
-        "summary": "Get Degree by ID",
+        "summary": "Get All Degrees",
         "tags": [
           "Degrees"
         ],
@@ -844,22 +842,14 @@
             "cookieAuth": []
           }
         ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "integer"
-            }
-          }
-        ],
         "responses": {
           "200": {
-            "description": "Degree retrieved successfully."
+            "description": "Degrees retrieved successfully."
           }
         }
-      },
+      }
+    },
+    "/api/profile/degree/{id}": {
       "put": {
         "summary": "Update Degree",
         "tags": [
@@ -958,11 +948,9 @@
             "description": "Certification added successfully."
           }
         }
-      }
-    },
-    "/api/profile/certification/{id}": {
+      },
       "get": {
-        "summary": "Get Certification by ID",
+        "summary": "Get All Certifications",
         "tags": [
           "Certifications"
         ],
@@ -971,22 +959,14 @@
             "cookieAuth": []
           }
         ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "integer"
-            }
-          }
-        ],
         "responses": {
           "200": {
-            "description": "Certification retrieved successfully."
+            "description": "Certifications retrieved successfully."
           }
         }
-      },
+      }
+    },
+    "/api/profile/certification/{id}": {
       "put": {
         "summary": "Update Certification",
         "tags": [
@@ -1085,11 +1065,9 @@
             "description": "License added successfully."
           }
         }
-      }
-    },
-    "/api/profile/license/{id}": {
+      },
       "get": {
-        "summary": "Get License by ID",
+        "summary": "Get All Licenses",
         "tags": [
           "Licenses"
         ],
@@ -1098,22 +1076,14 @@
             "cookieAuth": []
           }
         ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "integer"
-            }
-          }
-        ],
         "responses": {
           "200": {
-            "description": "License retrieved successfully."
+            "description": "Licenses retrieved successfully."
           }
         }
-      },
+      }
+    },
+    "/api/profile/license/{id}": {
       "put": {
         "summary": "Update License",
         "tags": [
@@ -1212,11 +1182,9 @@
             "description": "Course added successfully."
           }
         }
-      }
-    },
-    "/api/profile/course/{id}": {
+      },
       "get": {
-        "summary": "Get Course by ID",
+        "summary": "Get All Courses",
         "tags": [
           "Courses"
         ],
@@ -1225,22 +1193,14 @@
             "cookieAuth": []
           }
         ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "integer"
-            }
-          }
-        ],
         "responses": {
           "200": {
-            "description": "Course retrieved successfully."
+            "description": "Courses retrieved successfully."
           }
         }
-      },
+      }
+    },
+    "/api/profile/course/{id}": {
       "put": {
         "summary": "Update Professional Course",
         "tags": [
@@ -1339,11 +1299,9 @@
             "description": "Employment record added successfully."
           }
         }
-      }
-    },
-    "/api/profile/employment/{id}": {
+      },
       "get": {
-        "summary": "Get Employment History by ID",
+        "summary": "Get All Employment History",
         "tags": [
           "Employment"
         ],
@@ -1352,22 +1310,14 @@
             "cookieAuth": []
           }
         ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "integer"
-            }
-          }
-        ],
         "responses": {
           "200": {
-            "description": "Employment record retrieved successfully."
+            "description": "Employment history retrieved successfully."
           }
         }
-      },
+      }
+    },
+    "/api/profile/employment/{id}": {
       "put": {
         "summary": "Update Employment History",
         "tags": [

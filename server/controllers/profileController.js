@@ -20,15 +20,15 @@ exports.getProfile = async (req, res) => {
     // Fetch Main Profile
     const [profile] = await pool.execute('SELECT * FROM profiles WHERE user_id = ?', [userId]);
     // Fetch Degrees
-    const [degrees] = await pool.execute('SELECT * FROM degrees WHERE user_id = ?', [userId]);
+    const [degrees] = await pool.execute('SELECT * FROM degrees WHERE user_id = ? ORDER BY completion_date DESC', [userId]);
     // Fetch Certifications
-    const [certifications] = await pool.execute('SELECT * FROM certifications WHERE user_id = ?', [userId]);
+    const [certifications] = await pool.execute('SELECT * FROM certifications WHERE user_id = ? ORDER BY issue_date DESC', [userId]);
     // Fetch Short Courses
-    const [courses] = await pool.execute('SELECT * FROM short_courses WHERE user_id = ?', [userId]);
+    const [courses] = await pool.execute('SELECT * FROM short_courses WHERE user_id = ? ORDER BY completion_date DESC', [userId]);
     // Fetch Employment History
     const [employment] = await pool.execute('SELECT * FROM employment_history WHERE user_id = ? ORDER BY start_date DESC', [userId]);
     // Fetch Licenses
-    const [licenses] = await pool.execute('SELECT * FROM licenses WHERE user_id = ?', [userId]);
+    const [licenses] = await pool.execute('SELECT * FROM licenses WHERE user_id = ? ORDER BY completion_date DESC', [userId]);
 
     res.json({
       profile: profile[0] || {},
@@ -115,6 +115,71 @@ exports.getProfileCompletionStatus = async (req, res) => {
   } catch (error) {
     console.error('Get profile completion status error:', error);
     res.status(500).json({ error: 'Failed to fetch profile completion status' });
+  }
+};
+
+exports.getDegrees = async (req, res) => {
+  try {
+    const [rows] = await pool.execute(
+      'SELECT * FROM degrees WHERE user_id = ? ORDER BY completion_date DESC',
+      [req.user.userId]
+    );
+    res.json(rows);
+  } catch (error) {
+    console.error('Get degrees error:', error);
+    res.status(500).json({ error: 'Failed to fetch degrees' });
+  }
+};
+
+exports.getCertifications = async (req, res) => {
+  try {
+    const [rows] = await pool.execute(
+      'SELECT * FROM certifications WHERE user_id = ? ORDER BY issue_date DESC',
+      [req.user.userId]
+    );
+    res.json(rows);
+  } catch (error) {
+    console.error('Get certifications error:', error);
+    res.status(500).json({ error: 'Failed to fetch certifications' });
+  }
+};
+
+exports.getLicenses = async (req, res) => {
+  try {
+    const [rows] = await pool.execute(
+      'SELECT * FROM licenses WHERE user_id = ? ORDER BY completion_date DESC',
+      [req.user.userId]
+    );
+    res.json(rows);
+  } catch (error) {
+    console.error('Get licenses error:', error);
+    res.status(500).json({ error: 'Failed to fetch licenses' });
+  }
+};
+
+exports.getCourses = async (req, res) => {
+  try {
+    const [rows] = await pool.execute(
+      'SELECT * FROM short_courses WHERE user_id = ? ORDER BY completion_date DESC',
+      [req.user.userId]
+    );
+    res.json(rows);
+  } catch (error) {
+    console.error('Get courses error:', error);
+    res.status(500).json({ error: 'Failed to fetch courses' });
+  }
+};
+
+exports.getEmployment = async (req, res) => {
+  try {
+    const [rows] = await pool.execute(
+      'SELECT * FROM employment_history WHERE user_id = ? ORDER BY start_date DESC',
+      [req.user.userId]
+    );
+    res.json(rows);
+  } catch (error) {
+    console.error('Get employment error:', error);
+    res.status(500).json({ error: 'Failed to fetch employment' });
   }
 };
 

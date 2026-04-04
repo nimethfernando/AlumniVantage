@@ -44,7 +44,12 @@ const employmentRules = [
 
 // ROUTES
 router.get('/', verifyToken, profileController.getProfile);
-router.get('/completion', verifyToken, profileController.getProfileCompletionStatus); // <-- NEW ROUTE ADDED HERE
+router.get('/completion', verifyToken, profileController.getProfileCompletionStatus);
+router.get('/degrees', verifyToken, profileController.getDegrees);
+router.get('/certifications', verifyToken, profileController.getCertifications);
+router.get('/licenses', verifyToken, profileController.getLicenses);
+router.get('/courses', verifyToken, profileController.getCourses);
+router.get('/employment', verifyToken, profileController.getEmployment);
 
 router.post('/', verifyToken, upload.single('profile_image'), profileRules, validateRequest, profileController.updateProfile);
 
