@@ -26,7 +26,7 @@ exports.generateApiKey = async (req, res) => {
 exports.getApiKeys = async (req, res) => {
   try {
     const [rows] = await db.query(
-      `SELECT id, client_name, created_at
+      `SELECT id, client_name, is_revoked, created_at
        FROM api_keys
        ORDER BY created_at DESC`
     );

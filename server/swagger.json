@@ -266,6 +266,10 @@
             "type": "string",
             "example": "Eastminster AR Client"
           },
+          "is_revoked": {
+            "type": "boolean",
+            "example": false
+          },
           "created_at": {
             "type": "string",
             "format": "date-time",
@@ -393,7 +397,7 @@
       },
       "get": {
         "summary": "View API Keys List",
-        "description": "Retrieves the list of developer API keys showing ID, name, and created date.",
+        "description": "Retrieves the list of developer API keys showing ID, name, revoked status, and created date.",
         "tags": [
           "Developer API Keys"
         ],
@@ -417,6 +421,7 @@
                   {
                     "id": 1,
                     "client_name": "Eastminster AR Client",
+                    "is_revoked": false,
                     "created_at": "2026-03-28T10:30:00.000Z"
                   }
                 ]
