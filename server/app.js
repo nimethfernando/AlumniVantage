@@ -20,6 +20,7 @@ const authRoutes = require('./routes/authRoutes');
 const profileRoutes = require('./routes/profileRoutes');
 const bidRoutes = require('./routes/bidRoutes');
 const publicRoutes = require('./routes/publicRoutes'); 
+const analyticsRoutes = require('./routes/analyticsRoutes'); // NEW: Import Analytics Routes
 
 // Import Database and Background Jobs
 const db = require('./config/db'); 
@@ -138,6 +139,7 @@ app.use('/api/profile', apiLimiter, profileRoutes); // Protected by Rate Limiter
 app.use('/api/bids', apiLimiter, bidRoutes); // Protected by Rate Limiter
 app.use('/api/public', publicRoutes); // Public Developer API
 app.use('/api/dev', apiKeyRoutes); // API Key Management Routes
+app.use('/api/analytics', apiLimiter, analyticsRoutes); // NEW: Protected Analytics Route
 
 // ==========================================
 // 4. ERROR HANDLING

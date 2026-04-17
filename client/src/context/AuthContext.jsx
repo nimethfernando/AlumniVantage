@@ -9,7 +9,6 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is authenticated using cookie
     const checkAuth = async () => {
       try {
         await api.get('/api/profile');
@@ -25,7 +24,6 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = () => {
-    // cookie already set by backend
     setUser({ authenticated: true });
   };
 
@@ -41,7 +39,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider value={{ user, login, logout, loading }}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 };

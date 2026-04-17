@@ -103,10 +103,22 @@
       },
       "GenerateApiKeyRequest": {
         "type": "object",
+        "required": [
+          "client_name",
+          "scope"
+        ],
         "properties": {
           "client_name": {
             "type": "string",
-            "example": "Eastminster AR Client"
+            "example": "University Analytics Dashboard"
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "read:analytics",
+              "read:alumni_of_day"
+            ],
+            "example": "read:analytics"
           }
         }
       },
@@ -264,7 +276,11 @@
           },
           "client_name": {
             "type": "string",
-            "example": "Eastminster AR Client"
+            "example": "University Analytics Dashboard"
+          },
+          "scope": {
+            "type": "string",
+            "example": "read:analytics"
           },
           "is_revoked": {
             "type": "boolean",
@@ -282,7 +298,11 @@
         "properties": {
           "client_name": {
             "type": "string",
-            "example": "Eastminster AR Client"
+            "example": "University Analytics Dashboard"
+          },
+          "scope": {
+            "type": "string",
+            "example": "read:analytics"
           },
           "api_key": {
             "type": "string",
@@ -364,7 +384,7 @@
     "/api/dev/api-keys": {
       "post": {
         "summary": "Generate API Key",
-        "description": "Creates a new developer API key for public client access.",
+        "description": "Creates a new scoped developer API key for client access.",
         "tags": [
           "Developer API Keys"
         ],
@@ -377,11 +397,15 @@
           }
         ],
         "requestBody": {
-          "required": false,
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/GenerateApiKeyRequest"
+              },
+              "example": {
+                "client_name": "University Analytics Dashboard",
+                "scope": "read:analytics"
               }
             }
           }
@@ -389,6 +413,9 @@
         "responses": {
           "201": {
             "description": "API key generated successfully."
+          },
+          "400": {
+            "description": "Validation failed."
           },
           "401": {
             "description": "Unauthorized. Login required."
@@ -420,7 +447,8 @@
                 "example": [
                   {
                     "id": 1,
-                    "client_name": "Eastminster AR Client",
+                    "client_name": "University Analytics Dashboard",
+                    "scope": "read:analytics",
                     "is_revoked": false,
                     "created_at": "2026-03-28T10:30:00.000Z"
                   }
@@ -466,7 +494,8 @@
                   "$ref": "#/components/schemas/ApiKeyStatsItem"
                 },
                 "example": {
-                  "client_name": "Eastminster AR Client",
+                  "client_name": "University Analytics Dashboard",
+                  "scope": "read:analytics",
                   "api_key": "dev_key_a1b2c3d4e5f6g7h8",
                   "is_revoked": false,
                   "created_at": "2026-03-28T10:30:00.000Z",
