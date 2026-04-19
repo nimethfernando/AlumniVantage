@@ -229,16 +229,18 @@ const Profile = () => {
   return (
     <div className="profile-container">
       <div className="profile-header">
-        {profile.profile_image_url ? (
-          <img 
-            src={`http://localhost:3000${profile.profile_image_url}`} 
-            alt="Profile" 
-            className="profile-image"
-          />
-        ) : (
-          <div className="profile-image-placeholder">No Image</div>
-        )}
-        <h2>Alumni Profile</h2>
+        <div className="profile-img-container">
+          {profile.profile_image_url ? (
+            <img 
+              src={`http://localhost:3000${profile.profile_image_url}`} 
+              alt="Profile" 
+              className="profile-image"
+            />
+          ) : (
+            <div className="profile-image-placeholder">No Image</div>
+          )}
+        </div>
+        <h2>{profile.name || 'Alumni Profile'}</h2>
       </div>
 
       <BiddingSystem />
