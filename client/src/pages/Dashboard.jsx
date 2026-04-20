@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import api from '../api/axiosConfig';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer,
-  PieChart, Pie, Cell, LineChart, Line, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar
+  PieChart, Pie, Cell, LineChart, Line, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar,
+  AreaChart, Area
 } from 'recharts';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -18,11 +19,20 @@ const Dashboard = () => {
     graduationDate: '',
     industrySector: ''
   });
-  const [skillsData, setSkillsData] = useState([]);
-  const [industryData, setIndustryData] = useState([]);
-  const [trendData, setTrendData] = useState([]);
+  
+  const [analytics, setAnalytics] = useState({
+    skillsGap: [],
+    industryEmployment: [],
+    employmentTrends: [],
+    topEmployers: [],
+    certificationsByCategory: [],
+    alumniByGraduationYear: [],
+    sectorDemand: [],
+    coursesPopularity: []
+  });
 
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
+  // Expanded color palette for the new charts
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658', '#8dd1e1', '#a4de6c'];
 
   useEffect(() => {
     fetchDashboardData();
@@ -40,14 +50,18 @@ const Dashboard = () => {
         }
       });
 
-      setSkillsData(response.data.skillsGap || []);
-      setIndustryData(response.data.industryEmployment || []);
-      setTrendData(response.data.employmentTrends || []);
+      setAnalytics({
+        skillsGap: response.data.skillsGap || [],
+        industryEmployment: response.data.industryEmployment || [],
+        employmentTrends: response.data.employmentTrends || [],
+        topEmployers: response.data.topEmployers || [],
+        certificationsByCategory: response.data.certificationsByCategory || [],
+        alumniByGraduationYear: response.data.alumniByGraduationYear || [],
+        sectorDemand: response.data.sectorDemand || [],
+        coursesPopularity: response.data.coursesPopularity || []
+      });
     } catch (err) {
       console.error('Error fetching analytics data:', err);
-      setSkillsData([]);
-      setIndustryData([]);
-      setTrendData([]);
       setError(err.response?.data?.error || 'Failed to load analytics data.');
     } finally {
       setLoading(false);
@@ -60,7 +74,7 @@ const Dashboard = () => {
 
   const exportPDF = async () => {
     const element = dashboardRef.current;
-    const canvas = await html2canvas(element);
+    const canvas = await html2canvas(element, { scale: 2 }); // Improved quality
     const data = canvas.toDataURL('image/png');
     const pdf = new jsPDF('p', 'mm', 'a4');
     const imgProperties = pdf.getImageProperties(data);
@@ -72,10 +86,16 @@ const Dashboard = () => {
 
   const exportCSV = () => {
     const csvData = [
-      ...skillsData.map(item => ({ chart: 'skillsGap', ...item })),
-      ...industryData.map(item => ({ chart: 'industryEmployment', ...item })),
-      ...trendData.map(item => ({ chart: 'employmentTrends', ...item }))
+      ...analytics.skillsGap.map(item => ({ chart: 'skillsGap', ...item })),
+      ...analytics.industryEmployment.map(item => ({ chart: 'industryEmployment', ...item })),
+      ...analytics.employmentTrends.map(item => ({ chart: 'employmentTrends', ...item })),
+      ...analytics.topEmployers.map(item => ({ chart: 'topEmployers', ...item })),
+      ...analytics.certificationsByCategory.map(item => ({ chart: 'certificationsByCategory', ...item })),
+      ...analytics.alumniByGraduationYear.map(item => ({ chart: 'alumniByGraduationYear', ...item })),
+      ...analytics.sectorDemand.map(item => ({ chart: 'sectorDemand', ...item })),
+      ...analytics.coursesPopularity.map(item => ({ chart: 'coursesPopularity', ...item }))
     ];
+    
     const csv = Papa.unparse(csvData);
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
@@ -121,13 +141,14 @@ const Dashboard = () => {
 
       {!loading && !error && (
         <div className="charts-grid" ref={dashboardRef}>
+          
           <div className="chart-card">
             <h3>Curriculum vs Alumni Skills Gap</h3>
             <ResponsiveContainer width="100%" height={300}>
-              <RadarChart cx="50%" cy="50%" outerRadius="80%" data={skillsData}>
+              <RadarChart data={analytics.skillsGap}>
                 <PolarGrid />
                 <PolarAngleAxis dataKey="subject" />
-                <PolarRadiusAxis angle={30} domain={[0, 100]} />
+                <PolarRadiusAxis />
                 <Radar name="University Taught" dataKey="university" stroke="#8884d8" fill="#8884d8" fillOpacity={0.6} />
                 <Radar name="Alumni Acquired" dataKey="alumni" stroke="#82ca9d" fill="#82ca9d" fillOpacity={0.6} />
                 <Legend />
@@ -140,8 +161,8 @@ const Dashboard = () => {
             <h3>Employment by Industry Sector</h3>
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
-                <Pie data={industryData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} label>
-                  {industryData.map((entry, index) => (
+                <Pie data={analytics.industryEmployment} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} label>
+                  {analytics.industryEmployment.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
@@ -154,30 +175,89 @@ const Dashboard = () => {
           <div className="chart-card">
             <h3>Post-Graduation Certification Trends</h3>
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={trendData}>
+              <LineChart data={analytics.employmentTrends}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="year" />
                 <YAxis />
                 <RechartsTooltip />
                 <Legend />
-                <Line type="monotone" dataKey="certified" stroke="#8884d8" activeDot={{ r: 8 }} />
+                <Line type="monotone" name="Employed" dataKey="employed" stroke="#82ca9d" activeDot={{ r: 8 }} />
+                <Line type="monotone" name="Certified" dataKey="certified" stroke="#8884d8" activeDot={{ r: 8 }} />
               </LineChart>
             </ResponsiveContainer>
           </div>
 
           <div className="chart-card">
-            <h3>Overall Employment Track</h3>
+            <h3>Top Employers</h3>
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={trendData}>
+              <BarChart data={analytics.topEmployers}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="employer" />
+                <YAxis />
+                <RechartsTooltip />
+                <Legend />
+                <Bar name="Alumni Count" dataKey="alumni_count" fill="#0088FE" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div className="chart-card">
+            <h3>Certifications by Category</h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie data={analytics.certificationsByCategory} dataKey="value" nameKey="category" innerRadius={60} outerRadius={110} label>
+                  {analytics.certificationsByCategory.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <RechartsTooltip />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div className="chart-card">
+            <h3>Alumni by Graduation Year</h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <AreaChart data={analytics.alumniByGraduationYear}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="year" />
                 <YAxis />
                 <RechartsTooltip />
                 <Legend />
-                <Bar dataKey="employed" fill="#82ca9d" />
+                <Area type="monotone" name="Total Alumni" dataKey="total" stroke="#ffc658" fill="#ffc658" fillOpacity={0.4} />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div className="chart-card">
+            <h3>Sector Demand</h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart layout="vertical" data={analytics.sectorDemand} margin={{ top: 10, right: 30, left: 40, bottom: 10 }}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis type="number" />
+                <YAxis dataKey="sector" type="category" width={100} />
+                <RechartsTooltip />
+                <Legend />
+                <Bar name="Demand" dataKey="value" fill="#8884d8" />
               </BarChart>
             </ResponsiveContainer>
           </div>
+
+          <div className="chart-card">
+            <h3>Popular Courses</h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <RadarChart cx="50%" cy="50%" outerRadius="80%" data={analytics.coursesPopularity}>
+                <PolarGrid />
+                <PolarAngleAxis dataKey="subject" />
+                <PolarRadiusAxis />
+                <Radar name="Popularity" dataKey="value" stroke="#ff7300" fill="#ff7300" fillOpacity={0.6} />
+                <RechartsTooltip />
+                <Legend />
+              </RadarChart>
+            </ResponsiveContainer>
+          </div>
+
         </div>
       )}
     </div>
