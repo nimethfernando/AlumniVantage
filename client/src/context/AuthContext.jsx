@@ -11,8 +11,9 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        await api.get('/api/profile');
-        setUser({ authenticated: true });
+        const res = await api.get('/api/profile');
+        // Include the data from the backend (which should contain the role)
+        setUser({ authenticated: true, ...res.data });
       } catch (err) {
         setUser(null);
       } finally {
@@ -23,8 +24,9 @@ export const AuthProvider = ({ children }) => {
     checkAuth();
   }, []);
 
-  const login = () => {
-    setUser({ authenticated: true });
+  // Update login to accept user data
+  const login = (userData) => {
+    setUser({ authenticated: true, ...userData });
   };
 
   const logout = async () => {

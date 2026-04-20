@@ -1,4 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { AuthContext } from '../context/AuthContext';
 import api from '../api/axiosConfig';
 import '../App.css'; 
 import BiddingSystem from '../components/BiddingSystem';
@@ -29,6 +31,10 @@ const Profile = () => {
   const [editingCourse, setEditingCourse] = useState(null);
   const [editingEmployment, setEditingEmployment] = useState(null);
 
+  // --- AUTH & NAVIGATION ---
+  const { logout } = useContext(AuthContext);
+  const navigate = useNavigate();
+
   useEffect(() => {
     fetchProfile();
   }, []);
@@ -53,6 +59,11 @@ const Profile = () => {
     } catch (err) {
       console.error("Failed to fetch profile");
     }
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
   };
 
   const handleProfileSubmit = async (e) => {
@@ -228,19 +239,42 @@ const Profile = () => {
 
   return (
     <div className="profile-container">
-      <div className="profile-header">
-        <div className="profile-img-container">
-          {profile.profile_image_url ? (
-            <img 
-              src={`http://localhost:3000${profile.profile_image_url}`} 
-              alt="Profile" 
-              className="profile-image"
-            />
-          ) : (
-            <div className="profile-image-placeholder">No Image</div>
-          )}
+      <div className="profile-header" style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px' }}>
+        
+        {/* Centered Profile Info */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+          <div className="profile-img-container">
+            {profile.profile_image_url ? (
+              <img 
+                src={`http://localhost:3000${profile.profile_image_url}`} 
+                alt="Profile" 
+                className="profile-image"
+              />
+            ) : (
+              <div className="profile-image-placeholder">No Image</div>
+            )}
+          </div>
+          <h2>{profile.name || 'Alumni Profile'}</h2>
         </div>
-        <h2>{profile.name || 'Alumni Profile'}</h2>
+
+        {/* Top-Right Logout Button */}
+        <button 
+          onClick={handleLogout} 
+          className="btn-secondary" 
+          style={{ 
+            position: 'absolute', 
+            top: '20px', 
+            right: '20px', 
+            backgroundColor: '#dc3545', 
+            color: 'white', 
+            border: 'none', 
+            padding: '0.6rem 1.2rem', 
+            cursor: 'pointer', 
+            borderRadius: '4px' 
+          }}
+        >
+          Logout
+        </button>
       </div>
 
       <BiddingSystem />

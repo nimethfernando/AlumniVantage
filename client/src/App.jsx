@@ -87,7 +87,7 @@ function App() {
           <Route
             path="/dashboard"
             element={
-              <RoleRoute allowedRoles={['developer', 'admin', 'university']}>
+              <RoleRoute allowedRoles={['developer']}>
                 <Dashboard />
               </RoleRoute>
             }
