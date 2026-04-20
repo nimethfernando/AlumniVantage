@@ -83,11 +83,11 @@ function App() {
             }
           />
           
-          {/* Restricted Routes (Only Admins, Developers, or University Staff) */}
+          {/* Restricted Routes (Only Admins, Developers, or Alumni) */}
           <Route
             path="/dashboard"
             element={
-              <RoleRoute allowedRoles={['developer']}>
+              <RoleRoute allowedRoles={['developer', 'admin', 'alumnus']}>
                 <Dashboard />
               </RoleRoute>
             }
@@ -96,7 +96,7 @@ function App() {
           <Route
             path="/alumni-directory"
             element={
-              <RoleRoute allowedRoles={['developer', 'admin', 'university']}>
+              <RoleRoute allowedRoles={['developer', 'admin', 'alumnus']}>
                 <AlumniDirectory />
               </RoleRoute>
             }

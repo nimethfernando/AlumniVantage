@@ -19,8 +19,20 @@ const Login = () => {
     setError('');
     try {
       const res = await api.post('/api/auth/login', { email, password });
-      login(); 
-      navigate('/profile');  
+      
+      // Extract user data from the backend response
+      const userData = res.data?.user || res.data;
+      
+      // Pass the user data into the context
+      login(userData); 
+
+      // Redirect based on role (Admin and Developer go to dashboard)
+      if (userData?.role === 'admin' || userData?.role === 'developer') {
+        navigate('/dashboard'); 
+      } else {
+        navigate('/profile');  
+      }
+      
     } catch (err) {
       setError(err.response?.data?.error || 'Invalid email or password');
     } finally {
@@ -37,7 +49,13 @@ const Login = () => {
         <form onSubmit={handleSubmit} className="custom-form">
           <div className="form-group">
             <label>Email Address</label>
-            <input type="email" placeholder="you@my.westminster.ac.uk" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            <input 
+              type="email" 
+              placeholder="you@my.westminster.ac.uk" 
+              value={email} 
+              onChange={(e) => setEmail(e.target.value)} 
+              required 
+            />
           </div>
           <div className="form-group">
             <label>Password</label>
