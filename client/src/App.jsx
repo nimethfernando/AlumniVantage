@@ -10,7 +10,6 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import Profile from './pages/Profile';
 import Dashboard from './pages/Dashboard';
-import AlumniDirectory from './pages/AlumniDirectory';
 
 axios.interceptors.response.use(
   (response) => response,
@@ -83,21 +82,12 @@ function App() {
             }
           />
           
-          {/* Restricted Routes (Only Admins, Developers, or Alumni) */}
+          {/* Restricted Routes (Strictly Admin Only) */}
           <Route
             path="/dashboard"
             element={
-              <RoleRoute allowedRoles={['developer', 'admin', 'alumnus']}>
+              <RoleRoute allowedRoles={['admin']}>
                 <Dashboard />
-              </RoleRoute>
-            }
-          />
-
-          <Route
-            path="/alumni-directory"
-            element={
-              <RoleRoute allowedRoles={['developer', 'admin', 'alumnus']}>
-                <AlumniDirectory />
               </RoleRoute>
             }
           />

@@ -28,7 +28,9 @@ const Dashboard = () => {
     certificationsByCategory: [],
     alumniByGraduationYear: [],
     sectorDemand: [],
-    coursesPopularity: []
+    coursesPopularity: [],
+    // Added summaryMetrics state
+    summaryMetrics: { totalAlumni: 0, totalCertifications: 0, topIndustry: 'N/A' }
   });
 
   // Expanded color palette for the new charts
@@ -58,7 +60,9 @@ const Dashboard = () => {
         certificationsByCategory: response.data.certificationsByCategory || [],
         alumniByGraduationYear: response.data.alumniByGraduationYear || [],
         sectorDemand: response.data.sectorDemand || [],
-        coursesPopularity: response.data.coursesPopularity || []
+        coursesPopularity: response.data.coursesPopularity || [],
+        // Capture the new summary metrics from the backend
+        summaryMetrics: response.data.summaryMetrics || { totalAlumni: 0, totalCertifications: 0, topIndustry: 'N/A' }
       });
     } catch (err) {
       console.error('Error fetching analytics data:', err);
@@ -140,124 +144,145 @@ const Dashboard = () => {
       {error && <p className="error-message">{error}</p>}
 
       {!loading && !error && (
-        <div className="charts-grid" ref={dashboardRef}>
+        <div ref={dashboardRef}>
           
-          <div className="chart-card">
-            <h3>Curriculum vs Alumni Skills Gap</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <RadarChart data={analytics.skillsGap}>
-                <PolarGrid />
-                <PolarAngleAxis dataKey="subject" />
-                <PolarRadiusAxis />
-                <Radar name="University Taught" dataKey="university" stroke="#8884d8" fill="#8884d8" fillOpacity={0.6} />
-                <Radar name="Alumni Acquired" dataKey="alumni" stroke="#82ca9d" fill="#82ca9d" fillOpacity={0.6} />
-                <Legend />
-                <RechartsTooltip />
-              </RadarChart>
-            </ResponsiveContainer>
+          {/* NEW: Top Level Summary Cards */}
+          <div className="summary-cards-container">
+            <div className="stat-card">
+              <h3>Total Alumni</h3>
+              <div className="stat-number">{analytics.summaryMetrics?.totalAlumni || 0}</div>
+            </div>
+            <div className="stat-card">
+              <h3>Total Certifications</h3>
+              <div className="stat-number">{analytics.summaryMetrics?.totalCertifications || 0}</div>
+            </div>
+            <div className="stat-card">
+              <h3>Top Industry</h3>
+              <div className="stat-number" style={{ fontSize: '1.5rem', color: '#646cff' }}>
+                {analytics.summaryMetrics?.topIndustry || 'N/A'}
+              </div>
+            </div>
           </div>
 
-          <div className="chart-card">
-            <h3>Employment by Industry Sector</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie data={analytics.industryEmployment} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} label>
-                  {analytics.industryEmployment.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <RechartsTooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
+          <div className="charts-grid">
+            
+            <div className="chart-card">
+              <h3>Curriculum vs Alumni Skills Gap</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <RadarChart data={analytics.skillsGap}>
+                  <PolarGrid />
+                  <PolarAngleAxis dataKey="subject" />
+                  <PolarRadiusAxis />
+                  <Radar name="University Taught" dataKey="university" stroke="#8884d8" fill="#8884d8" fillOpacity={0.6} />
+                  <Radar name="Alumni Acquired" dataKey="alumni" stroke="#82ca9d" fill="#82ca9d" fillOpacity={0.6} />
+                  <Legend />
+                  <RechartsTooltip />
+                </RadarChart>
+              </ResponsiveContainer>
+            </div>
 
-          <div className="chart-card">
-            <h3>Post-Graduation Certification Trends</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={analytics.employmentTrends}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="year" />
-                <YAxis />
-                <RechartsTooltip />
-                <Legend />
-                <Line type="monotone" name="Employed" dataKey="employed" stroke="#82ca9d" activeDot={{ r: 8 }} />
-                <Line type="monotone" name="Certified" dataKey="certified" stroke="#8884d8" activeDot={{ r: 8 }} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
+            <div className="chart-card">
+              <h3>Employment by Industry Sector</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie data={analytics.industryEmployment} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} label>
+                    {analytics.industryEmployment.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <RechartsTooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
 
-          <div className="chart-card">
-            <h3>Top Employers</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={analytics.topEmployers}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="employer" />
-                <YAxis />
-                <RechartsTooltip />
-                <Legend />
-                <Bar name="Alumni Count" dataKey="alumni_count" fill="#0088FE" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+            <div className="chart-card">
+              <h3>Post-Graduation Certification Trends</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={analytics.employmentTrends}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="year" />
+                  <YAxis />
+                  <RechartsTooltip />
+                  <Legend />
+                  <Line type="monotone" name="Employed" dataKey="employed" stroke="#82ca9d" activeDot={{ r: 8 }} />
+                  <Line type="monotone" name="Certified" dataKey="certified" stroke="#8884d8" activeDot={{ r: 8 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
 
-          <div className="chart-card">
-            <h3>Certifications by Category</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie data={analytics.certificationsByCategory} dataKey="value" nameKey="category" innerRadius={60} outerRadius={110} label>
-                  {analytics.certificationsByCategory.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <RechartsTooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
+            <div className="chart-card">
+              <h3>Top Employers</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={analytics.topEmployers}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="employer" />
+                  <YAxis />
+                  <RechartsTooltip />
+                  <Legend />
+                  <Bar name="Alumni Count" dataKey="alumni_count" fill="#0088FE" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
 
-          <div className="chart-card">
-            <h3>Alumni by Graduation Year</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={analytics.alumniByGraduationYear}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="year" />
-                <YAxis />
-                <RechartsTooltip />
-                <Legend />
-                <Area type="monotone" name="Total Alumni" dataKey="total" stroke="#ffc658" fill="#ffc658" fillOpacity={0.4} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
+            <div className="chart-card">
+              <h3>Certifications by Category</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie data={analytics.certificationsByCategory} dataKey="value" nameKey="category" innerRadius={60} outerRadius={110} label>
+                    {analytics.certificationsByCategory.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <RechartsTooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
 
-          <div className="chart-card">
-            <h3>Sector Demand</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart layout="vertical" data={analytics.sectorDemand} margin={{ top: 10, right: 30, left: 40, bottom: 10 }}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis type="number" />
-                <YAxis dataKey="sector" type="category" width={100} />
-                <RechartsTooltip />
-                <Legend />
-                <Bar name="Demand" dataKey="value" fill="#8884d8" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+            <div className="chart-card">
+              <h3>Alumni by Graduation Year</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <AreaChart data={analytics.alumniByGraduationYear}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="year" />
+                  <YAxis />
+                  <RechartsTooltip />
+                  <Legend />
+                  <Area type="monotone" name="Total Alumni" dataKey="total" stroke="#ffc658" fill="#ffc658" fillOpacity={0.4} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
 
-          <div className="chart-card">
-            <h3>Popular Courses</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <RadarChart cx="50%" cy="50%" outerRadius="80%" data={analytics.coursesPopularity}>
-                <PolarGrid />
-                <PolarAngleAxis dataKey="subject" />
-                <PolarRadiusAxis />
-                <Radar name="Popularity" dataKey="value" stroke="#ff7300" fill="#ff7300" fillOpacity={0.6} />
-                <RechartsTooltip />
-                <Legend />
-              </RadarChart>
-            </ResponsiveContainer>
-          </div>
+            <div className="chart-card">
+              <h3>Sector Demand</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart layout="vertical" data={analytics.sectorDemand} margin={{ top: 10, right: 30, left: 40, bottom: 10 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis type="number" />
+                  <YAxis dataKey="sector" type="category" width={100} />
+                  <RechartsTooltip />
+                  <Legend />
+                  <Bar name="Demand" dataKey="value" fill="#8884d8" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
 
+            <div className="chart-card">
+              <h3>Popular Courses</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <RadarChart cx="50%" cy="50%" outerRadius="80%" data={analytics.coursesPopularity}>
+                  <PolarGrid />
+                  <PolarAngleAxis dataKey="subject" />
+                  <PolarRadiusAxis />
+                  <Radar name="Popularity" dataKey="value" stroke="#ff7300" fill="#ff7300" fillOpacity={0.6} />
+                  <RechartsTooltip />
+                  <Legend />
+                </RadarChart>
+              </ResponsiveContainer>
+            </div>
+
+          </div>
         </div>
       )}
     </div>

@@ -6,7 +6,8 @@ exports.getDashboardAnalytics = async (req, res) => {
     const programme = req.query.programme || null;
     const graduationYear = req.query.graduationYear || null;
     const sector = req.query.sector || null;
-
+    
+    // EXISTING CHART QUERIES
     const [skillsGap] = await db.query(`
       SELECT
         course_name AS subject,
@@ -94,6 +95,30 @@ exports.getDashboardAnalytics = async (req, res) => {
       LIMIT 8
     `);
 
+    // NEW SUMMARY QUERIES
+    // 1. Total Alumni Count (users with role = 'alumni')
+    const [alumniCountResult] = await db.query(
+      "SELECT COUNT(*) as count FROM users WHERE role = 'alumni'"
+    );
+    const totalAlumni = alumniCountResult[0].count;
+
+    // 2. Total Certifications Across All Users
+    const [certificationCountResult] = await db.query(
+      "SELECT COUNT(*) as count FROM certifications"
+    );
+    const totalCertifications = certificationCountResult[0].count;
+
+    // 3. Top Industry / Most Common Company
+    const [topIndustryResult] = await db.query(`
+      SELECT company, COUNT(*) as count 
+      FROM employment_history 
+      GROUP BY company 
+      ORDER BY count DESC 
+      LIMIT 1
+    `);
+    const topIndustry = topIndustryResult.length > 0 ? topIndustryResult[0].company : 'N/A';
+
+    // SEND RESPONSE
     res.json({
       skillsGap,
       industryEmployment,
@@ -102,7 +127,12 @@ exports.getDashboardAnalytics = async (req, res) => {
       certificationsByCategory,
       alumniByGraduationYear,
       sectorDemand,
-      coursesPopularity
+      coursesPopularity,
+      summaryMetrics: {
+        totalAlumni,
+        totalCertifications,
+        topIndustry
+      }
     });
   } catch (error) {
     console.error('Analytics error:', error);

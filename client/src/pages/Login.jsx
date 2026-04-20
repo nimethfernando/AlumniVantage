@@ -26,8 +26,8 @@ const Login = () => {
       // Pass the user data into the context
       login(userData); 
 
-      // Redirect based on role (Admin and Developer go to dashboard)
-      if (userData?.role === 'admin' || userData?.role === 'developer') {
+      // ONLY admin goes to dashboard, everyone else to profile
+      if (userData?.role === 'admin') {
         navigate('/dashboard'); 
       } else {
         navigate('/profile');  

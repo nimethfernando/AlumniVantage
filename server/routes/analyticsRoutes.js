@@ -10,7 +10,7 @@ const requireRole = require('../middleware/requireRole');
 router.get(
   '/', 
   verifyToken, 
-  requireRole('developer', 'admin', 'alumnus'), 
+  requireRole('admin'), 
   verifyApiKey(['read:analytics']), // Check if verifyApiKey also has this bug in its file!
   analyticsController.getDashboardAnalytics
 );
