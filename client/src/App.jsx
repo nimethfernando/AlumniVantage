@@ -10,6 +10,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import Profile from './pages/Profile';
 import Dashboard from './pages/Dashboard';
+import AlumniDirectory from './pages/AlumniDirectory';
 
 axios.interceptors.response.use(
   (response) => response,
@@ -33,16 +34,32 @@ axios.interceptors.response.use(
   }
 );
 
-// Protected Route Wrapper
+// Standard Protected Route (Must be logged in)
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useContext(AuthContext);
 
-  // Wait for the auth check to finish before deciding where to route
   if (loading) {
     return <p>Loading...</p>;
   }
 
   return user ? children : <Navigate to="/login" replace />;
+};
+
+// Strict Role-Based Route (Must be logged in AND have a specific role)
+const RoleRoute = ({ children, allowedRoles }) => {
+  const { user, loading } = useContext(AuthContext);
+
+  if (loading) {
+    return <p>Loading...</p>;
+  }
+
+  // Check if logged in and if their role is in the allowed array
+  if (user && allowedRoles.includes(user.role)) {
+    return children;
+  }
+
+  // If logged in but wrong role, send to profile. If not logged in, send to login.
+  return user ? <Navigate to="/profile" replace /> : <Navigate to="/login" replace />;
 };
 
 function App() {
@@ -56,7 +73,7 @@ function App() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password/:token" element={<ResetPassword />} />
 
-          {/* Protected Profile Route */}
+          {/* Standard Protected Routes (All logged-in users) */}
           <Route
             path="/profile"
             element={
@@ -65,14 +82,26 @@ function App() {
               </PrivateRoute>
             }
           />
+          
+          {/* Restricted Routes (Only Admins, Developers, or University Staff) */}
           <Route
             path="/dashboard"
             element={
-              <PrivateRoute>
+              <RoleRoute allowedRoles={['developer', 'admin', 'university']}>
                 <Dashboard />
-              </PrivateRoute>
+              </RoleRoute>
             }
           />
+
+          <Route
+            path="/alumni-directory"
+            element={
+              <RoleRoute allowedRoles={['developer', 'admin', 'university']}>
+                <AlumniDirectory />
+              </RoleRoute>
+            }
+          />
+
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>

@@ -6,7 +6,6 @@ const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
 const path = require('path');
 const fs = require('fs');
-const apiKeyRoutes = require('./routes/apiKeyRoutes');
 
 // Swagger Documentation
 const swaggerUi = require('swagger-ui-express');
@@ -16,11 +15,13 @@ const rateLimit = require('express-rate-limit');
 const csrf = require('csurf');
 
 // Import Routes
+const apiKeyRoutes = require('./routes/apiKeyRoutes');
 const authRoutes = require('./routes/authRoutes');
 const profileRoutes = require('./routes/profileRoutes');
 const bidRoutes = require('./routes/bidRoutes');
 const publicRoutes = require('./routes/publicRoutes'); 
-const analyticsRoutes = require('./routes/analyticsRoutes'); // NEW: Import Analytics Routes
+const analyticsRoutes = require('./routes/analyticsRoutes');
+const alumniRoutes = require('./routes/alumniRoutes'); // NEW: Import Alumni Routes
 
 // Import Database and Background Jobs
 const db = require('./config/db'); 
@@ -139,7 +140,8 @@ app.use('/api/profile', apiLimiter, profileRoutes); // Protected by Rate Limiter
 app.use('/api/bids', apiLimiter, bidRoutes); // Protected by Rate Limiter
 app.use('/api/public', publicRoutes); // Public Developer API
 app.use('/api/dev', apiKeyRoutes); // API Key Management Routes
-app.use('/api/analytics', apiLimiter, analyticsRoutes); // NEW: Protected Analytics Route
+app.use('/api/analytics', apiLimiter, analyticsRoutes); // Protected Analytics Route
+app.use('/api/alumni', apiLimiter, alumniRoutes); // NEW: Protected Alumni Directory Route
 
 // ==========================================
 // 4. ERROR HANDLING
