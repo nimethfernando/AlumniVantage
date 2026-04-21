@@ -116,7 +116,10 @@ exports.getCourses = async (req, res) => {
 
 exports.getEmployment = async (req, res) => {
   try {
-    const [rows] = await pool.execute('SELECT * FROM employment_history WHERE user_id = ? ORDER BY start_date DESC', [req.user.userId]);
+    const [rows] = await pool.execute(
+      'SELECT * FROM employment_history WHERE user_id = ? ORDER BY start_date DESC',
+      [req.user.userId]
+    );
     res.json(rows);
   } catch (error) {
     console.error('Get employment error:', error);
@@ -254,13 +257,15 @@ exports.addCourse = async (req, res) => {
 
 exports.addEmployment = async (req, res) => {
   try {
-    const { company_name, job_title, industry_sector, start_date, end_date } = req.body;
+    const { company_name, job_title, industry_sector, location, start_date, end_date } = req.body;
     const formattedStart = new Date(start_date).toISOString().split('T')[0];
     const formattedEnd = end_date ? new Date(end_date).toISOString().split('T')[0] : null;
+
     await pool.execute(
-      'INSERT INTO employment_history (user_id, company, role, industry_sector, start_date, end_date) VALUES (?, ?, ?, ?, ?, ?)',
-      [req.user.userId, company_name, job_title, industry_sector, formattedStart, formattedEnd]
+      'INSERT INTO employment_history (user_id, company, role, industry_sector, location, start_date, end_date) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [req.user.userId, company_name, job_title, industry_sector, location, formattedStart, formattedEnd]
     );
+
     res.status(201).json({ message: "Employment added!" });
   } catch (error) {
     console.error("Add Employment Error:", error);
@@ -449,14 +454,14 @@ exports.updateEmployment = async (req, res) => {
   try {
     const userId = req.user.userId;
     const { id } = req.params;
-    const { company_name, job_title, industry_sector, start_date, end_date } = req.body;
+    const { company_name, job_title, industry_sector, location, start_date, end_date } = req.body;
 
     const formattedStart = new Date(start_date).toISOString().split('T')[0];
     const formattedEnd = end_date ? new Date(end_date).toISOString().split('T')[0] : null;
 
     const [result] = await pool.execute(
-      'UPDATE employment_history SET company = ?, role = ?, industry_sector = ?, start_date = ?, end_date = ? WHERE id = ? AND user_id = ?',
-      [company_name, job_title, industry_sector, formattedStart, formattedEnd, id, userId]
+      'UPDATE employment_history SET company = ?, role = ?, industry_sector = ?, location = ?, start_date = ?, end_date = ? WHERE id = ? AND user_id = ?',
+      [company_name, job_title, industry_sector, location, formattedStart, formattedEnd, id, userId]
     );
 
     if (result.affectedRows === 0) return res.status(404).json({ error: "Employment record not found." });

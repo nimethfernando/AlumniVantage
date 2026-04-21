@@ -15,7 +15,8 @@ exports.getAlumniDirectory = async (req, res) => {
         MAX(YEAR(d.completion_date)) AS graduation_year,
         MAX(eh.company) AS company,
         MAX(eh.role) AS job_title,
-        MAX(eh.industry_sector) AS industry_sector
+        MAX(eh.industry_sector) AS industry_sector,
+        MAX(eh.location) AS location
       FROM users u
       LEFT JOIN profiles p ON p.user_id = u.id
       LEFT JOIN degrees d ON d.user_id = u.id

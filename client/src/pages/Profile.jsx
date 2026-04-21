@@ -2,8 +2,10 @@ import { useState, useEffect, useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import api from '../api/axiosConfig';
-import '../App.css'; 
+import '../App.css';
 import BiddingSystem from '../components/BiddingSystem';
+
+const INDUSTRY_SECTORS = ['Finance', 'Technology', 'Business', 'Marketing'];
 
 const Profile = () => {
   const [profile, setProfile] = useState({ bio: '', linkedin_url: '' });
@@ -22,7 +24,14 @@ const Profile = () => {
   const [newShortCourse, setNewShortCourse] = useState({ course_name: '', course_url: '', completion_date: '' });
 
   const [employmentHistory, setEmploymentHistory] = useState([]);
-  const [newEmployment, setNewEmployment] = useState({ job_title: '', company_name: '', industry_sector: 'Technology', start_date: '', end_date: '' });
+  const [newEmployment, setNewEmployment] = useState({
+    job_title: '',
+    company_name: '',
+    industry_sector: 'Technology',
+    location: '',
+    start_date: '',
+    end_date: ''
+  });
 
   const [editingDegree, setEditingDegree] = useState(null);
   const [editingCert, setEditingCert] = useState(null);
@@ -43,7 +52,7 @@ const Profile = () => {
       if (res.data.profile) setProfile(res.data.profile);
       if (res.data.degrees) setDegrees(res.data.degrees);
       if (res.data.certifications) {
-        setCertifications(res.data.certifications.map(c => ({...c, cert_name: c.name, course_url: c.credential_url})));
+        setCertifications(res.data.certifications.map(c => ({ ...c, cert_name: c.name, course_url: c.credential_url })));
       }
       if (res.data.licenses) setLicenses(res.data.licenses);
       if (res.data.courses) setShortCourses(res.data.courses);
@@ -52,11 +61,12 @@ const Profile = () => {
           ...emp,
           job_title: emp.role,
           company_name: emp.company,
-          industry_sector: emp.industry_sector || 'Technology'
+          industry_sector: emp.industry_sector || 'Technology',
+          location: emp.location || ''
         })));
       }
     } catch (err) {
-      console.error("Failed to fetch profile");
+      console.error('Failed to fetch profile');
     }
   };
 
@@ -131,7 +141,14 @@ const Profile = () => {
     e.preventDefault();
     try {
       await api.post('/api/profile/employment', newEmployment);
-      setNewEmployment({ job_title: '', company_name: '', industry_sector: 'Technology', start_date: '', end_date: '' });
+      setNewEmployment({
+        job_title: '',
+        company_name: '',
+        industry_sector: 'Technology',
+        location: '',
+        start_date: '',
+        end_date: ''
+      });
       fetchProfile();
     } catch (err) {
       console.error(err);
@@ -334,17 +351,17 @@ const Profile = () => {
         {degrees.length > 0 ? (
           <ul className="item-list">
             {degrees.map((deg, index) => (
-              <li key={index} className="list-item" style={{flexDirection: 'column', alignItems: 'flex-start'}}>
+              <li key={index} className="list-item" style={{ flexDirection: 'column', alignItems: 'flex-start' }}>
                 {editingDegree?.id === deg.id ? (
-                  <form className="inline-form" onSubmit={(e) => handleUpdateDegree(e, deg.id)} style={{width: '100%', marginBottom: '10px'}}>
-                    <input type="text" value={editingDegree.degree_name} onChange={e => setEditingDegree({...editingDegree, degree_name: e.target.value})} required />
-                    <input type="url" value={editingDegree.university_url} onChange={e => setEditingDegree({...editingDegree, university_url: e.target.value})} required />
-                    <input type="date" value={formatDateForInput(editingDegree.completion_date)} onChange={e => setEditingDegree({...editingDegree, completion_date: e.target.value})} required />
-                    <button type="submit" className="btn-primary" style={{padding: '0.4rem'}}>Save</button>
-                    <button type="button" onClick={() => setEditingDegree(null)} className="btn-secondary" style={{padding: '0.4rem'}}>Cancel</button>
+                  <form className="inline-form" onSubmit={(e) => handleUpdateDegree(e, deg.id)} style={{ width: '100%', marginBottom: '10px' }}>
+                    <input type="text" value={editingDegree.degree_name} onChange={e => setEditingDegree({ ...editingDegree, degree_name: e.target.value })} required />
+                    <input type="url" value={editingDegree.university_url} onChange={e => setEditingDegree({ ...editingDegree, university_url: e.target.value })} required />
+                    <input type="date" value={formatDateForInput(editingDegree.completion_date)} onChange={e => setEditingDegree({ ...editingDegree, completion_date: e.target.value })} required />
+                    <button type="submit" className="btn-primary" style={{ padding: '0.4rem' }}>Save</button>
+                    <button type="button" onClick={() => setEditingDegree(null)} className="btn-secondary" style={{ padding: '0.4rem' }}>Cancel</button>
                   </form>
                 ) : (
-                  <div style={{display:'flex', justifyContent:'space-between', width:'100%'}}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
                     <div className="item-details">
                       <strong>{deg.degree_name}</strong>
                       <span>{new Date(deg.completion_date).toLocaleDateString()}</span>
@@ -387,17 +404,17 @@ const Profile = () => {
         {certifications.length > 0 ? (
           <ul className="item-list">
             {certifications.map((cert, index) => (
-              <li key={index} className="list-item" style={{flexDirection: 'column', alignItems: 'flex-start'}}>
+              <li key={index} className="list-item" style={{ flexDirection: 'column', alignItems: 'flex-start' }}>
                 {editingCert?.id === cert.id ? (
-                  <form className="inline-form" onSubmit={(e) => handleUpdateCert(e, cert.id)} style={{width: '100%', marginBottom: '10px'}}>
-                    <input type="text" value={editingCert.cert_name} onChange={e => setEditingCert({...editingCert, cert_name: e.target.value})} required />
-                    <input type="url" value={editingCert.course_url} onChange={e => setEditingCert({...editingCert, course_url: e.target.value})} required />
-                    <input type="date" value={formatDateForInput(editingCert.completion_date || cert.issue_date)} onChange={e => setEditingCert({...editingCert, completion_date: e.target.value})} required />
-                    <button type="submit" className="btn-primary" style={{padding: '0.4rem'}}>Save</button>
-                    <button type="button" onClick={() => setEditingCert(null)} className="btn-secondary" style={{padding: '0.4rem'}}>Cancel</button>
+                  <form className="inline-form" onSubmit={(e) => handleUpdateCert(e, cert.id)} style={{ width: '100%', marginBottom: '10px' }}>
+                    <input type="text" value={editingCert.cert_name} onChange={e => setEditingCert({ ...editingCert, cert_name: e.target.value })} required />
+                    <input type="url" value={editingCert.course_url} onChange={e => setEditingCert({ ...editingCert, course_url: e.target.value })} required />
+                    <input type="date" value={formatDateForInput(editingCert.completion_date || cert.issue_date)} onChange={e => setEditingCert({ ...editingCert, completion_date: e.target.value })} required />
+                    <button type="submit" className="btn-primary" style={{ padding: '0.4rem' }}>Save</button>
+                    <button type="button" onClick={() => setEditingCert(null)} className="btn-secondary" style={{ padding: '0.4rem' }}>Cancel</button>
                   </form>
                 ) : (
-                  <div style={{display:'flex', justifyContent:'space-between', width:'100%'}}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
                     <div className="item-details">
                       <strong>{cert.cert_name}</strong>
                       <span>{new Date(cert.completion_date || cert.issue_date).toLocaleDateString()}</span>
@@ -440,17 +457,17 @@ const Profile = () => {
         {licenses.length > 0 ? (
           <ul className="item-list">
             {licenses.map((lic, index) => (
-              <li key={index} className="list-item" style={{flexDirection: 'column', alignItems: 'flex-start'}}>
+              <li key={index} className="list-item" style={{ flexDirection: 'column', alignItems: 'flex-start' }}>
                 {editingLicense?.id === lic.id ? (
-                  <form className="inline-form" onSubmit={(e) => handleUpdateLicense(e, lic.id)} style={{width: '100%', marginBottom: '10px'}}>
-                    <input type="text" value={editingLicense.license_name} onChange={e => setEditingLicense({...editingLicense, license_name: e.target.value})} required />
-                    <input type="url" value={editingLicense.awarding_body_url} onChange={e => setEditingLicense({...editingLicense, awarding_body_url: e.target.value})} required />
-                    <input type="date" value={formatDateForInput(editingLicense.completion_date)} onChange={e => setEditingLicense({...editingLicense, completion_date: e.target.value})} required />
-                    <button type="submit" className="btn-primary" style={{padding: '0.4rem'}}>Save</button>
-                    <button type="button" onClick={() => setEditingLicense(null)} className="btn-secondary" style={{padding: '0.4rem'}}>Cancel</button>
+                  <form className="inline-form" onSubmit={(e) => handleUpdateLicense(e, lic.id)} style={{ width: '100%', marginBottom: '10px' }}>
+                    <input type="text" value={editingLicense.license_name} onChange={e => setEditingLicense({ ...editingLicense, license_name: e.target.value })} required />
+                    <input type="url" value={editingLicense.awarding_body_url} onChange={e => setEditingLicense({ ...editingLicense, awarding_body_url: e.target.value })} required />
+                    <input type="date" value={formatDateForInput(editingLicense.completion_date)} onChange={e => setEditingLicense({ ...editingLicense, completion_date: e.target.value })} required />
+                    <button type="submit" className="btn-primary" style={{ padding: '0.4rem' }}>Save</button>
+                    <button type="button" onClick={() => setEditingLicense(null)} className="btn-secondary" style={{ padding: '0.4rem' }}>Cancel</button>
                   </form>
                 ) : (
-                  <div style={{display:'flex', justifyContent:'space-between', width:'100%'}}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
                     <div className="item-details">
                       <strong>{lic.license_name}</strong>
                       <span>{new Date(lic.completion_date).toLocaleDateString()}</span>
@@ -493,17 +510,17 @@ const Profile = () => {
         {shortCourses.length > 0 ? (
           <ul className="item-list">
             {shortCourses.map((course, index) => (
-              <li key={index} className="list-item" style={{flexDirection: 'column', alignItems: 'flex-start'}}>
+              <li key={index} className="list-item" style={{ flexDirection: 'column', alignItems: 'flex-start' }}>
                 {editingCourse?.id === course.id ? (
-                  <form className="inline-form" onSubmit={(e) => handleUpdateCourse(e, course.id)} style={{width: '100%', marginBottom: '10px'}}>
-                    <input type="text" value={editingCourse.course_name} onChange={e => setEditingCourse({...editingCourse, course_name: e.target.value})} required />
-                    <input type="url" value={editingCourse.course_url} onChange={e => setEditingCourse({...editingCourse, course_url: e.target.value})} required />
-                    <input type="date" value={formatDateForInput(editingCourse.completion_date)} onChange={e => setEditingCourse({...editingCourse, completion_date: e.target.value})} required />
-                    <button type="submit" className="btn-primary" style={{padding: '0.4rem'}}>Save</button>
-                    <button type="button" onClick={() => setEditingCourse(null)} className="btn-secondary" style={{padding: '0.4rem'}}>Cancel</button>
+                  <form className="inline-form" onSubmit={(e) => handleUpdateCourse(e, course.id)} style={{ width: '100%', marginBottom: '10px' }}>
+                    <input type="text" value={editingCourse.course_name} onChange={e => setEditingCourse({ ...editingCourse, course_name: e.target.value })} required />
+                    <input type="url" value={editingCourse.course_url} onChange={e => setEditingCourse({ ...editingCourse, course_url: e.target.value })} required />
+                    <input type="date" value={formatDateForInput(editingCourse.completion_date)} onChange={e => setEditingCourse({ ...editingCourse, completion_date: e.target.value })} required />
+                    <button type="submit" className="btn-primary" style={{ padding: '0.4rem' }}>Save</button>
+                    <button type="button" onClick={() => setEditingCourse(null)} className="btn-secondary" style={{ padding: '0.4rem' }}>Cancel</button>
                   </form>
                 ) : (
-                  <div style={{display:'flex', justifyContent:'space-between', width:'100%'}}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
                     <div className="item-details">
                       <strong>{course.course_name}</strong>
                       <span>{new Date(course.completion_date).toLocaleDateString()}</span>
@@ -546,29 +563,30 @@ const Profile = () => {
         {employmentHistory.length > 0 ? (
           <ul className="item-list">
             {employmentHistory.map((job, index) => (
-              <li key={index} className="list-item" style={{flexDirection: 'column', alignItems: 'flex-start'}}>
+              <li key={index} className="list-item" style={{ flexDirection: 'column', alignItems: 'flex-start' }}>
                 {editingEmployment?.id === job.id ? (
-                  <form className="inline-form" onSubmit={(e) => handleUpdateEmployment(e, job.id)} style={{width: '100%', marginBottom: '10px', flexWrap: 'wrap'}}>
-                    <input type="text" value={editingEmployment.job_title} onChange={e => setEditingEmployment({...editingEmployment, job_title: e.target.value})} required style={{flex: 1, minWidth: '150px'}} />
-                    <input type="text" value={editingEmployment.company_name} onChange={e => setEditingEmployment({...editingEmployment, company_name: e.target.value})} required style={{flex: 1, minWidth: '150px'}} />
-                    <select value={editingEmployment.industry_sector} onChange={e => setEditingEmployment({...editingEmployment, industry_sector: e.target.value})} required style={{flex: 1, minWidth: '150px'}}>
-                      <option value="Finance">Finance</option>
-                      <option value="Technology">Technology</option>
-                      <option value="Business">Business</option>
-                      <option value="Marketing">Marketing</option>
+                  <form className="inline-form" onSubmit={(e) => handleUpdateEmployment(e, job.id)} style={{ width: '100%', marginBottom: '10px', flexWrap: 'wrap' }}>
+                    <input type="text" value={editingEmployment.job_title} onChange={e => setEditingEmployment({ ...editingEmployment, job_title: e.target.value })} required style={{ flex: 1, minWidth: '150px' }} />
+                    <input type="text" value={editingEmployment.company_name} onChange={e => setEditingEmployment({ ...editingEmployment, company_name: e.target.value })} required style={{ flex: 1, minWidth: '150px' }} />
+                    <select value={editingEmployment.industry_sector || 'Technology'} onChange={e => setEditingEmployment({ ...editingEmployment, industry_sector: e.target.value })} required style={{ flex: 1, minWidth: '150px' }}>
+                      {INDUSTRY_SECTORS.map((sector) => (
+                        <option key={sector} value={sector}>{sector}</option>
+                      ))}
                     </select>
-                    <input type="date" value={formatDateForInput(editingEmployment.start_date)} onChange={e => setEditingEmployment({...editingEmployment, start_date: e.target.value})} required />
-                    <input type="date" value={formatDateForInput(editingEmployment.end_date)} onChange={e => setEditingEmployment({...editingEmployment, end_date: e.target.value})} />
-                    <button type="submit" className="btn-primary" style={{padding: '0.4rem'}}>Save</button>
-                    <button type="button" onClick={() => setEditingEmployment(null)} className="btn-secondary" style={{padding: '0.4rem'}}>Cancel</button>
+                    <input type="text" value={editingEmployment.location || ''} onChange={e => setEditingEmployment({ ...editingEmployment, location: e.target.value })} placeholder="Location" required style={{ flex: 1, minWidth: '150px' }} />
+                    <input type="date" value={formatDateForInput(editingEmployment.start_date)} onChange={e => setEditingEmployment({ ...editingEmployment, start_date: e.target.value })} required />
+                    <input type="date" value={formatDateForInput(editingEmployment.end_date)} onChange={e => setEditingEmployment({ ...editingEmployment, end_date: e.target.value })} />
+                    <button type="submit" className="btn-primary" style={{ padding: '0.4rem' }}>Save</button>
+                    <button type="button" onClick={() => setEditingEmployment(null)} className="btn-secondary" style={{ padding: '0.4rem' }}>Cancel</button>
                   </form>
                 ) : (
-                  <div style={{display:'flex', justifyContent:'space-between', width:'100%'}}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
                     <div className="item-details">
                       <strong>{job.job_title}</strong>
                       <span>{job.company_name}</span>
                       <span><strong>Industry:</strong> {job.industry_sector}</span>
-                      <span style={{color: '#646cff'}}>
+                      <span><strong>Location:</strong> {job.location}</span>
+                      <span style={{ color: '#646cff' }}>
                         {new Date(job.start_date).toLocaleDateString()} - {job.end_date ? new Date(job.end_date).toLocaleDateString() : 'Present'}
                       </span>
                     </div>
@@ -584,7 +602,7 @@ const Profile = () => {
         ) : (
           <p className="empty-text">No employment history added yet.</p>
         )}
-        <form className="custom-form" onSubmit={handleAddEmployment} style={{marginTop: '1.5rem'}}>
+        <form className="custom-form" onSubmit={handleAddEmployment} style={{ marginTop: '1.5rem' }}>
           <div className="form-group">
             <label>Job Title</label>
             <input
@@ -608,11 +626,20 @@ const Profile = () => {
               onChange={(e) => setNewEmployment({ ...newEmployment, industry_sector: e.target.value })}
               required
             >
-              <option value="Finance">Finance</option>
-              <option value="Technology">Technology</option>
-              <option value="Business">Business</option>
-              <option value="Marketing">Marketing</option>
+              {INDUSTRY_SECTORS.map((sector) => (
+                <option key={sector} value={sector}>{sector}</option>
+              ))}
             </select>
+          </div>
+          <div className="form-group">
+            <label>Location</label>
+            <input
+              type="text"
+              placeholder="e.g. London, Dubai, Colombo"
+              required
+              value={newEmployment.location}
+              onChange={(e) => setNewEmployment({ ...newEmployment, location: e.target.value })}
+            />
           </div>
           <div style={{ display: 'flex', gap: '1rem' }}>
             <div className="form-group" style={{ flex: 1 }}>
@@ -632,10 +659,9 @@ const Profile = () => {
               />
             </div>
           </div>
-          <button type="submit" className="btn-secondary" style={{alignSelf: 'flex-start'}}>Add Employment</button>
+          <button type="submit" className="btn-secondary" style={{ alignSelf: 'flex-start' }}>Add Employment</button>
         </form>
       </div>
-
     </div>
   );
 };

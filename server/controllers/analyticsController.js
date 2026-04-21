@@ -172,6 +172,20 @@ exports.getDashboardAnalytics = async (req, res) => {
       LIMIT 8
     `, params);
 
+    const [locationDistribution] = await db.query(`
+      SELECT
+        COALESCE(eh.location, 'Unknown') AS location,
+        COUNT(*) AS value
+      FROM users u
+      LEFT JOIN degrees d ON d.user_id = u.id
+      LEFT JOIN employment_history eh ON eh.user_id = u.id
+      ${whereClause}
+      AND eh.location IS NOT NULL
+      GROUP BY eh.location
+      ORDER BY value DESC
+      LIMIT 10
+    `, params);
+
     const [alumniCountResult] = await db.query(`
       SELECT COUNT(DISTINCT u.id) AS count
       FROM users u
@@ -216,6 +230,7 @@ exports.getDashboardAnalytics = async (req, res) => {
       alumniByGraduationYear,
       sectorDemand,
       coursesPopularity,
+      locationDistribution,
       summaryMetrics: {
         totalAlumni,
         totalCertifications,
