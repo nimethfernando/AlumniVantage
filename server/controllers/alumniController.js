@@ -14,7 +14,8 @@ exports.getAlumniDirectory = async (req, res) => {
         MAX(d.degree_name) AS degree_name,
         MAX(YEAR(d.completion_date)) AS graduation_year,
         MAX(eh.company) AS company,
-        MAX(eh.role) AS industry_sector
+        MAX(eh.role) AS job_title,
+        MAX(eh.industry_sector) AS industry_sector
       FROM users u
       LEFT JOIN profiles p ON p.user_id = u.id
       LEFT JOIN degrees d ON d.user_id = u.id
@@ -35,8 +36,8 @@ exports.getAlumniDirectory = async (req, res) => {
     }
 
     if (sector) {
-      query += ` AND eh.role LIKE ?`;
-      params.push(`%${sector}%`);
+      query += ` AND eh.industry_sector = ?`;
+      params.push(sector);
     }
 
     query += `
@@ -73,16 +74,16 @@ exports.getFilterOptions = async (req, res) => {
     `);
 
     const [sectors] = await db.query(`
-      SELECT DISTINCT role
+      SELECT DISTINCT industry_sector
       FROM employment_history
-      WHERE role IS NOT NULL
-      ORDER BY role ASC
+      WHERE industry_sector IS NOT NULL
+      ORDER BY industry_sector ASC
     `);
 
     res.status(200).json({
       programmes: programmes.map(p => p.degree_name),
       graduationYears: years.map(y => y.year),
-      sectors: sectors.map(s => s.role)
+      sectors: sectors.map(s => s.industry_sector)
     });
   } catch (error) {
     console.error('Get filter options error:', error);

@@ -16,10 +16,16 @@ const Dashboard = () => {
   const [error, setError] = useState('');
   const [filters, setFilters] = useState({
     programme: '',
-    graduationDate: '',
-    industrySector: ''
+    graduationYear: '',
+    sector: ''
   });
-  
+
+  const [filterOptions, setFilterOptions] = useState({
+    programmes: [],
+    graduationYears: [],
+    sectors: []
+  });
+
   const [analytics, setAnalytics] = useState({
     skillsGap: [],
     industryEmployment: [],
@@ -29,24 +35,47 @@ const Dashboard = () => {
     alumniByGraduationYear: [],
     sectorDemand: [],
     coursesPopularity: [],
-    // Added summaryMetrics state
     summaryMetrics: { totalAlumni: 0, totalCertifications: 0, topIndustry: 'N/A' }
   });
 
-  // Expanded color palette for the new charts
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658', '#8dd1e1', '#a4de6c'];
+
+  useEffect(() => {
+    fetchFilterOptions();
+  }, []);
 
   useEffect(() => {
     fetchDashboardData();
   }, [filters]);
 
+  const fetchFilterOptions = async () => {
+    try {
+      const response = await api.get('/api/alumni/filter-options', {
+        headers: {
+          'x-api-key': import.meta.env.VITE_ANALYTICS_API_KEY
+        }
+      });
+
+      setFilterOptions({
+        programmes: response.data.programmes || [],
+        graduationYears: response.data.graduationYears || [],
+        sectors: response.data.sectors || []
+      });
+    } catch (err) {
+      console.error('Failed to fetch filter options:', err);
+    }
+  };
+
   const fetchDashboardData = async () => {
     setLoading(true);
     setError('');
     try {
-      const query = new URLSearchParams(filters).toString();
+      const params = new URLSearchParams();
+      if (filters.programme) params.append('programme', filters.programme);
+      if (filters.graduationYear) params.append('graduationYear', filters.graduationYear);
+      if (filters.sector) params.append('sector', filters.sector);
 
-      const response = await api.get(`/api/analytics?${query}`, {
+      const response = await api.get(`/api/analytics?${params.toString()}`, {
         headers: {
           'x-api-key': import.meta.env.VITE_ANALYTICS_API_KEY
         }
@@ -61,7 +90,6 @@ const Dashboard = () => {
         alumniByGraduationYear: response.data.alumniByGraduationYear || [],
         sectorDemand: response.data.sectorDemand || [],
         coursesPopularity: response.data.coursesPopularity || [],
-        // Capture the new summary metrics from the backend
         summaryMetrics: response.data.summaryMetrics || { totalAlumni: 0, totalCertifications: 0, topIndustry: 'N/A' }
       });
     } catch (err) {
@@ -73,41 +101,67 @@ const Dashboard = () => {
   };
 
   const handleFilterChange = (e) => {
-    setFilters({ ...filters, [e.target.name]: e.target.value });
+    setFilters((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value
+    }));
   };
 
   const exportPDF = async () => {
-    const element = dashboardRef.current;
-    const canvas = await html2canvas(element, { scale: 2 }); // Improved quality
-    const data = canvas.toDataURL('image/png');
-    const pdf = new jsPDF('p', 'mm', 'a4');
-    const imgProperties = pdf.getImageProperties(data);
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = (imgProperties.height * pdfWidth) / imgProperties.width;
-    pdf.addImage(data, 'PNG', 0, 0, pdfWidth, pdfHeight);
-    pdf.save('University-Analytics-Report.pdf');
+    try {
+      const element = dashboardRef.current;
+      if (!element) return;
+      const canvas = await html2canvas(element, { scale: 2, useCORS: true });
+      const data = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const imgProperties = pdf.getImageProperties(data);
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (imgProperties.height * pdfWidth) / imgProperties.width;
+      let heightLeft = pdfHeight;
+      let position = 0;
+
+      pdf.addImage(data, 'PNG', 0, position, pdfWidth, pdfHeight);
+      heightLeft -= pdf.internal.pageSize.getHeight();
+
+      while (heightLeft > 0) {
+        position = heightLeft - pdfHeight;
+        pdf.addPage();
+        pdf.addImage(data, 'PNG', 0, position, pdfWidth, pdfHeight);
+        heightLeft -= pdf.internal.pageSize.getHeight();
+      }
+
+      pdf.save('University-Analytics-Report.pdf');
+    } catch (err) {
+      console.error('PDF export failed:', err);
+      setError('Failed to generate PDF report.');
+    }
   };
 
   const exportCSV = () => {
-    const csvData = [
-      ...analytics.skillsGap.map(item => ({ chart: 'skillsGap', ...item })),
-      ...analytics.industryEmployment.map(item => ({ chart: 'industryEmployment', ...item })),
-      ...analytics.employmentTrends.map(item => ({ chart: 'employmentTrends', ...item })),
-      ...analytics.topEmployers.map(item => ({ chart: 'topEmployers', ...item })),
-      ...analytics.certificationsByCategory.map(item => ({ chart: 'certificationsByCategory', ...item })),
-      ...analytics.alumniByGraduationYear.map(item => ({ chart: 'alumniByGraduationYear', ...item })),
-      ...analytics.sectorDemand.map(item => ({ chart: 'sectorDemand', ...item })),
-      ...analytics.coursesPopularity.map(item => ({ chart: 'coursesPopularity', ...item }))
-    ];
-    
-    const csv = Papa.unparse(csvData);
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.setAttribute('download', 'Analytics_Data.csv');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    try {
+      const csvData = [
+        ...analytics.skillsGap.map((item) => ({ chart: 'skillsGap', ...item })),
+        ...analytics.industryEmployment.map((item) => ({ chart: 'industryEmployment', ...item })),
+        ...analytics.employmentTrends.map((item) => ({ chart: 'employmentTrends', ...item })),
+        ...analytics.topEmployers.map((item) => ({ chart: 'topEmployers', ...item })),
+        ...analytics.certificationsByCategory.map((item) => ({ chart: 'certificationsByCategory', ...item })),
+        ...analytics.alumniByGraduationYear.map((item) => ({ chart: 'alumniByGraduationYear', ...item })),
+        ...analytics.sectorDemand.map((item) => ({ chart: 'sectorDemand', ...item })),
+        ...analytics.coursesPopularity.map((item) => ({ chart: 'coursesPopularity', ...item }))
+      ];
+
+      const csv = Papa.unparse(csvData);
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.setAttribute('download', 'Analytics_Data.csv');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error('CSV export failed:', err);
+      setError('Failed to export CSV.');
+    }
   };
 
   return (
@@ -115,28 +169,37 @@ const Dashboard = () => {
       <header className="dashboard-header">
         <h1>University Analytics & Intelligence</h1>
         <div className="export-buttons">
-          <button onClick={exportCSV} className="btn-secondary">Export CSV</button>
-          <button onClick={exportPDF} className="btn-primary">Generate PDF Report</button>
+          <button onClick={exportCSV} className="btn-secondary" type="button">Export CSV</button>
+          <button onClick={exportPDF} className="btn-primary" type="button">Generate PDF Report</button>
         </div>
       </header>
 
       <section className="filters-section">
         <select name="programme" value={filters.programme} onChange={handleFilterChange}>
           <option value="">All Programmes</option>
-          <option value="Computer Science">Computer Science</option>
-          <option value="Business Management">Business Management</option>
+          {filterOptions.programmes.map((programme, index) => (
+            <option key={index} value={programme}>
+              {programme}
+            </option>
+          ))}
         </select>
 
-        <select name="graduationDate" value={filters.graduationDate} onChange={handleFilterChange}>
+        <select name="graduationYear" value={filters.graduationYear} onChange={handleFilterChange}>
           <option value="">All Years</option>
-          <option value="2023">2023</option>
-          <option value="2022">2022</option>
+          {filterOptions.graduationYears.map((year, index) => (
+            <option key={index} value={year}>
+              {year}
+            </option>
+          ))}
         </select>
 
-        <select name="industrySector" value={filters.industrySector} onChange={handleFilterChange}>
+        <select name="sector" value={filters.sector} onChange={handleFilterChange}>
           <option value="">All Industries</option>
-          <option value="Technology">Technology</option>
-          <option value="Finance">Finance</option>
+          {filterOptions.sectors.map((sector, index) => (
+            <option key={index} value={sector}>
+              {sector}
+            </option>
+          ))}
         </select>
       </section>
 
@@ -145,8 +208,6 @@ const Dashboard = () => {
 
       {!loading && !error && (
         <div ref={dashboardRef}>
-          
-          {/* NEW: Top Level Summary Cards */}
           <div className="summary-cards-container">
             <div className="stat-card">
               <h3>Total Alumni</h3>
@@ -165,9 +226,8 @@ const Dashboard = () => {
           </div>
 
           <div className="charts-grid">
-            
             <div className="chart-card">
-              <h3>Curriculum vs Alumni Skills Gap</h3>
+              <h3>Curriculum vs Alumni Skills Gap (Radar Chart)</h3>
               <ResponsiveContainer width="100%" height={300}>
                 <RadarChart data={analytics.skillsGap}>
                   <PolarGrid />
@@ -179,25 +239,39 @@ const Dashboard = () => {
                   <RechartsTooltip />
                 </RadarChart>
               </ResponsiveContainer>
+              <p className="chart-insight">
+                This chart highlights gaps between what the university teaches and what alumni later acquire independently, helping identify skills that may need to be integrated into the curriculum earlier.
+              </p>
             </div>
 
             <div className="chart-card">
-              <h3>Employment by Industry Sector</h3>
+              <h3>Employment by Industry Sector (Pie Chart)</h3>
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
-                  <Pie data={analytics.industryEmployment} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} label>
+                  <Pie
+                    data={analytics.industryEmployment}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={100}
+                    label
+                  >
                     {analytics.industryEmployment.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      <Cell key={`industry-cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
                   <RechartsTooltip />
                   <Legend />
                 </PieChart>
               </ResponsiveContainer>
+              <p className="chart-insight">
+                This chart shows where graduates are being employed most heavily, helping the university identify which industry sectors currently absorb the largest share of alumni talent.
+              </p>
             </div>
 
             <div className="chart-card">
-              <h3>Post-Graduation Certification Trends</h3>
+              <h3>Post-Graduation Certification Trends (Line Chart)</h3>
               <ResponsiveContainer width="100%" height={300}>
                 <LineChart data={analytics.employmentTrends}>
                   <CartesianGrid strokeDasharray="3 3" />
@@ -209,10 +283,13 @@ const Dashboard = () => {
                   <Line type="monotone" name="Certified" dataKey="certified" stroke="#8884d8" activeDot={{ r: 8 }} />
                 </LineChart>
               </ResponsiveContainer>
+              <p className="chart-insight">
+                Growth in alumni certifications after graduation suggests changing industry expectations and shows which professional areas are becoming more important over time.
+              </p>
             </div>
 
             <div className="chart-card">
-              <h3>Top Employers</h3>
+              <h3>Top Employers (Bar Chart)</h3>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={analytics.topEmployers}>
                   <CartesianGrid strokeDasharray="3 3" />
@@ -223,25 +300,41 @@ const Dashboard = () => {
                   <Bar name="Alumni Count" dataKey="alumni_count" fill="#0088FE" />
                 </BarChart>
               </ResponsiveContainer>
+              <p className="chart-insight">
+                This chart reveals which employers recruit the most graduates, giving the university evidence of strong employer relationships and dominant hiring destinations.
+              </p>
             </div>
 
             <div className="chart-card">
-              <h3>Certifications by Category</h3>
+              <h3>Certifications by Category (Doughnut Chart)</h3>
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
-                  <Pie data={analytics.certificationsByCategory} dataKey="value" nameKey="category" innerRadius={60} outerRadius={110} label>
+                  <Pie
+                    data={analytics.certificationsByCategory}
+                    dataKey="value"
+                    nameKey="category"
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={110}
+                    paddingAngle={3}
+                    label
+                  >
                     {analytics.certificationsByCategory.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      <Cell key={`cert-cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
                   <RechartsTooltip />
                   <Legend />
                 </PieChart>
               </ResponsiveContainer>
+              <p className="chart-insight">
+                This doughnut chart shows the most common certification areas pursued by alumni, indicating where graduates feel they must strengthen their skills after university.
+              </p>
             </div>
 
             <div className="chart-card">
-              <h3>Alumni by Graduation Year</h3>
+              <h3>Alumni by Graduation Year (Area Chart)</h3>
               <ResponsiveContainer width="100%" height={300}>
                 <AreaChart data={analytics.alumniByGraduationYear}>
                   <CartesianGrid strokeDasharray="3 3" />
@@ -252,10 +345,13 @@ const Dashboard = () => {
                   <Area type="monotone" name="Total Alumni" dataKey="total" stroke="#ffc658" fill="#ffc658" fillOpacity={0.4} />
                 </AreaChart>
               </ResponsiveContainer>
+              <p className="chart-insight">
+                This chart shows how alumni records are distributed by graduation year, helping compare trends across different graduating cohorts.
+              </p>
             </div>
 
             <div className="chart-card">
-              <h3>Sector Demand</h3>
+              <h3>Sector Demand (Bar Chart)</h3>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart layout="vertical" data={analytics.sectorDemand} margin={{ top: 10, right: 30, left: 40, bottom: 10 }}>
                   <CartesianGrid strokeDasharray="3 3" />
@@ -266,10 +362,13 @@ const Dashboard = () => {
                   <Bar name="Demand" dataKey="value" fill="#8884d8" />
                 </BarChart>
               </ResponsiveContainer>
+              <p className="chart-insight">
+                This chart highlights the roles or sectors with the strongest alumni presence, helping the university track labour market demand and emerging professional directions.
+              </p>
             </div>
 
             <div className="chart-card">
-              <h3>Popular Courses</h3>
+              <h3>Popular Courses (Radar Chart)</h3>
               <ResponsiveContainer width="100%" height={300}>
                 <RadarChart cx="50%" cy="50%" outerRadius="80%" data={analytics.coursesPopularity}>
                   <PolarGrid />
@@ -280,8 +379,10 @@ const Dashboard = () => {
                   <Legend />
                 </RadarChart>
               </ResponsiveContainer>
+              <p className="chart-insight">
+                This chart shows the most commonly completed post-graduation courses, revealing which workplace skills alumni are most often forced to learn independently.
+              </p>
             </div>
-
           </div>
         </div>
       )}

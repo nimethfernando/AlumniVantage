@@ -2,11 +2,9 @@ const pool = require('../config/db');
 
 // --- HELPER FUNCTION FOR URL VALIDATION ---
 const isValidUrl = (urlString) => {
-  if (!urlString) return true; // Skip if empty (let DB handle required fields)
+  if (!urlString) return true;
   try {
-    // This is NodeJS's built-in URL parser. 
-    // If it's a valid link, it succeeds. If it's garbage text, it throws an error.
-    new URL(urlString); 
+    new URL(urlString);
     return true;
   } catch (error) {
     return false;
@@ -15,19 +13,12 @@ const isValidUrl = (urlString) => {
 
 exports.getProfile = async (req, res) => {
   try {
-    const userId = req.user.userId; 
-    
-    // Fetch Main Profile
+    const userId = req.user.userId;
     const [profile] = await pool.execute('SELECT * FROM profiles WHERE user_id = ?', [userId]);
-    // Fetch Degrees
     const [degrees] = await pool.execute('SELECT * FROM degrees WHERE user_id = ? ORDER BY completion_date DESC', [userId]);
-    // Fetch Certifications
     const [certifications] = await pool.execute('SELECT * FROM certifications WHERE user_id = ? ORDER BY issue_date DESC', [userId]);
-    // Fetch Short Courses
     const [courses] = await pool.execute('SELECT * FROM short_courses WHERE user_id = ? ORDER BY completion_date DESC', [userId]);
-    // Fetch Employment History
     const [employment] = await pool.execute('SELECT * FROM employment_history WHERE user_id = ? ORDER BY start_date DESC', [userId]);
-    // Fetch Licenses
     const [licenses] = await pool.execute('SELECT * FROM licenses WHERE user_id = ? ORDER BY completion_date DESC', [userId]);
 
     res.json({
@@ -47,40 +38,13 @@ exports.getProfile = async (req, res) => {
 exports.getProfileCompletionStatus = async (req, res) => {
   try {
     const userId = req.user.userId;
-
-    // Fetch main profile
-    const [profileRows] = await pool.execute(
-      'SELECT * FROM profiles WHERE user_id = ?',
-      [userId]
-    );
-
+    const [profileRows] = await pool.execute('SELECT * FROM profiles WHERE user_id = ?', [userId]);
     const profile = profileRows[0] || {};
-
-    // Fetch related sections
-    const [degrees] = await pool.execute(
-      'SELECT id FROM degrees WHERE user_id = ? LIMIT 1',
-      [userId]
-    );
-
-    const [certifications] = await pool.execute(
-      'SELECT id FROM certifications WHERE user_id = ? LIMIT 1',
-      [userId]
-    );
-
-    const [licenses] = await pool.execute(
-      'SELECT id FROM licenses WHERE user_id = ? LIMIT 1',
-      [userId]
-    );
-
-    const [courses] = await pool.execute(
-      'SELECT id FROM short_courses WHERE user_id = ? LIMIT 1',
-      [userId]
-    );
-
-    const [employment] = await pool.execute(
-      'SELECT id FROM employment_history WHERE user_id = ? LIMIT 1',
-      [userId]
-    );
+    const [degrees] = await pool.execute('SELECT id FROM degrees WHERE user_id = ? LIMIT 1', [userId]);
+    const [certifications] = await pool.execute('SELECT id FROM certifications WHERE user_id = ? LIMIT 1', [userId]);
+    const [licenses] = await pool.execute('SELECT id FROM licenses WHERE user_id = ? LIMIT 1', [userId]);
+    const [courses] = await pool.execute('SELECT id FROM short_courses WHERE user_id = ? LIMIT 1', [userId]);
+    const [employment] = await pool.execute('SELECT id FROM employment_history WHERE user_id = ? LIMIT 1', [userId]);
 
     const checklist = [
       { key: 'bio', completed: !!(profile.bio && profile.bio.trim()) },
@@ -93,17 +57,9 @@ exports.getProfileCompletionStatus = async (req, res) => {
       { key: 'employment', completed: employment.length > 0 }
     ];
 
-    const completed = checklist
-      .filter(item => item.completed)
-      .map(item => item.key);
-
-    const missing = checklist
-      .filter(item => !item.completed)
-      .map(item => item.key);
-
-    const completion_percentage = Math.round(
-      (completed.length / checklist.length) * 100
-    );
+    const completed = checklist.filter(item => item.completed).map(item => item.key);
+    const missing = checklist.filter(item => !item.completed).map(item => item.key);
+    const completion_percentage = Math.round((completed.length / checklist.length) * 100);
 
     res.status(200).json({
       completion_percentage,
@@ -120,10 +76,7 @@ exports.getProfileCompletionStatus = async (req, res) => {
 
 exports.getDegrees = async (req, res) => {
   try {
-    const [rows] = await pool.execute(
-      'SELECT * FROM degrees WHERE user_id = ? ORDER BY completion_date DESC',
-      [req.user.userId]
-    );
+    const [rows] = await pool.execute('SELECT * FROM degrees WHERE user_id = ? ORDER BY completion_date DESC', [req.user.userId]);
     res.json(rows);
   } catch (error) {
     console.error('Get degrees error:', error);
@@ -133,10 +86,7 @@ exports.getDegrees = async (req, res) => {
 
 exports.getCertifications = async (req, res) => {
   try {
-    const [rows] = await pool.execute(
-      'SELECT * FROM certifications WHERE user_id = ? ORDER BY issue_date DESC',
-      [req.user.userId]
-    );
+    const [rows] = await pool.execute('SELECT * FROM certifications WHERE user_id = ? ORDER BY issue_date DESC', [req.user.userId]);
     res.json(rows);
   } catch (error) {
     console.error('Get certifications error:', error);
@@ -146,10 +96,7 @@ exports.getCertifications = async (req, res) => {
 
 exports.getLicenses = async (req, res) => {
   try {
-    const [rows] = await pool.execute(
-      'SELECT * FROM licenses WHERE user_id = ? ORDER BY completion_date DESC',
-      [req.user.userId]
-    );
+    const [rows] = await pool.execute('SELECT * FROM licenses WHERE user_id = ? ORDER BY completion_date DESC', [req.user.userId]);
     res.json(rows);
   } catch (error) {
     console.error('Get licenses error:', error);
@@ -159,10 +106,7 @@ exports.getLicenses = async (req, res) => {
 
 exports.getCourses = async (req, res) => {
   try {
-    const [rows] = await pool.execute(
-      'SELECT * FROM short_courses WHERE user_id = ? ORDER BY completion_date DESC',
-      [req.user.userId]
-    );
+    const [rows] = await pool.execute('SELECT * FROM short_courses WHERE user_id = ? ORDER BY completion_date DESC', [req.user.userId]);
     res.json(rows);
   } catch (error) {
     console.error('Get courses error:', error);
@@ -172,10 +116,7 @@ exports.getCourses = async (req, res) => {
 
 exports.getEmployment = async (req, res) => {
   try {
-    const [rows] = await pool.execute(
-      'SELECT * FROM employment_history WHERE user_id = ? ORDER BY start_date DESC',
-      [req.user.userId]
-    );
+    const [rows] = await pool.execute('SELECT * FROM employment_history WHERE user_id = ? ORDER BY start_date DESC', [req.user.userId]);
     res.json(rows);
   } catch (error) {
     console.error('Get employment error:', error);
@@ -189,7 +130,6 @@ exports.updateProfile = async (req, res) => {
     const { bio, linkedin_url } = req.body;
     let profile_image_url = null;
 
-    // Backend URL Validation
     if (linkedin_url && !isValidUrl(linkedin_url)) {
       return res.status(400).json({ error: "Invalid LinkedIn URL format." });
     }
@@ -198,24 +138,21 @@ exports.updateProfile = async (req, res) => {
       profile_image_url = `/uploads/${req.file.filename}`;
     }
 
-    // Upsert (Insert or Update) the profile
     const [existing] = await pool.execute('SELECT * FROM profiles WHERE user_id = ?', [userId]);
-    
+
     if (existing.length > 0) {
-      // Update
       let query = 'UPDATE profiles SET bio = ?, linkedin_url = ?';
       let params = [bio, linkedin_url];
-      
+
       if (profile_image_url) {
         query += ', profile_image_url = ?';
         params.push(profile_image_url);
       }
       query += ' WHERE user_id = ?';
       params.push(userId);
-      
+
       await pool.execute(query, params);
     } else {
-      // Insert
       await pool.execute(
         'INSERT INTO profiles (user_id, bio, linkedin_url, profile_image_url) VALUES (?, ?, ?, ?)',
         [userId, bio, linkedin_url, profile_image_url]
@@ -250,30 +187,30 @@ exports.addDegree = async (req, res) => {
 };
 
 exports.addCertification = async (req, res) => {
-    try {
-        const userId = req.user.userId;
-        const { cert_name, course_url, completion_date } = req.body;
+  try {
+    const userId = req.user.userId;
+    const { cert_name, course_url, completion_date } = req.body;
 
-        if (course_url && !isValidUrl(course_url)) {
-          return res.status(400).json({ error: "Invalid Course URL format." });
-        }
-
-        const name = cert_name;
-        const issuing_organization = null; 
-        const issue_date = completion_date;
-        const expiration_date = null;
-        const credential_url = course_url;
-
-        const [result] = await pool.execute(
-            'INSERT INTO certifications (user_id, name, issuing_organization, issue_date, expiration_date, credential_url) VALUES (?, ?, ?, ?, ?, ?)',
-            [userId, name, issuing_organization, issue_date, expiration_date, credential_url]
-        );
-
-        res.status(201).json({ message: 'Certification added successfully!', certificationId: result.insertId });
-    } catch (error) {
-        console.error("Error adding certification:", error);
-        res.status(500).json({ error: "Failed to add certification" });
+    if (course_url && !isValidUrl(course_url)) {
+      return res.status(400).json({ error: "Invalid Course URL format." });
     }
+
+    const name = cert_name;
+    const issuing_organization = null;
+    const issue_date = completion_date;
+    const expiration_date = null;
+    const credential_url = course_url;
+
+    const [result] = await pool.execute(
+      'INSERT INTO certifications (user_id, name, issuing_organization, issue_date, expiration_date, credential_url) VALUES (?, ?, ?, ?, ?, ?)',
+      [userId, name, issuing_organization, issue_date, expiration_date, credential_url]
+    );
+
+    res.status(201).json({ message: 'Certification added successfully!', certificationId: result.insertId });
+  } catch (error) {
+    console.error("Error adding certification:", error);
+    res.status(500).json({ error: "Failed to add certification" });
+  }
 };
 
 exports.addLicense = async (req, res) => {
@@ -290,9 +227,9 @@ exports.addLicense = async (req, res) => {
       [req.user.userId, license_name, awarding_body_url, formattedDate]
     );
     res.status(201).json({ message: "License added!" });
-  } catch (error) { 
-    console.error("Add License Error:", error); 
-    res.status(500).json({ error: "Failed to add license" }); 
+  } catch (error) {
+    console.error("Add License Error:", error);
+    res.status(500).json({ error: "Failed to add license" });
   }
 };
 
@@ -309,42 +246,33 @@ exports.addCourse = async (req, res) => {
       [req.user.userId, course_name, course_url, formattedDate]
     );
     res.status(201).json({ message: "Course added!" });
-  } catch (error) { 
-    console.error("Add Course Error:", error); 
-    res.status(500).json({ error: "Failed to add course" }); 
+  } catch (error) {
+    console.error("Add Course Error:", error);
+    res.status(500).json({ error: "Failed to add course" });
   }
 };
 
 exports.addEmployment = async (req, res) => {
   try {
-    const { company_name, job_title, start_date, end_date } = req.body;
-
-    // 1. Format the dates to YYYY-MM-DD
+    const { company_name, job_title, industry_sector, start_date, end_date } = req.body;
     const formattedStart = new Date(start_date).toISOString().split('T')[0];
     const formattedEnd = end_date ? new Date(end_date).toISOString().split('T')[0] : null;
     await pool.execute(
-      'INSERT INTO employment_history (user_id, company, role, start_date, end_date) VALUES (?, ?, ?, ?, ?)',
-      [req.user.userId, company_name, job_title, formattedStart, formattedEnd]
+      'INSERT INTO employment_history (user_id, company, role, industry_sector, start_date, end_date) VALUES (?, ?, ?, ?, ?, ?)',
+      [req.user.userId, company_name, job_title, industry_sector, formattedStart, formattedEnd]
     );
     res.status(201).json({ message: "Employment added!" });
-
-  } catch (error) { 
-    console.error("Add Employment Error:", error); 
-    res.status(500).json({ error: "Failed to add employment" }); 
+  } catch (error) {
+    console.error("Add Employment Error:", error);
+    res.status(500).json({ error: "Failed to add employment" });
   }
 };
-
-// --- DELETE ENDPOINTS ---
 
 exports.deleteDegree = async (req, res) => {
   try {
     const userId = req.user.userId;
-    const { id } = req.params; 
-
-    const [result] = await pool.execute(
-      'DELETE FROM degrees WHERE id = ? AND user_id = ?',
-      [id, userId]
-    );
+    const { id } = req.params;
+    const [result] = await pool.execute('DELETE FROM degrees WHERE id = ? AND user_id = ?', [id, userId]);
 
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: "Degree not found or you do not have permission to delete it." });
@@ -361,11 +289,7 @@ exports.deleteCertification = async (req, res) => {
   try {
     const userId = req.user.userId;
     const { id } = req.params;
-
-    const [result] = await pool.execute(
-      'DELETE FROM certifications WHERE id = ? AND user_id = ?',
-      [id, userId]
-    );
+    const [result] = await pool.execute('DELETE FROM certifications WHERE id = ? AND user_id = ?', [id, userId]);
 
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: "Certification not found." });
@@ -381,11 +305,7 @@ exports.deleteLicense = async (req, res) => {
   try {
     const userId = req.user.userId;
     const { id } = req.params;
-
-    const [result] = await pool.execute(
-      'DELETE FROM licenses WHERE id = ? AND user_id = ?',
-      [id, userId]
-    );
+    const [result] = await pool.execute('DELETE FROM licenses WHERE id = ? AND user_id = ?', [id, userId]);
 
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: "License not found." });
@@ -401,11 +321,7 @@ exports.deleteCourse = async (req, res) => {
   try {
     const userId = req.user.userId;
     const { id } = req.params;
-
-    const [result] = await pool.execute(
-      'DELETE FROM short_courses WHERE id = ? AND user_id = ?',
-      [id, userId]
-    );
+    const [result] = await pool.execute('DELETE FROM short_courses WHERE id = ? AND user_id = ?', [id, userId]);
 
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: "Course not found." });
@@ -421,11 +337,7 @@ exports.deleteEmployment = async (req, res) => {
   try {
     const userId = req.user.userId;
     const { id } = req.params;
-
-    const [result] = await pool.execute(
-      'DELETE FROM employment_history WHERE id = ? AND user_id = ?',
-      [id, userId]
-    );
+    const [result] = await pool.execute('DELETE FROM employment_history WHERE id = ? AND user_id = ?', [id, userId]);
 
     if (result.affectedRows === 0) {
       return res.status(404).json({ error: "Employment record not found." });
@@ -436,8 +348,6 @@ exports.deleteEmployment = async (req, res) => {
     res.status(500).json({ error: "Failed to delete employment record" });
   }
 };
-
-// --- UPDATE ENDPOINTS FOR SUB-ITEMS ---
 
 exports.updateDegree = async (req, res) => {
   try {
@@ -450,7 +360,6 @@ exports.updateDegree = async (req, res) => {
     }
 
     const formattedDate = new Date(completion_date).toISOString().split('T')[0];
-
     const [result] = await pool.execute(
       'UPDATE degrees SET degree_name = ?, university_url = ?, completion_date = ? WHERE id = ? AND user_id = ?',
       [degree_name, university_url, formattedDate, id, userId]
@@ -469,13 +378,12 @@ exports.updateCertification = async (req, res) => {
     const userId = req.user.userId;
     const { id } = req.params;
     const { cert_name, course_url, completion_date } = req.body;
-    
+
     if (course_url && !isValidUrl(course_url)) {
       return res.status(400).json({ error: "Invalid Course URL format." });
     }
 
     const formattedDate = new Date(completion_date).toISOString().split('T')[0];
-
     const [result] = await pool.execute(
       'UPDATE certifications SET name = ?, credential_url = ?, issue_date = ? WHERE id = ? AND user_id = ?',
       [cert_name, course_url, formattedDate, id, userId]
@@ -500,7 +408,6 @@ exports.updateLicense = async (req, res) => {
     }
 
     const formattedDate = new Date(completion_date).toISOString().split('T')[0];
-
     const [result] = await pool.execute(
       'UPDATE licenses SET license_name = ?, awarding_body_url = ?, completion_date = ? WHERE id = ? AND user_id = ?',
       [license_name, awarding_body_url, formattedDate, id, userId]
@@ -525,7 +432,6 @@ exports.updateCourse = async (req, res) => {
     }
 
     const formattedDate = new Date(completion_date).toISOString().split('T')[0];
-
     const [result] = await pool.execute(
       'UPDATE short_courses SET course_name = ?, course_url = ?, completion_date = ? WHERE id = ? AND user_id = ?',
       [course_name, course_url, formattedDate, id, userId]
@@ -543,14 +449,14 @@ exports.updateEmployment = async (req, res) => {
   try {
     const userId = req.user.userId;
     const { id } = req.params;
-    const { company_name, job_title, start_date, end_date } = req.body;
+    const { company_name, job_title, industry_sector, start_date, end_date } = req.body;
 
     const formattedStart = new Date(start_date).toISOString().split('T')[0];
     const formattedEnd = end_date ? new Date(end_date).toISOString().split('T')[0] : null;
 
     const [result] = await pool.execute(
-      'UPDATE employment_history SET company = ?, role = ?, start_date = ?, end_date = ? WHERE id = ? AND user_id = ?',
-      [company_name, job_title, formattedStart, formattedEnd, id, userId]
+      'UPDATE employment_history SET company = ?, role = ?, industry_sector = ?, start_date = ?, end_date = ? WHERE id = ? AND user_id = ?',
+      [company_name, job_title, industry_sector, formattedStart, formattedEnd, id, userId]
     );
 
     if (result.affectedRows === 0) return res.status(404).json({ error: "Employment record not found." });

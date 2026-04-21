@@ -39,6 +39,7 @@ const courseRules = [
 const employmentRules = [
     body('job_title').notEmpty().withMessage('Job title is required').trim().escape(),
     body('company_name').notEmpty().withMessage('Company name is required').trim().escape(),
+    body('industry_sector').notEmpty().withMessage('Industry sector is required').isIn(['Finance','Technology','Business','Marketing']).withMessage('Invalid industry sector'),
     body('start_date').notEmpty().withMessage('Start date is required')
 ];
 

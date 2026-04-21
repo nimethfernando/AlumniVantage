@@ -75,6 +75,11 @@ const ViewAlumni = () => {
     });
   };
 
+  const getDisplayName = (email) => {
+    if (!email) return 'Alumni';
+    return email.split('@')[0];
+  };
+
   return (
     <div className="container">
       <div className="card" style={{ marginBottom: '2rem' }}>
@@ -132,7 +137,22 @@ const ViewAlumni = () => {
           {alumni.length > 0 ? (
             alumni.map((item, index) => (
               <div key={index} className="card">
-                <h3>{item.email}</h3>
+                {item.profile_image_url && (
+                  <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
+                    <img
+                      src={`http://localhost:3000${item.profile_image_url}`}
+                      alt="Profile"
+                      style={{
+                        width: '90px',
+                        height: '90px',
+                        borderRadius: '50%',
+                        objectFit: 'cover',
+                        border: '3px solid #e2e8f0'
+                      }}
+                    />
+                  </div>
+                )}
+                <h3>{getDisplayName(item.email)}</h3>
                 <p><strong>Programme:</strong> {item.degree_name || 'N/A'}</p>
                 <p><strong>Graduation Year:</strong> {item.graduation_year || 'N/A'}</p>
                 <p><strong>Company:</strong> {item.company || 'N/A'}</p>

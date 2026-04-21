@@ -2,125 +2,211 @@ const db = require('../config/db');
 
 exports.getDashboardAnalytics = async (req, res) => {
   try {
-    // These can be used to add WHERE clauses to the queries below if needed
     const programme = req.query.programme || null;
     const graduationYear = req.query.graduationYear || null;
     const sector = req.query.sector || null;
-    
-    // EXISTING CHART QUERIES
-    const [skillsGap] = await db.query(`
+
+    const conditions = ['u.is_verified = 1'];
+    const params = [];
+
+    if (programme) {
+      conditions.push('d.degree_name LIKE ?');
+      params.push(`%${programme}%`);
+    }
+
+    if (graduationYear) {
+      conditions.push('YEAR(d.completion_date) = ?');
+      params.push(graduationYear);
+    }
+
+    if (sector) {
+      conditions.push('eh.industry_sector = ?');
+      params.push(sector);
+    }
+
+    const whereClause = `WHERE ${conditions.join(' AND ')}`;
+
+    const [skillsRaw] = await db.query(`
       SELECT
-        course_name AS subject,
-        50 AS university,
+        sc.course_name AS subject,
         LEAST(COUNT(*) * 10, 100) AS alumni,
         100 AS fullMark
-      FROM short_courses
-      GROUP BY course_name
+      FROM users u
+      LEFT JOIN degrees d ON d.user_id = u.id
+      LEFT JOIN employment_history eh ON eh.user_id = u.id
+      LEFT JOIN short_courses sc ON sc.user_id = u.id
+      ${whereClause}
+      AND sc.course_name IS NOT NULL
+      GROUP BY sc.course_name
+      ORDER BY alumni DESC
       LIMIT 6
-    `);
+    `, params);
+
+    const universitySkills = {
+      'Cyber Security': 90,
+      'Advanced Server-Side Web Programming': 95,
+      'Concurrent Programming': 88,
+      'Database Systems': 85,
+      'Software Engineering': 80,
+      'Web Development': 82,
+      'Java Programming': 78,
+      'Networking': 75,
+      'Python': 72,
+      'Cloud Computing': 35,
+      'Docker': 15,
+      'Kubernetes': 10,
+      'AWS': 20,
+      'Azure': 18,
+      'Scrum': 25
+    };
+
+    const skillsGap = skillsRaw.map((item) => ({
+      subject: item.subject,
+      university: universitySkills[item.subject] || 30,
+      alumni: item.alumni,
+      fullMark: item.fullMark
+    }));
 
     const [industryEmployment] = await db.query(`
       SELECT
-        COALESCE(company, 'Unknown') AS name,
+        COALESCE(eh.industry_sector, 'Unknown') AS name,
         COUNT(*) AS value
-      FROM employment_history
-      GROUP BY company
+      FROM users u
+      LEFT JOIN degrees d ON d.user_id = u.id
+      LEFT JOIN employment_history eh ON eh.user_id = u.id
+      ${whereClause}
+      AND eh.industry_sector IS NOT NULL
+      GROUP BY eh.industry_sector
       ORDER BY value DESC
       LIMIT 8
-    `);
+    `, params);
 
     const [employmentTrends] = await db.query(`
       SELECT
-        YEAR(completion_date) AS year,
-        COUNT(*) AS employed,
-        COUNT(*) AS certified
-      FROM degrees
-      WHERE completion_date IS NOT NULL
-      GROUP BY YEAR(completion_date)
+        YEAR(d.completion_date) AS year,
+        COUNT(DISTINCT eh.user_id) AS employed,
+        COUNT(DISTINCT c.user_id) AS certified
+      FROM users u
+      LEFT JOIN degrees d ON d.user_id = u.id
+      LEFT JOIN employment_history eh ON eh.user_id = u.id
+      LEFT JOIN certifications c ON c.user_id = u.id
+      ${whereClause}
+      AND d.completion_date IS NOT NULL
+      GROUP BY YEAR(d.completion_date)
       ORDER BY year ASC
-    `);
+    `, params);
 
     const [topEmployers] = await db.query(`
       SELECT
-        COALESCE(company, 'Unknown') AS employer,
+        COALESCE(eh.company, 'Unknown') AS employer,
         COUNT(*) AS alumni_count
-      FROM employment_history
-      GROUP BY company
+      FROM users u
+      LEFT JOIN degrees d ON d.user_id = u.id
+      LEFT JOIN employment_history eh ON eh.user_id = u.id
+      ${whereClause}
+      AND eh.company IS NOT NULL
+      GROUP BY eh.company
       ORDER BY alumni_count DESC
       LIMIT 10
-    `);
+    `, params);
 
     const [certificationsByCategory] = await db.query(`
       SELECT
         CASE
-          WHEN LOWER(name) LIKE '%aws%' OR LOWER(name) LIKE '%azure%' OR LOWER(name) LIKE '%gcp%' THEN 'Cloud'
-          WHEN LOWER(name) LIKE '%security%' OR LOWER(name) LIKE '%cyber%' THEN 'Security'
-          WHEN LOWER(name) LIKE '%scrum%' OR LOWER(name) LIKE '%agile%' THEN 'Project Management'
-          WHEN LOWER(name) LIKE '%python%' OR LOWER(name) LIKE '%sql%' OR LOWER(name) LIKE '%data%' THEN 'Data'
+          WHEN LOWER(c.name) LIKE '%aws%' OR LOWER(c.name) LIKE '%azure%' OR LOWER(c.name) LIKE '%gcp%' THEN 'Cloud'
+          WHEN LOWER(c.name) LIKE '%security%' OR LOWER(c.name) LIKE '%cyber%' THEN 'Security'
+          WHEN LOWER(c.name) LIKE '%scrum%' OR LOWER(c.name) LIKE '%agile%' THEN 'Project Management'
+          WHEN LOWER(c.name) LIKE '%python%' OR LOWER(c.name) LIKE '%sql%' OR LOWER(c.name) LIKE '%data%' OR LOWER(c.name) LIKE '%tableau%' THEN 'Data'
           ELSE 'Other'
         END AS category,
         COUNT(*) AS value
-      FROM certifications
+      FROM users u
+      LEFT JOIN degrees d ON d.user_id = u.id
+      LEFT JOIN employment_history eh ON eh.user_id = u.id
+      LEFT JOIN certifications c ON c.user_id = u.id
+      ${whereClause}
+      AND c.name IS NOT NULL
       GROUP BY category
       ORDER BY value DESC
-    `);
+    `, params);
 
     const [alumniByGraduationYear] = await db.query(`
       SELECT
-        YEAR(completion_date) AS year,
-        COUNT(*) AS total
-      FROM degrees
-      WHERE completion_date IS NOT NULL
-      GROUP BY YEAR(completion_date)
+        YEAR(d.completion_date) AS year,
+        COUNT(DISTINCT d.user_id) AS total
+      FROM users u
+      LEFT JOIN degrees d ON d.user_id = u.id
+      LEFT JOIN employment_history eh ON eh.user_id = u.id
+      ${whereClause}
+      AND d.completion_date IS NOT NULL
+      GROUP BY YEAR(d.completion_date)
       ORDER BY year ASC
-    `);
+    `, params);
 
     const [sectorDemand] = await db.query(`
       SELECT
-        COALESCE(role, 'Unknown') AS sector,
+        COALESCE(eh.industry_sector, 'Unknown') AS sector,
         COUNT(*) AS value
-      FROM employment_history
-      GROUP BY role
+      FROM users u
+      LEFT JOIN degrees d ON d.user_id = u.id
+      LEFT JOIN employment_history eh ON eh.user_id = u.id
+      ${whereClause}
+      AND eh.industry_sector IS NOT NULL
+      GROUP BY eh.industry_sector
       ORDER BY value DESC
       LIMIT 10
-    `);
+    `, params);
 
     const [coursesPopularity] = await db.query(`
       SELECT
-        course_name AS subject,
+        sc.course_name AS subject,
         COUNT(*) AS value
-      FROM short_courses
-      GROUP BY course_name
+      FROM users u
+      LEFT JOIN degrees d ON d.user_id = u.id
+      LEFT JOIN employment_history eh ON eh.user_id = u.id
+      LEFT JOIN short_courses sc ON sc.user_id = u.id
+      ${whereClause}
+      AND sc.course_name IS NOT NULL
+      GROUP BY sc.course_name
       ORDER BY value DESC
       LIMIT 8
-    `);
-    
-    // 1. Total Alumni Count (Count distinct users who actually have a completed degree)
+    `, params);
+
     const [alumniCountResult] = await db.query(`
-      SELECT COUNT(DISTINCT user_id) as count 
-      FROM degrees 
-      WHERE completion_date IS NOT NULL
-    `);
-    const totalAlumni = alumniCountResult[0].count;
+      SELECT COUNT(DISTINCT u.id) AS count
+      FROM users u
+      LEFT JOIN degrees d ON d.user_id = u.id
+      LEFT JOIN employment_history eh ON eh.user_id = u.id
+      ${whereClause}
+      AND d.completion_date IS NOT NULL
+    `, params);
 
-    // 2. Total Certifications Across All Users
     const [certificationCountResult] = await db.query(`
-      SELECT COUNT(*) as count 
-      FROM certifications
-    `);
-    const totalCertifications = certificationCountResult[0].count;
+      SELECT COUNT(c.id) AS count
+      FROM users u
+      LEFT JOIN degrees d ON d.user_id = u.id
+      LEFT JOIN employment_history eh ON eh.user_id = u.id
+      LEFT JOIN certifications c ON c.user_id = u.id
+      ${whereClause}
+      AND c.id IS NOT NULL
+    `, params);
 
-    // 3. Top Industry (Using 'role' to represent sector demand, matching other charts)
     const [topIndustryResult] = await db.query(`
-      SELECT COALESCE(role, 'N/A') as sector, COUNT(*) as count 
-      FROM employment_history 
-      GROUP BY role 
-      ORDER BY count DESC 
+      SELECT COALESCE(eh.industry_sector, 'N/A') AS sector, COUNT(*) AS count
+      FROM users u
+      LEFT JOIN degrees d ON d.user_id = u.id
+      LEFT JOIN employment_history eh ON eh.user_id = u.id
+      ${whereClause}
+      AND eh.industry_sector IS NOT NULL
+      GROUP BY eh.industry_sector
+      ORDER BY count DESC
       LIMIT 1
-    `);
+    `, params);
+
+    const totalAlumni = alumniCountResult[0]?.count || 0;
+    const totalCertifications = certificationCountResult[0]?.count || 0;
     const topIndustry = topIndustryResult.length > 0 ? topIndustryResult[0].sector : 'N/A';
 
-    // SEND RESPONSE
     res.json({
       skillsGap,
       industryEmployment,
