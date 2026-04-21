@@ -6,12 +6,21 @@ const verifyToken = require('../middleware/authMiddleware');
 const verifyApiKey = require('../middleware/verifyApiKey');
 const requireRole = require('../middleware/requireRole');
 
-// GET /api/analytics
+// GET /api/analytics/filters - Fetch dynamic options for dashboard dropdowns
+router.get(
+  '/filters',
+  verifyToken,
+  requireRole('admin'),
+  verifyApiKey(['read:analytics']), 
+  analyticsController.getFilterOptions // Make sure this is added in your analyticsController.js as previously discussed!
+);
+
+// GET /api/analytics - Main dashboard analytics data
 router.get(
   '/', 
   verifyToken, 
   requireRole('admin'), 
-  verifyApiKey(['read:analytics']), // Check if verifyApiKey also has this bug in its file!
+  verifyApiKey(['read:analytics']),
   analyticsController.getDashboardAnalytics
 );
 

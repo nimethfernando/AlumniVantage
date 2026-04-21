@@ -1,5 +1,45 @@
+// server/controllers/analyticsController.js
 const db = require('../config/db');
 
+// --- GET FILTER OPTIONS ---
+// This provides the unique list of Programmes, Years, and Sectors to the frontend
+exports.getFilterOptions = async (req, res) => {
+  try {
+    // Fetch unique degree names
+    const [programmes] = await db.query(`
+      SELECT DISTINCT degree_name FROM degrees 
+      WHERE degree_name IS NOT NULL AND degree_name != ''
+      ORDER BY degree_name ASC
+    `);
+
+    // Fetch unique graduation years
+    const [years] = await db.query(`
+      SELECT DISTINCT YEAR(completion_date) as year FROM degrees 
+      WHERE completion_date IS NOT NULL 
+      ORDER BY year DESC
+    `);
+
+    // Fetch unique industry sectors
+    const [sectors] = await db.query(`
+      SELECT DISTINCT industry_sector FROM employment_history 
+      WHERE industry_sector IS NOT NULL AND industry_sector != ''
+      ORDER BY industry_sector ASC
+    `);
+
+    res.json({
+      programmes: programmes.map(p => p.degree_name),
+      years: years.map(y => y.year).filter(y => y !== null), // Filter out any null years just in case
+      sectors: sectors.map(s => s.industry_sector)
+    });
+  } catch (error) {
+    console.error('Failed to fetch filter options:', error);
+    res.status(500).json({ error: 'Failed to fetch filter options' });
+  }
+};
+
+
+// --- GET DASHBOARD ANALYTICS ---
+// This processes the selected filters and returns the chart data
 exports.getDashboardAnalytics = async (req, res) => {
   try {
     const programme = req.query.programme || null;
@@ -26,11 +66,12 @@ exports.getDashboardAnalytics = async (req, res) => {
 
     const whereClause = `WHERE ${conditions.join(' AND ')}`;
 
+    // --- SKILLS GAP ANALYTICS ---
     const [skillsRaw] = await db.query(`
       SELECT
         skill,
         MAX(curriculum_value) AS curriculum,
-        LEAST(COUNT(*) * 10, 100) AS alumni,
+        LEAST(COUNT(DISTINCT u.id) * 10, 100) AS alumni, -- CHANGED to prevent duplicate counting
         100 AS fullMark
       FROM (
         SELECT 'Docker' AS skill, 15 AS curriculum_value
@@ -118,26 +159,16 @@ exports.getDashboardAnalytics = async (req, res) => {
       };
     });
 
+    // --- CURRENT EMPLOYMENT FILTER ---
     const currentJobFilterSql = `
-      FROM (
-        SELECT eh.user_id, eh.company, eh.role, eh.industry_sector, eh.location, eh.start_date, eh.end_date
-        FROM employment_history eh
-        INNER JOIN (
-          SELECT user_id, MAX(start_date) AS latest_start_date
-          FROM employment_history
-          WHERE end_date IS NULL OR end_date >= CURDATE()
-          GROUP BY user_id
-        ) latest_job
-          ON eh.user_id = latest_job.user_id
-          AND eh.start_date = latest_job.latest_start_date
-        WHERE eh.end_date IS NULL OR eh.end_date >= CURDATE()
-      ) current_jobs
-      INNER JOIN users u ON u.id = current_jobs.user_id
+      FROM employment_history eh
+      INNER JOIN users u ON u.id = eh.user_id
       LEFT JOIN degrees d ON d.user_id = u.id
       WHERE u.is_verified = 1
+      AND eh.end_date IS NULL
       ${programme ? 'AND d.degree_name LIKE ?' : ''}
       ${graduationYear ? 'AND YEAR(d.completion_date) = ?' : ''}
-      ${sector ? 'AND current_jobs.industry_sector = ?' : ''}
+      ${sector ? 'AND eh.industry_sector = ?' : ''}
     `;
 
     const currentJobParams = [
@@ -146,69 +177,71 @@ exports.getDashboardAnalytics = async (req, res) => {
       ...(sector ? [sector] : [])
     ];
 
+    // --- EMPLOYMENT CHARTS ---
     const [industryEmployment] = await db.query(`
       SELECT
-        COALESCE(current_jobs.industry_sector, 'Unknown') AS name,
-        COUNT(DISTINCT current_jobs.user_id) AS value
+        COALESCE(eh.industry_sector, 'Unknown') AS name,
+        COUNT(DISTINCT eh.user_id) AS value
       ${currentJobFilterSql}
-      AND current_jobs.industry_sector IS NOT NULL
-      GROUP BY current_jobs.industry_sector
+      AND eh.industry_sector IS NOT NULL
+      GROUP BY eh.industry_sector
       ORDER BY value DESC
       LIMIT 8
     `, currentJobParams);
 
     const [jobTitles] = await db.query(`
       SELECT
-        COALESCE(current_jobs.role, 'Unknown') AS name,
-        COUNT(DISTINCT current_jobs.user_id) AS value
+        COALESCE(eh.role, 'Unknown') AS name,
+        COUNT(DISTINCT eh.user_id) AS value
       ${currentJobFilterSql}
-      AND current_jobs.role IS NOT NULL
-      GROUP BY current_jobs.role
+      AND eh.role IS NOT NULL
+      GROUP BY eh.role
       ORDER BY value DESC
       LIMIT 10
     `, currentJobParams);
 
     const [topEmployers] = await db.query(`
       SELECT
-        COALESCE(current_jobs.company, 'Unknown') AS employer,
-        COUNT(DISTINCT current_jobs.user_id) AS alumni_count
+        COALESCE(eh.company, 'Unknown') AS employer,
+        COUNT(DISTINCT eh.user_id) AS alumni_count
       ${currentJobFilterSql}
-      AND current_jobs.company IS NOT NULL
-      GROUP BY current_jobs.company
+      AND eh.company IS NOT NULL
+      GROUP BY eh.company
       ORDER BY alumni_count DESC
       LIMIT 10
     `, currentJobParams);
 
     const [locationDistribution] = await db.query(`
       SELECT
-        COALESCE(current_jobs.location, 'Unknown') AS location,
-        COUNT(DISTINCT current_jobs.user_id) AS value
+        COALESCE(eh.location, 'Unknown') AS location,
+        COUNT(DISTINCT eh.user_id) AS value
       ${currentJobFilterSql}
-      AND current_jobs.location IS NOT NULL
-      GROUP BY current_jobs.location
+      AND eh.location IS NOT NULL
+      GROUP BY eh.location
       ORDER BY value DESC
       LIMIT 10
     `, currentJobParams);
 
     const [sectorDemand] = await db.query(`
       SELECT
-        COALESCE(current_jobs.industry_sector, 'Unknown') AS sector,
-        COUNT(DISTINCT current_jobs.user_id) AS value
+        COALESCE(eh.industry_sector, 'Unknown') AS sector,
+        COUNT(DISTINCT eh.user_id) AS value
       ${currentJobFilterSql}
-      AND current_jobs.industry_sector IS NOT NULL
-      GROUP BY current_jobs.industry_sector
+      AND eh.industry_sector IS NOT NULL
+      GROUP BY eh.industry_sector
       ORDER BY value DESC
       LIMIT 10
     `, currentJobParams);
 
+    // --- OTHER ANALYTICS ---
     const [certificationTrendRaw] = await db.query(`
       SELECT
         DATE_FORMAT(c.issue_date, '%b') AS month,
         MONTH(c.issue_date) AS monthNumber,
-        SUM(CASE WHEN LOWER(c.name) LIKE '%aws%' THEN 1 ELSE 0 END) AS AWS,
-        SUM(CASE WHEN LOWER(c.name) LIKE '%azure%' THEN 1 ELSE 0 END) AS Azure,
-        SUM(CASE WHEN LOWER(c.name) LIKE '%gcp%' OR LOWER(c.name) LIKE '%google cloud%' THEN 1 ELSE 0 END) AS GCP,
-        SUM(CASE WHEN LOWER(c.name) LIKE '%docker%' THEN 1 ELSE 0 END) AS Docker
+        COUNT(DISTINCT CASE WHEN LOWER(c.name) LIKE '%aws%' THEN u.id ELSE NULL END) AS AWS,
+        COUNT(DISTINCT CASE WHEN LOWER(c.name) LIKE '%azure%' THEN u.id ELSE NULL END) AS Azure,
+        COUNT(DISTINCT CASE WHEN LOWER(c.name) LIKE '%gcp%' OR LOWER(c.name) LIKE '%google cloud%' THEN u.id ELSE NULL END) AS GCP,
+        COUNT(DISTINCT CASE WHEN LOWER(c.name) LIKE '%docker%' THEN u.id ELSE NULL END) AS Docker
       FROM users u
       LEFT JOIN degrees d ON d.user_id = u.id
       LEFT JOIN employment_history eh ON eh.user_id = u.id
@@ -230,7 +263,7 @@ exports.getDashboardAnalytics = async (req, res) => {
     const [coursesPopularity] = await db.query(`
       SELECT
         sc.course_name AS subject,
-        COUNT(*) AS value
+        COUNT(DISTINCT sc.id) AS value -- CHANGED from COUNT(*) to prevent duplicates
       FROM users u
       LEFT JOIN degrees d ON d.user_id = u.id
       LEFT JOIN employment_history eh ON eh.user_id = u.id
@@ -242,6 +275,7 @@ exports.getDashboardAnalytics = async (req, res) => {
       LIMIT 8
     `, params);
 
+    // --- SUMMARY METRICS ---
     const [alumniCountResult] = await db.query(`
       SELECT COUNT(DISTINCT u.id) AS count
       FROM users u
@@ -251,7 +285,7 @@ exports.getDashboardAnalytics = async (req, res) => {
     `, params);
 
     const [certificationCountResult] = await db.query(`
-      SELECT COUNT(c.id) AS count
+      SELECT COUNT(DISTINCT c.id) AS count -- CHANGED from COUNT(c.id) to prevent duplicates
       FROM users u
       LEFT JOIN degrees d ON d.user_id = u.id
       LEFT JOIN employment_history eh ON eh.user_id = u.id
@@ -262,11 +296,11 @@ exports.getDashboardAnalytics = async (req, res) => {
 
     const [topIndustryResult] = await db.query(`
       SELECT
-        COALESCE(current_jobs.industry_sector, 'N/A') AS sector,
-        COUNT(DISTINCT current_jobs.user_id) AS count
+        COALESCE(eh.industry_sector, 'N/A') AS sector,
+        COUNT(DISTINCT eh.user_id) AS count
       ${currentJobFilterSql}
-      AND current_jobs.industry_sector IS NOT NULL
-      GROUP BY current_jobs.industry_sector
+      AND eh.industry_sector IS NOT NULL
+      GROUP BY eh.industry_sector
       ORDER BY count DESC
       LIMIT 1
     `, currentJobParams);

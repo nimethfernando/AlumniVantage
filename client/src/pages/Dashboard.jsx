@@ -49,7 +49,8 @@ const Dashboard = () => {
 
   const fetchFilterOptions = async () => {
     try {
-      const response = await api.get('/api/alumni/filter-options', {
+      // Updated to match the new analytics filter route
+      const response = await api.get('/api/analytics/filters', {
         headers: {
           'x-api-key': import.meta.env.VITE_ANALYTICS_API_KEY
         }
@@ -57,7 +58,7 @@ const Dashboard = () => {
 
       setFilterOptions({
         programmes: response.data.programmes || [],
-        graduationYears: response.data.graduationYears || [],
+        graduationYears: response.data.years || [], // Mapped 'years' from backend to 'graduationYears'
         sectors: response.data.sectors || []
       });
     } catch (err) {
