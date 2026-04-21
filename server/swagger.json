@@ -328,6 +328,63 @@
             "example": 12
           }
         }
+      },
+      "AlumniItem": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "integer",
+            "example": 10
+          },
+          "email": {
+            "type": "string",
+            "example": "alumni@example.com"
+          },
+          "first_name": {
+            "type": "string",
+            "example": "John"
+          },
+          "last_name": {
+            "type": "string",
+            "example": "Doe"
+          },
+          "bio": {
+            "type": "string",
+            "example": "Experienced software developer..."
+          },
+          "linkedin_url": {
+            "type": "string",
+            "example": "https://linkedin.com/in/johndoe"
+          },
+          "profile_image_url": {
+            "type": "string",
+            "example": "/uploads/profile.jpg"
+          },
+          "degree_name": {
+            "type": "string",
+            "example": "BEng Software Engineering"
+          },
+          "graduation_year": {
+            "type": "integer",
+            "example": 2026
+          },
+          "company": {
+            "type": "string",
+            "example": "Google"
+          },
+          "job_title": {
+            "type": "string",
+            "example": "Senior Developer"
+          },
+          "industry_sector": {
+            "type": "string",
+            "example": "Technology"
+          },
+          "location": {
+            "type": "string",
+            "example": "London"
+          }
+        }
       }
     }
   },
@@ -455,10 +512,10 @@
                 ]
               }
             }
-          },
-          "401": {
-            "description": "Unauthorized. Login required."
           }
+        },
+        "401": {
+          "description": "Unauthorized. Login required."
         }
       }
     },
@@ -1514,6 +1571,228 @@
           },
           "404": {
             "description": "No active pending bid found."
+          }
+        }
+      }
+    },
+    "/api/alumni/filter-options": {
+      "get": {
+        "summary": "Get Alumni Filter Options",
+        "description": "Retrieves available filter options (programmes, graduation years, sectors) for the alumni directory.",
+        "tags": [
+          "Alumni Directory"
+        ],
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved filter options."
+          }
+        }
+      }
+    },
+    "/api/alumni": {
+      "get": {
+        "summary": "Get all alumni (View Alumni)",
+        "description": "Retrieves the alumni directory list based on provided filters.",
+        "tags": [
+          "Alumni Directory"
+        ],
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "programme",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter by degree programme"
+          },
+          {
+            "in": "query",
+            "name": "graduationYear",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Filter by year of graduation"
+          },
+          {
+            "in": "query",
+            "name": "sector",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter by industry sector"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved alumni list.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AlumniItem"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create an alumni record",
+        "description": "Create a new alumni record directly.",
+        "tags": [
+          "Alumni Directory"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "csrfAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AlumniItem"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Alumni record created successfully."
+          }
+        }
+      }
+    },
+    "/api/alumni/{id}": {
+      "get": {
+        "summary": "Get a specific alumnus",
+        "description": "Fetch details of a single alumnus by their ID.",
+        "tags": [
+          "Alumni Directory"
+        ],
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "User ID of the alumnus"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved alumnus details.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlumniItem"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Alumnus not found."
+          }
+        }
+      },
+      "put": {
+        "summary": "Update an alumnus",
+        "description": "Update details for an existing alumnus record.",
+        "tags": [
+          "Alumni Directory"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "csrfAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "User ID of the alumnus"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AlumniItem"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Alumnus record updated successfully."
+          },
+          "404": {
+            "description": "Alumnus not found."
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete an alumnus",
+        "description": "Remove an alumnus record by ID.",
+        "tags": [
+          "Alumni Directory"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "csrfAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "User ID of the alumnus"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Alumnus record deleted successfully."
+          },
+          "404": {
+            "description": "Alumnus not found."
           }
         }
       }

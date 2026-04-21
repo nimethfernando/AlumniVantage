@@ -130,7 +130,8 @@ exports.getEmployment = async (req, res) => {
 exports.updateProfile = async (req, res) => {
   try {
     const userId = req.user.userId;
-    const { bio, linkedin_url } = req.body;
+    // Extract first_name and last_name along with existing fields
+    const { first_name, last_name, bio, linkedin_url } = req.body;
     let profile_image_url = null;
 
     if (linkedin_url && !isValidUrl(linkedin_url)) {
@@ -144,8 +145,9 @@ exports.updateProfile = async (req, res) => {
     const [existing] = await pool.execute('SELECT * FROM profiles WHERE user_id = ?', [userId]);
 
     if (existing.length > 0) {
-      let query = 'UPDATE profiles SET bio = ?, linkedin_url = ?';
-      let params = [bio, linkedin_url];
+      // Update with first_name and last_name
+      let query = 'UPDATE profiles SET first_name = ?, last_name = ?, bio = ?, linkedin_url = ?';
+      let params = [first_name, last_name, bio, linkedin_url];
 
       if (profile_image_url) {
         query += ', profile_image_url = ?';
@@ -156,9 +158,10 @@ exports.updateProfile = async (req, res) => {
 
       await pool.execute(query, params);
     } else {
+      // Insert with first_name and last_name
       await pool.execute(
-        'INSERT INTO profiles (user_id, bio, linkedin_url, profile_image_url) VALUES (?, ?, ?, ?)',
-        [userId, bio, linkedin_url, profile_image_url]
+        'INSERT INTO profiles (user_id, first_name, last_name, bio, linkedin_url, profile_image_url) VALUES (?, ?, ?, ?, ?, ?)',
+        [userId, first_name, last_name, bio, linkedin_url, profile_image_url]
       );
     }
 

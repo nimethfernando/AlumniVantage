@@ -75,9 +75,13 @@ const ViewAlumni = () => {
     });
   };
 
-  const getDisplayName = (email) => {
-    if (!email) return 'Alumni';
-    return email.split('@')[0];
+  // Updated to use first_name and last_name, falling back to email
+  const getDisplayName = (item) => {
+    if (item.first_name || item.last_name) {
+      return `${item.first_name || ''} ${item.last_name || ''}`.trim();
+    }
+    if (!item.email) return 'Alumni';
+    return item.email.split('@')[0];
   };
 
   return (
@@ -152,7 +156,8 @@ const ViewAlumni = () => {
                     />
                   </div>
                 )}
-                <h3>{getDisplayName(item.email)}</h3>
+                {/* Updated to pass the entire item object */}
+                <h3>{getDisplayName(item)}</h3>
                 <p><strong>Programme:</strong> {item.degree_name || 'N/A'}</p>
                 <p><strong>Graduation Year:</strong> {item.graduation_year || 'N/A'}</p>
                 <p><strong>Company:</strong> {item.company || 'N/A'}</p>

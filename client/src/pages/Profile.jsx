@@ -8,7 +8,8 @@ import BiddingSystem from '../components/BiddingSystem';
 const INDUSTRY_SECTORS = ['Finance', 'Technology', 'Business', 'Marketing'];
 
 const Profile = () => {
-  const [profile, setProfile] = useState({ bio: '', linkedin_url: '' });
+  // Added first_name and last_name to the initial profile state
+  const [profile, setProfile] = useState({ first_name: '', last_name: '', bio: '', linkedin_url: '' });
   const [image, setImage] = useState(null);
   
   const [degrees, setDegrees] = useState([]);
@@ -78,8 +79,11 @@ const Profile = () => {
   const handleProfileSubmit = async (e) => {
     e.preventDefault();
     const formData = new FormData();
-    formData.append('bio', profile.bio);
-    formData.append('linkedin_url', profile.linkedin_url);
+    // Appended first_name and last_name to the form data
+    formData.append('first_name', profile.first_name || '');
+    formData.append('last_name', profile.last_name || '');
+    formData.append('bio', profile.bio || '');
+    formData.append('linkedin_url', profile.linkedin_url || '');
     if (image) formData.append('profile_image', image);
 
     try {
@@ -281,7 +285,12 @@ const Profile = () => {
               <div className="profile-image-placeholder">No Image</div>
             )}
           </div>
-          <h2>{profile.name || 'Alumni Profile'}</h2>
+          {/* Updated header to display first_name and last_name properly */}
+          <h2>
+            {profile.first_name || profile.last_name 
+              ? `${profile.first_name || ''} ${profile.last_name || ''}`.trim() 
+              : 'Alumni Profile'}
+          </h2>
         </div>
 
         <div style={{ position: 'absolute', top: '20px', right: '20px', display: 'flex', gap: '15px' }}>
@@ -320,6 +329,28 @@ const Profile = () => {
       <div className="card-section">
         <h3>Personal Information</h3>
         <form className="custom-form" onSubmit={handleProfileSubmit}>
+          {/* Added First Name Input */}
+          <div className="form-group">
+            <label>First Name</label>
+            <input 
+              type="text" 
+              placeholder="Enter your first name"
+              value={profile.first_name || ''} 
+              onChange={(e) => setProfile({ ...profile, first_name: e.target.value })} 
+            />
+          </div>
+
+          {/* Added Last Name Input */}
+          <div className="form-group">
+            <label>Last Name</label>
+            <input 
+              type="text" 
+              placeholder="Enter your last name"
+              value={profile.last_name || ''} 
+              onChange={(e) => setProfile({ ...profile, last_name: e.target.value })} 
+            />
+          </div>
+
           <div className="form-group">
             <label>Profile Image</label>
             <input type="file" accept="image/*" onChange={(e) => setImage(e.target.files[0])} className="file-input" />
@@ -329,7 +360,7 @@ const Profile = () => {
             <textarea
               rows="4"
               placeholder="Tell us about yourself..."
-              value={profile.bio}
+              value={profile.bio || ''}
               onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
             />
           </div>
@@ -338,7 +369,7 @@ const Profile = () => {
             <input
               type="url"
               placeholder="https://linkedin.com/in/yourprofile"
-              value={profile.linkedin_url}
+              value={profile.linkedin_url || ''}
               onChange={(e) => setProfile({ ...profile, linkedin_url: e.target.value })}
             />
           </div>

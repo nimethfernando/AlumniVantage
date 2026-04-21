@@ -8,6 +8,8 @@ exports.getAlumniDirectory = async (req, res) => {
       SELECT
         u.id AS user_id,
         u.email,
+        MAX(p.first_name) AS first_name,
+        MAX(p.last_name) AS last_name,
         MAX(p.bio) AS bio,
         MAX(p.linkedin_url) AS linkedin_url,
         MAX(p.profile_image_url) AS profile_image_url,

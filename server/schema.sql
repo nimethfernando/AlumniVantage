@@ -30,6 +30,8 @@ CREATE TABLE users (
 CREATE TABLE profiles (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
+    first_name VARCHAR(255),
+    last_name VARCHAR(255),
     bio TEXT,
     linkedin_url VARCHAR(255),
     profile_image_url VARCHAR(255),
