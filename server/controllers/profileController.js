@@ -263,7 +263,7 @@ exports.addEmployment = async (req, res) => {
 
     await pool.execute(
       'INSERT INTO employment_history (user_id, company, role, industry_sector, location, start_date, end_date) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [req.user.userId, company_name, job_title, industry_sector, location, formattedStart, formattedEnd]
+      [req.user.userId, company_name, job_title, industry_sector, location || null, formattedStart, formattedEnd]
     );
 
     res.status(201).json({ message: "Employment added!" });
@@ -461,7 +461,7 @@ exports.updateEmployment = async (req, res) => {
 
     const [result] = await pool.execute(
       'UPDATE employment_history SET company = ?, role = ?, industry_sector = ?, location = ?, start_date = ?, end_date = ? WHERE id = ? AND user_id = ?',
-      [company_name, job_title, industry_sector, location, formattedStart, formattedEnd, id, userId]
+      [company_name, job_title, industry_sector, location || null, formattedStart, formattedEnd, id, userId]
     );
 
     if (result.affectedRows === 0) return res.status(404).json({ error: "Employment record not found." });

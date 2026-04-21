@@ -2,8 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import api from '../api/axiosConfig';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer,
-  PieChart, Pie, Cell, LineChart, Line, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar,
-  AreaChart, Area
+  PieChart, Pie, Cell, LineChart, Line, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar
 } from 'recharts';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
@@ -29,16 +28,16 @@ const Dashboard = () => {
   const [analytics, setAnalytics] = useState({
     skillsGap: [],
     industryEmployment: [],
-    employmentTrends: [],
+    jobTitles: [],
     topEmployers: [],
-    certificationsByCategory: [],
-    alumniByGraduationYear: [],
+    locationDistribution: [],
     sectorDemand: [],
+    certificationTrend: [],
     coursesPopularity: [],
     summaryMetrics: { totalAlumni: 0, totalCertifications: 0, topIndustry: 'N/A' }
   });
 
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658', '#8dd1e1', '#a4de6c'];
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658', '#8dd1e1', '#a4de6c', '#d0ed57'];
 
   useEffect(() => {
     fetchFilterOptions();
@@ -84,11 +83,11 @@ const Dashboard = () => {
       setAnalytics({
         skillsGap: response.data.skillsGap || [],
         industryEmployment: response.data.industryEmployment || [],
-        employmentTrends: response.data.employmentTrends || [],
+        jobTitles: response.data.jobTitles || [],
         topEmployers: response.data.topEmployers || [],
-        certificationsByCategory: response.data.certificationsByCategory || [],
-        alumniByGraduationYear: response.data.alumniByGraduationYear || [],
+        locationDistribution: response.data.locationDistribution || [],
         sectorDemand: response.data.sectorDemand || [],
+        certificationTrend: response.data.certificationTrend || [],
         coursesPopularity: response.data.coursesPopularity || [],
         summaryMetrics: response.data.summaryMetrics || { totalAlumni: 0, totalCertifications: 0, topIndustry: 'N/A' }
       });
@@ -142,11 +141,11 @@ const Dashboard = () => {
       const csvData = [
         ...analytics.skillsGap.map((item) => ({ chart: 'skillsGap', ...item })),
         ...analytics.industryEmployment.map((item) => ({ chart: 'industryEmployment', ...item })),
-        ...analytics.employmentTrends.map((item) => ({ chart: 'employmentTrends', ...item })),
+        ...analytics.jobTitles.map((item) => ({ chart: 'jobTitles', ...item })),
         ...analytics.topEmployers.map((item) => ({ chart: 'topEmployers', ...item })),
-        ...analytics.certificationsByCategory.map((item) => ({ chart: 'certificationsByCategory', ...item })),
-        ...analytics.alumniByGraduationYear.map((item) => ({ chart: 'alumniByGraduationYear', ...item })),
+        ...analytics.locationDistribution.map((item) => ({ chart: 'locationDistribution', ...item })),
         ...analytics.sectorDemand.map((item) => ({ chart: 'sectorDemand', ...item })),
+        ...analytics.certificationTrend.map((item) => ({ chart: 'certificationTrend', ...item })),
         ...analytics.coursesPopularity.map((item) => ({ chart: 'coursesPopularity', ...item }))
       ];
 
@@ -227,25 +226,25 @@ const Dashboard = () => {
 
           <div className="charts-grid">
             <div className="chart-card">
-              <h3>Curriculum vs Alumni Skills Gap (Radar Chart)</h3>
+              <h3>Curriculum Skill Gap Analysis</h3>
               <ResponsiveContainer width="100%" height={300}>
                 <RadarChart data={analytics.skillsGap}>
                   <PolarGrid />
                   <PolarAngleAxis dataKey="subject" />
                   <PolarRadiusAxis />
-                  <Radar name="University Taught" dataKey="university" stroke="#8884d8" fill="#8884d8" fillOpacity={0.6} />
-                  <Radar name="Alumni Acquired" dataKey="alumni" stroke="#82ca9d" fill="#82ca9d" fillOpacity={0.6} />
+                  <Radar name="Curriculum" dataKey="university" stroke="#8884d8" fill="#8884d8" fillOpacity={0.6} />
+                  <Radar name="Alumni Demand" dataKey="alumni" stroke="#82ca9d" fill="#82ca9d" fillOpacity={0.6} />
                   <Legend />
                   <RechartsTooltip />
                 </RadarChart>
               </ResponsiveContainer>
               <p className="chart-insight">
-                This chart highlights gaps between what the university teaches and what alumni later acquire independently, helping identify skills that may need to be integrated into the curriculum earlier.
+                This chart compares curriculum coverage with skills alumni had to acquire after graduation, highlighting the strongest curriculum gaps.
               </p>
             </div>
 
             <div className="chart-card">
-              <h3>Employment by Industry Sector (Pie Chart)</h3>
+              <h3>Employment by Industry Sector</h3>
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
                   <Pie
@@ -266,30 +265,29 @@ const Dashboard = () => {
                 </PieChart>
               </ResponsiveContainer>
               <p className="chart-insight">
-                This chart shows where graduates are being employed most heavily, helping the university identify which industry sectors currently absorb the largest share of alumni talent.
+                This chart shows the main sectors where alumni are currently employed, helping identify where graduates are most often absorbed.
               </p>
             </div>
 
             <div className="chart-card">
-              <h3>Post-Graduation Certification Trends (Line Chart)</h3>
+              <h3>Most Common Job Titles</h3>
               <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={analytics.employmentTrends}>
+                <BarChart layout="vertical" data={analytics.jobTitles} margin={{ top: 10, right: 30, left: 60, bottom: 10 }}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="year" />
-                  <YAxis />
+                  <XAxis type="number" />
+                  <YAxis dataKey="name" type="category" width={140} />
                   <RechartsTooltip />
                   <Legend />
-                  <Line type="monotone" name="Employed" dataKey="employed" stroke="#82ca9d" activeDot={{ r: 8 }} />
-                  <Line type="monotone" name="Certified" dataKey="certified" stroke="#8884d8" activeDot={{ r: 8 }} />
-                </LineChart>
+                  <Bar name="Alumni Count" dataKey="value" fill="#00C49F" />
+                </BarChart>
               </ResponsiveContainer>
               <p className="chart-insight">
-                Growth in alumni certifications after graduation suggests changing industry expectations and shows which professional areas are becoming more important over time.
+                This chart highlights the most common roles alumni now hold, revealing emerging career pathways and employment patterns.
               </p>
             </div>
 
             <div className="chart-card">
-              <h3>Top Employers (Bar Chart)</h3>
+              <h3>Top Employers Hiring Alumni</h3>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart data={analytics.topEmployers}>
                   <CartesianGrid strokeDasharray="3 3" />
@@ -301,18 +299,18 @@ const Dashboard = () => {
                 </BarChart>
               </ResponsiveContainer>
               <p className="chart-insight">
-                This chart reveals which employers recruit the most graduates, giving the university evidence of strong employer relationships and dominant hiring destinations.
+                This chart identifies which employers recruit the most graduates, showing the organisations with the strongest alumni hiring presence.
               </p>
             </div>
 
             <div className="chart-card">
-              <h3>Certifications by Category (Doughnut Chart)</h3>
+              <h3>Geographic Distribution of Alumni</h3>
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
                   <Pie
-                    data={analytics.certificationsByCategory}
+                    data={analytics.locationDistribution}
                     dataKey="value"
-                    nameKey="category"
+                    nameKey="location"
                     cx="50%"
                     cy="50%"
                     innerRadius={60}
@@ -320,8 +318,8 @@ const Dashboard = () => {
                     paddingAngle={3}
                     label
                   >
-                    {analytics.certificationsByCategory.map((entry, index) => (
-                      <Cell key={`cert-cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    {analytics.locationDistribution.map((entry, index) => (
+                      <Cell key={`location-cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
                   <RechartsTooltip />
@@ -329,58 +327,61 @@ const Dashboard = () => {
                 </PieChart>
               </ResponsiveContainer>
               <p className="chart-insight">
-                This doughnut chart shows the most common certification areas pursued by alumni, indicating where graduates feel they must strengthen their skills after university.
+                This chart shows where alumni are working geographically, helping the university understand its reach and international footprint.
               </p>
             </div>
 
             <div className="chart-card">
-              <h3>Alumni by Graduation Year (Area Chart)</h3>
+              <h3>Industry Demand by Sector</h3>
               <ResponsiveContainer width="100%" height={300}>
-                <AreaChart data={analytics.alumniByGraduationYear}>
+                <BarChart data={analytics.sectorDemand}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="year" />
+                  <XAxis dataKey="sector" />
                   <YAxis />
-                  <RechartsTooltip />
-                  <Legend />
-                  <Area type="monotone" name="Total Alumni" dataKey="total" stroke="#ffc658" fill="#ffc658" fillOpacity={0.4} />
-                </AreaChart>
-              </ResponsiveContainer>
-              <p className="chart-insight">
-                This chart shows how alumni records are distributed by graduation year, helping compare trends across different graduating cohorts.
-              </p>
-            </div>
-
-            <div className="chart-card">
-              <h3>Sector Demand (Bar Chart)</h3>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart layout="vertical" data={analytics.sectorDemand} margin={{ top: 10, right: 30, left: 40, bottom: 10 }}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis type="number" />
-                  <YAxis dataKey="sector" type="category" width={100} />
                   <RechartsTooltip />
                   <Legend />
                   <Bar name="Demand" dataKey="value" fill="#8884d8" />
                 </BarChart>
               </ResponsiveContainer>
               <p className="chart-insight">
-                This chart highlights the roles or sectors with the strongest alumni presence, helping the university track labour market demand and emerging professional directions.
+                This chart shows the highest-demand sectors based on alumni employment concentration, helping guide curriculum planning decisions.
               </p>
             </div>
 
             <div className="chart-card">
-              <h3>Popular Courses (Radar Chart)</h3>
+              <h3>Certification Growth Trend (Last 6 Months)</h3>
               <ResponsiveContainer width="100%" height={300}>
-                <RadarChart cx="50%" cy="50%" outerRadius="80%" data={analytics.coursesPopularity}>
-                  <PolarGrid />
-                  <PolarAngleAxis dataKey="subject" />
-                  <PolarRadiusAxis />
-                  <Radar name="Popularity" dataKey="value" stroke="#ff7300" fill="#ff7300" fillOpacity={0.6} />
+                <LineChart data={analytics.certificationTrend}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
                   <RechartsTooltip />
                   <Legend />
-                </RadarChart>
+                  <Line type="monotone" dataKey="AWS" stroke="#0088FE" activeDot={{ r: 6 }} />
+                  <Line type="monotone" dataKey="Azure" stroke="#00C49F" activeDot={{ r: 6 }} />
+                  <Line type="monotone" dataKey="GCP" stroke="#FFBB28" activeDot={{ r: 6 }} />
+                  <Line type="monotone" dataKey="Docker" stroke="#FF8042" activeDot={{ r: 6 }} />
+                </LineChart>
               </ResponsiveContainer>
               <p className="chart-insight">
-                This chart shows the most commonly completed post-graduation courses, revealing which workplace skills alumni are most often forced to learn independently.
+                This chart tracks recent growth in high-demand certifications, helping the university spot rapidly emerging industry needs.
+              </p>
+            </div>
+
+            <div className="chart-card">
+              <h3>Professional Development Trends (Courses)</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart layout="vertical" data={analytics.coursesPopularity} margin={{ top: 10, right: 30, left: 60, bottom: 10 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis type="number" />
+                  <YAxis dataKey="subject" type="category" width={140} />
+                  <RechartsTooltip />
+                  <Legend />
+                  <Bar name="Completions" dataKey="value" fill="#ff7300" />
+                </BarChart>
+              </ResponsiveContainer>
+              <p className="chart-insight">
+                This chart shows the most commonly completed post-graduation courses, indicating which workplace skills alumni most often learn independently.
               </p>
             </div>
           </div>

@@ -39,7 +39,8 @@ const courseRules = [
 const employmentRules = [
     body('job_title').notEmpty().withMessage('Job title is required').trim().escape(),
     body('company_name').notEmpty().withMessage('Company name is required').trim().escape(),
-    body('industry_sector').notEmpty().withMessage('Industry sector is required').isIn(['Finance','Technology','Business','Marketing']).withMessage('Invalid industry sector'),
+    body('industry_sector').notEmpty().withMessage('Industry sector is required').isIn(['Finance','Technology','Business','Marketing','Healthcare','Education','Data Analytics']).withMessage('Invalid industry sector'),
+    body('location').optional({ checkFalsy: true }).isString().trim().isLength({ max: 150 }).withMessage('Location must be less than 150 characters').escape(),
     body('start_date').notEmpty().withMessage('Start date is required')
 ];
 
