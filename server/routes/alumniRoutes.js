@@ -10,7 +10,7 @@ const requireRole = require('../middleware/requireRole');
 router.get(
   '/filter-options', 
   verifyToken, 
-  requireRole(['developer', 'admin', 'alumnus']),
+  requireRole('developer', 'admin', 'alumnus'),
   verifyApiKey(['read:alumni']), 
   alumniController.getFilterOptions
 );
@@ -19,7 +19,7 @@ router.get(
 router.get(
   '/', 
   verifyToken, 
-  requireRole(['developer', 'admin', 'alumnus']),
+  requireRole('developer', 'admin', 'alumnus'),
   verifyApiKey(['read:alumni']), 
   alumniController.getAlumniDirectory
 );

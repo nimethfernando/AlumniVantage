@@ -1,5 +1,5 @@
 import { useState, useEffect, useContext } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import api from '../api/axiosConfig';
 import '../App.css'; 
@@ -257,24 +257,36 @@ const Profile = () => {
           <h2>{profile.name || 'Alumni Profile'}</h2>
         </div>
 
-        {/* Top-Right Logout Button */}
-        <button 
-          onClick={handleLogout} 
-          className="btn-secondary" 
-          style={{ 
-            position: 'absolute', 
-            top: '20px', 
-            right: '20px', 
-            backgroundColor: '#dc3545', 
-            color: 'white', 
-            border: 'none', 
-            padding: '0.6rem 1.2rem', 
-            cursor: 'pointer', 
-            borderRadius: '4px' 
-          }}
-        >
-          Logout
-        </button>
+        {/* Top-Right Buttons (View Alumni & Logout) */}
+        <div style={{ position: 'absolute', top: '20px', right: '20px', display: 'flex', gap: '15px' }}>
+          <Link 
+            to="/alumni" 
+            className="btn-secondary"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              textDecoration: 'none',
+              padding: '0.6rem 1.2rem',
+              borderRadius: '4px'
+            }}
+          >
+            View Alumni
+          </Link>
+          <button 
+            onClick={handleLogout} 
+            className="btn-secondary" 
+            style={{ 
+              backgroundColor: '#dc3545', 
+              color: 'white', 
+              border: 'none', 
+              padding: '0.6rem 1.2rem', 
+              cursor: 'pointer', 
+              borderRadius: '4px' 
+            }}
+          >
+            Logout
+          </button>
+        </div>
       </div>
 
       <BiddingSystem />

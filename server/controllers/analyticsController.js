@@ -94,29 +94,31 @@ exports.getDashboardAnalytics = async (req, res) => {
       ORDER BY value DESC
       LIMIT 8
     `);
-
-    // NEW SUMMARY QUERIES
-    // 1. Total Alumni Count (users with role = 'alumni')
-    const [alumniCountResult] = await db.query(
-      "SELECT COUNT(*) as count FROM users WHERE role = 'alumni'"
-    );
+    
+    // 1. Total Alumni Count (Count distinct users who actually have a completed degree)
+    const [alumniCountResult] = await db.query(`
+      SELECT COUNT(DISTINCT user_id) as count 
+      FROM degrees 
+      WHERE completion_date IS NOT NULL
+    `);
     const totalAlumni = alumniCountResult[0].count;
 
     // 2. Total Certifications Across All Users
-    const [certificationCountResult] = await db.query(
-      "SELECT COUNT(*) as count FROM certifications"
-    );
+    const [certificationCountResult] = await db.query(`
+      SELECT COUNT(*) as count 
+      FROM certifications
+    `);
     const totalCertifications = certificationCountResult[0].count;
 
-    // 3. Top Industry / Most Common Company
+    // 3. Top Industry (Using 'role' to represent sector demand, matching other charts)
     const [topIndustryResult] = await db.query(`
-      SELECT company, COUNT(*) as count 
+      SELECT COALESCE(role, 'N/A') as sector, COUNT(*) as count 
       FROM employment_history 
-      GROUP BY company 
+      GROUP BY role 
       ORDER BY count DESC 
       LIMIT 1
     `);
-    const topIndustry = topIndustryResult.length > 0 ? topIndustryResult[0].company : 'N/A';
+    const topIndustry = topIndustryResult.length > 0 ? topIndustryResult[0].sector : 'N/A';
 
     // SEND RESPONSE
     res.json({

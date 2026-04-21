@@ -8,13 +8,13 @@ exports.getAlumniDirectory = async (req, res) => {
       SELECT
         u.id AS user_id,
         u.email,
-        p.bio,
-        p.linkedin_url,
-        p.profile_image_url,
-        d.degree_name,
-        YEAR(d.completion_date) AS graduation_year,
-        eh.company,
-        eh.role AS industry_sector
+        MAX(p.bio) AS bio,
+        MAX(p.linkedin_url) AS linkedin_url,
+        MAX(p.profile_image_url) AS profile_image_url,
+        MAX(d.degree_name) AS degree_name,
+        MAX(YEAR(d.completion_date)) AS graduation_year,
+        MAX(eh.company) AS company,
+        MAX(eh.role) AS industry_sector
       FROM users u
       LEFT JOIN profiles p ON p.user_id = u.id
       LEFT JOIN degrees d ON d.user_id = u.id
@@ -39,7 +39,10 @@ exports.getAlumniDirectory = async (req, res) => {
       params.push(`%${sector}%`);
     }
 
-    query += ` ORDER BY graduation_year DESC, u.id DESC`;
+    query += `
+      GROUP BY u.id, u.email
+      ORDER BY graduation_year DESC, u.id DESC
+    `;
 
     const [rows] = await db.query(query, params);
 
@@ -55,9 +58,26 @@ exports.getAlumniDirectory = async (req, res) => {
 
 exports.getFilterOptions = async (req, res) => {
   try {
-    const [programmes] = await db.query(`SELECT DISTINCT degree_name FROM degrees WHERE degree_name IS NOT NULL`);
-    const [years] = await db.query(`SELECT DISTINCT YEAR(completion_date) AS year FROM degrees WHERE completion_date IS NOT NULL ORDER BY year DESC`);
-    const [sectors] = await db.query(`SELECT DISTINCT role FROM employment_history WHERE role IS NOT NULL`);
+    const [programmes] = await db.query(`
+      SELECT DISTINCT degree_name
+      FROM degrees
+      WHERE degree_name IS NOT NULL
+      ORDER BY degree_name ASC
+    `);
+
+    const [years] = await db.query(`
+      SELECT DISTINCT YEAR(completion_date) AS year
+      FROM degrees
+      WHERE completion_date IS NOT NULL
+      ORDER BY year DESC
+    `);
+
+    const [sectors] = await db.query(`
+      SELECT DISTINCT role
+      FROM employment_history
+      WHERE role IS NOT NULL
+      ORDER BY role ASC
+    `);
 
     res.status(200).json({
       programmes: programmes.map(p => p.degree_name),

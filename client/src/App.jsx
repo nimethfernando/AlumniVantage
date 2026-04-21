@@ -1,4 +1,3 @@
-// src/App.jsx
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, AuthContext } from './context/AuthContext';
 import { useContext } from 'react';
@@ -10,6 +9,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import Profile from './pages/Profile';
 import Dashboard from './pages/Dashboard';
+import ViewAlumni from './pages/ViewAlumni';
 
 axios.interceptors.response.use(
   (response) => response,
@@ -78,6 +78,16 @@ function App() {
             element={
               <PrivateRoute>
                 <Profile />
+              </PrivateRoute>
+            }
+          />
+
+          {/* View Alumni Route */}
+          <Route
+            path="/alumni"
+            element={
+              <PrivateRoute>
+                <ViewAlumni />
               </PrivateRoute>
             }
           />
