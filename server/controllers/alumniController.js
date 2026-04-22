@@ -23,7 +23,7 @@ exports.getAlumniDirectory = async (req, res) => {
       LEFT JOIN profiles p ON p.user_id = u.id
       LEFT JOIN degrees d ON d.user_id = u.id
       LEFT JOIN employment_history eh ON eh.user_id = u.id
-      WHERE u.is_verified = 1
+      WHERE u.is_verified = 1 AND u.role = 'alumnus'
     `;
 
     const params = [];
