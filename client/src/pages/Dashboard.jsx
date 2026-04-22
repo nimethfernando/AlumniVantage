@@ -139,19 +139,26 @@ const Dashboard = () => {
 
   const exportCSV = () => {
     try {
-      const csvData = [
-        ...analytics.skillsGap.map((item) => ({ chart: 'skillsGap', ...item })),
-        ...analytics.industryEmployment.map((item) => ({ chart: 'industryEmployment', ...item })),
-        ...analytics.jobTitles.map((item) => ({ chart: 'jobTitles', ...item })),
-        ...analytics.topEmployers.map((item) => ({ chart: 'topEmployers', ...item })),
-        ...analytics.locationDistribution.map((item) => ({ chart: 'locationDistribution', ...item })),
-        ...analytics.sectorDemand.map((item) => ({ chart: 'sectorDemand', ...item })),
-        ...analytics.certificationTrend.map((item) => ({ chart: 'certificationTrend', ...item })),
-        ...analytics.coursesPopularity.map((item) => ({ chart: 'coursesPopularity', ...item }))
-      ];
+      let csvString = 'University Analytics Report\n\n';
 
-      const csv = Papa.unparse(csvData);
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      // Helper function to append each section properly
+      const addSection = (title, data) => {
+        if (!data || data.length === 0) return;
+        csvString += `--- ${title} ---\n`;
+        csvString += Papa.unparse(data) + '\n\n';
+      };
+
+      // Add each dataset as its own section
+      addSection('Skills Gap', analytics.skillsGap);
+      addSection('Industry Employment', analytics.industryEmployment);
+      addSection('Job Titles', analytics.jobTitles);
+      addSection('Top Employers', analytics.topEmployers);
+      addSection('Location Distribution', analytics.locationDistribution);
+      addSection('Sector Demand', analytics.sectorDemand);
+      addSection('Certification Trend', analytics.certificationTrend);
+      addSection('Courses Popularity', analytics.coursesPopularity);
+
+      const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
       link.href = URL.createObjectURL(blob);
       link.setAttribute('download', 'Analytics_Data.csv');
