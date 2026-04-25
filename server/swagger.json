@@ -116,7 +116,9 @@
             "type": "string",
             "enum": [
               "read:analytics",
-              "read:alumni_of_day"
+              "read:alumni",
+              "read:alumni_of_day",
+              "read:donations"
             ],
             "example": "read:analytics"
           }
@@ -1596,8 +1598,8 @@
     },
     "/api/alumni": {
       "get": {
-        "summary": "Get all alumni (View Alumni)",
-        "description": "Retrieves the alumni directory list based on provided filters.",
+        "summary": "Get all alumni with their details",
+        "description": "Retrieves the alumni directory list including all specific details based on provided filters.",
         "tags": [
           "Alumni Directory"
         ],
@@ -1634,7 +1636,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Successfully retrieved alumni list.",
+            "description": "Successfully retrieved comprehensive alumni list.",
             "content": {
               "application/json": {
                 "schema": {
@@ -1645,154 +1647,6 @@
                 }
               }
             }
-          }
-        }
-      },
-      "post": {
-        "summary": "Create an alumni record",
-        "description": "Create a new alumni record directly.",
-        "tags": [
-          "Alumni Directory"
-        ],
-        "security": [
-          {
-            "cookieAuth": []
-          },
-          {
-            "csrfAuth": []
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AlumniItem"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Alumni record created successfully."
-          }
-        }
-      }
-    },
-    "/api/alumni/{id}": {
-      "get": {
-        "summary": "Get a specific alumnus",
-        "description": "Fetch details of a single alumnus by their ID.",
-        "tags": [
-          "Alumni Directory"
-        ],
-        "security": [
-          {
-            "ApiKeyAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "integer"
-            },
-            "description": "User ID of the alumnus"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successfully retrieved alumnus details.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AlumniItem"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Alumnus not found."
-          }
-        }
-      },
-      "put": {
-        "summary": "Update an alumnus",
-        "description": "Update details for an existing alumnus record.",
-        "tags": [
-          "Alumni Directory"
-        ],
-        "security": [
-          {
-            "cookieAuth": []
-          },
-          {
-            "csrfAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "integer"
-            },
-            "description": "User ID of the alumnus"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AlumniItem"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Alumnus record updated successfully."
-          },
-          "404": {
-            "description": "Alumnus not found."
-          }
-        }
-      },
-      "delete": {
-        "summary": "Delete an alumnus",
-        "description": "Remove an alumnus record by ID.",
-        "tags": [
-          "Alumni Directory"
-        ],
-        "security": [
-          {
-            "cookieAuth": []
-          },
-          {
-            "csrfAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "integer"
-            },
-            "description": "User ID of the alumnus"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Alumnus record deleted successfully."
-          },
-          "404": {
-            "description": "Alumnus not found."
           }
         }
       }

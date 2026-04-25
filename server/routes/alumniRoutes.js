@@ -5,21 +5,24 @@ const verifyToken = require('../middleware/authMiddleware');
 const verifyApiKey = require('../middleware/verifyApiKey');
 const requireRole = require('../middleware/requireRole');
 
+// ALUMNI DIRECTORY ROUTES (/api/alumni)
+
+// 1. Dynamic filter options route
 // Requires: 1. Valid Login, 2. Authorized Role, 3. Valid API Key with 'read:alumni' scope
-// Dynamic filter options route
 router.get(
   '/filter-options', 
   verifyToken, 
-  requireRole('developer', 'admin', 'alumnus'),
+  requireRole('developer', 'admin', 'alumni'), 
   verifyApiKey(['read:alumni']), 
   alumniController.getFilterOptions
 );
 
-// Main directory route
+// 2. Main directory route (View All Alumni with Details)
+// Requires: 1. Valid Login, 2. Authorized Role, 3. Valid API Key with 'read:alumni' scope
 router.get(
   '/', 
   verifyToken, 
-  requireRole('developer', 'admin', 'alumnus'),
+  requireRole('developer', 'admin', 'alumni'),
   verifyApiKey(['read:alumni']), 
   alumniController.getAlumniDirectory
 );

@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const db = require('../config/db');
 
+// 1. Generate Key (The one you just fixed)
 exports.generateApiKey = async (req, res) => {
   try {
     const { client_name, scope } = req.body;
@@ -9,7 +10,7 @@ exports.generateApiKey = async (req, res) => {
     if (!userId) return res.status(401).json({ error: 'Unauthorized. User ID missing.' });
     if (!client_name || !scope) return res.status(400).json({ error: 'client_name and scope are required.' });
     
-    const allowedScopes = ['read:analytics', 'read:alumni', 'read:alumni_of_day'];
+    const allowedScopes = ['read:analytics', 'read:alumni', 'read:alumni_of_day', 'read:donations'];
     
     if (!allowedScopes.includes(scope)) return res.status(400).json({ error: 'Invalid scope provided.' });
     
@@ -28,6 +29,7 @@ exports.generateApiKey = async (req, res) => {
   }
 };
 
+// 2. Get Keys (REQUIRED to stop the crash)
 exports.getApiKeys = async (req, res) => {
   try {
     const userId = req.user?.id || req.user?.userId;
@@ -47,6 +49,7 @@ exports.getApiKeys = async (req, res) => {
   }
 };
 
+// 3. Revoke Key (REQUIRED)
 exports.revokeApiKey = async (req, res) => {
   try {
     const userId = req.user?.id || req.user?.userId;
@@ -68,6 +71,7 @@ exports.revokeApiKey = async (req, res) => {
   }
 };
 
+// 4. Get Key Stats (REQUIRED)
 exports.getApiKeyStatsById = async (req, res) => {
   try {
     const userId = req.user?.id || req.user?.userId;
