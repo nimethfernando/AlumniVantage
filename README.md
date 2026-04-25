@@ -35,3 +35,60 @@ Before you begin, ensure you have the following installed:
    ```bash
    # If using terminal:
    mysql -u root -p < server/schema.sql
+2. Backend (Server) Setup
+Open a terminal and navigate to the server directory:
+
+Bash
+cd server
+Install the required Node dependencies:
+
+Bash
+npm install
+Copy the example environment file and configure it:
+
+Bash
+cp .env.example .env
+Open the new server/.env file and update the DB_PASSWORD, JWT_SECRET, and EMAIL_PASS variables with your local credentials.
+
+3. Frontend (Client) Setup
+Open a new terminal window and navigate to the client directory:
+
+Bash
+cd client
+Install the required Node dependencies:
+
+Bash
+npm install
+Create a .env file in the client folder and add your scoped developer API keys:
+
+Code snippet
+VITE_ALUMNI_API_KEY=your_directory_key_here
+VITE_ANALYTICS_API_KEY=your_analytics_key_here
+💻 Running the Application
+To run the full stack, you will need two terminal windows open.
+
+Start the Backend Server:
+
+Bash
+cd server
+npm run dev
+The backend will launch on http://localhost:3000 and confirm the database connection.
+
+Start the Frontend Client:
+
+Bash
+cd client
+npm run dev
+The frontend will launch on http://localhost:5173.
+
+📚 API Documentation
+AlumniVantage features comprehensive, interactive API documentation. Once the backend server is running, you can explore all endpoints, schemas, and security requirements by visiting:
+
+👉 http://localhost:3000/api-docs
+
+🛡️ Architecture & Scoping
+This API uses a dual-authentication model to ensure strict data governance:
+
+User Identity (JWT): Verifies who is making the request (Admin vs. Alumnus).
+
+Client Identification (API Keys): Verifies which application is making the request. Keys are strictly scoped (e.g., an AR App key cannot access Dashboard Analytics).
