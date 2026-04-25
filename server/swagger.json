@@ -17,7 +17,7 @@
         "type": "apiKey",
         "in": "header",
         "name": "x-api-key",
-        "description": "Developer API Key required for AR Client public routes."
+        "description": "Developer API Key required for AR Client public routes and scoped endpoints."
       },
       "cookieAuth": {
         "type": "apiKey",
@@ -385,6 +385,60 @@
           "location": {
             "type": "string",
             "example": "London"
+          }
+        }
+      },
+      "AnalyticsFilters": {
+        "type": "object",
+        "properties": {
+          "programmes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "years": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "sectors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "DashboardData": {
+        "type": "object",
+        "properties": {
+          "skillsGap": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "industryEmployment": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "summaryMetrics": {
+            "type": "object",
+            "properties": {
+              "totalAlumni": {
+                "type": "integer"
+              },
+              "totalCertifications": {
+                "type": "integer"
+              },
+              "topIndustry": {
+                "type": "string"
+              }
+            }
           }
         }
       }
@@ -1577,6 +1631,93 @@
         }
       }
     },
+    "/api/analytics/filters": {
+      "get": {
+        "summary": "Get Analytics Filter Options",
+        "description": "Fetch unique programmes, years, and sectors for dashboard dropdowns.",
+        "tags": [
+          "Analytics"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Filter options retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyticsFilters"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/analytics": {
+      "get": {
+        "summary": "Get Dashboard Analytics",
+        "description": "Fetch all chart data and metrics for the university dashboard. Requires 'read:analytics' scope.",
+        "tags": [
+          "Analytics"
+        ],
+        "security": [
+          {
+            "cookieAuth": []
+          },
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "programme",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter by degree name"
+          },
+          {
+            "name": "graduationYear",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Filter by year"
+          },
+          {
+            "name": "sector",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter by industry sector"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Analytics data retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardData"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - Missing required scope"
+          }
+        }
+      }
+    },
     "/api/alumni/filter-options": {
       "get": {
         "summary": "Get Alumni Filter Options",
@@ -1599,7 +1740,7 @@
     "/api/alumni": {
       "get": {
         "summary": "Get all alumni with their details",
-        "description": "Retrieves the alumni directory list including all specific details based on provided filters.",
+        "description": "Retrieves the alumni directory list including all specific details based on provided filters. Requires 'read:alumni' scope.",
         "tags": [
           "Alumni Directory"
         ],
