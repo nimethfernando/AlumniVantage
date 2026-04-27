@@ -12,17 +12,17 @@ const requireRole = require('../middleware/requireRole');
 router.get(
   '/filter-options', 
   verifyToken, 
-  requireRole('developer', 'admin', 'alumni'), 
+  requireRole('developer', 'admin', 'alumnus'), 
   verifyApiKey(['read:alumni']), 
   alumniController.getFilterOptions
 );
 
 // 2. Main directory route (View All Alumni with Details)
-// Requires: 1. Valid Login, 2. Authorized Role, 3. Valid API Key with 'read:alumni' scope
+// Requires: 1. Valid Login, 2. Authorized Role, 3. Valid API Key with 'read:alumnus' scope
 router.get(
   '/', 
   verifyToken, 
-  requireRole('developer', 'admin', 'alumni'),
+  requireRole('developer', 'admin', 'alumnus'),
   verifyApiKey(['read:alumni']), 
   alumniController.getAlumniDirectory
 );
