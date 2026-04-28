@@ -1,19 +1,30 @@
 const pool = require('../config/db');
 
+// HELPER FUNCTIONS
+
 // --- HELPER FUNCTION FOR URL VALIDATION ---
+// Ensures that provided URLs (LinkedIn, Universities, etc.) are valid formats
+// before attempting to save them to the database.
 const isValidUrl = (urlString) => {
-  if (!urlString) return true;
+  if (!urlString) return true; // Empty strings are allowed (optional fields)
   try {
-    new URL(urlString);
+    new URL(urlString); // Built-in Node.js URL parser will throw an error if invalid
     return true;
   } catch (error) {
     return false;
   }
 };
 
+// GET (READ) OPERATIONS
+/**
+ * Fetches the complete profile and all related sub-records (degrees, certifications, etc.)
+ * for the currently authenticated user.
+ */
 exports.getProfile = async (req, res) => {
   try {
-    const userId = req.user.userId;
+    const userId = req.user.userId; // Extracted from auth middleware
+    // Execute multiple queries concurrently to fetch all profile sections.
+    // Parameterized queries (?) are used to prevent SQL Injection.
     const [profile] = await pool.execute('SELECT * FROM profiles WHERE user_id = ?', [userId]);
     const [degrees] = await pool.execute('SELECT * FROM degrees WHERE user_id = ? ORDER BY completion_date DESC', [userId]);
     const [certifications] = await pool.execute('SELECT * FROM certifications WHERE user_id = ? ORDER BY issue_date DESC', [userId]);
@@ -21,6 +32,7 @@ exports.getProfile = async (req, res) => {
     const [employment] = await pool.execute('SELECT * FROM employment_history WHERE user_id = ? ORDER BY start_date DESC', [userId]);
     const [licenses] = await pool.execute('SELECT * FROM licenses WHERE user_id = ? ORDER BY completion_date DESC', [userId]);
 
+    // Aggregate the results into a single JSON response object
     res.json({
       profile: profile[0] || {},
       degrees: degrees,
@@ -35,17 +47,25 @@ exports.getProfile = async (req, res) => {
   }
 };
 
+/**
+ * Calculates how much of the user's profile is complete (percentage)
+ * to drive UI elements like a "Profile Strength" progress bar.
+ */
 exports.getProfileCompletionStatus = async (req, res) => {
   try {
     const userId = req.user.userId;
     const [profileRows] = await pool.execute('SELECT * FROM profiles WHERE user_id = ?', [userId]);
     const profile = profileRows[0] || {};
+    
+    // Using LIMIT 1 is an optimization: we only need to know IF a record exists, 
+    // we don't need to fetch all the data for them.
     const [degrees] = await pool.execute('SELECT id FROM degrees WHERE user_id = ? LIMIT 1', [userId]);
     const [certifications] = await pool.execute('SELECT id FROM certifications WHERE user_id = ? LIMIT 1', [userId]);
     const [licenses] = await pool.execute('SELECT id FROM licenses WHERE user_id = ? LIMIT 1', [userId]);
     const [courses] = await pool.execute('SELECT id FROM short_courses WHERE user_id = ? LIMIT 1', [userId]);
     const [employment] = await pool.execute('SELECT id FROM employment_history WHERE user_id = ? LIMIT 1', [userId]);
 
+    // Define the criteria for a "100% complete" profile
     const checklist = [
       { key: 'bio', completed: !!(profile.bio && profile.bio.trim()) },
       { key: 'linkedin_url', completed: !!(profile.linkedin_url && profile.linkedin_url.trim()) },
@@ -74,6 +94,7 @@ exports.getProfileCompletionStatus = async (req, res) => {
   }
 };
 
+// Individual Getters for specific profile sections
 exports.getDegrees = async (req, res) => {
   try {
     const [rows] = await pool.execute('SELECT * FROM degrees WHERE user_id = ? ORDER BY completion_date DESC', [req.user.userId]);
@@ -127,6 +148,11 @@ exports.getEmployment = async (req, res) => {
   }
 };
 
+// UPDATE (OR CREATE) MAIN PROFILE
+/**
+ * Handles updating the main user profile. It acts as an "Upsert" (Update or Insert)
+ * depending on whether a profile record already exists for the user.
+ */
 exports.updateProfile = async (req, res) => {
   try {
     const userId = req.user.userId;
@@ -134,18 +160,21 @@ exports.updateProfile = async (req, res) => {
     const { first_name, last_name, bio, linkedin_url } = req.body;
     let profile_image_url = null;
 
+    // Validate URL format
     if (linkedin_url && !isValidUrl(linkedin_url)) {
       return res.status(400).json({ error: "Invalid LinkedIn URL format." });
     }
 
+    // Check if an image file was uploaded by the multer middleware
     if (req.file) {
       profile_image_url = `/uploads/${req.file.filename}`;
     }
 
+    // Check if profile exists to determine if we INSERT or UPDATE
     const [existing] = await pool.execute('SELECT * FROM profiles WHERE user_id = ?', [userId]);
 
     if (existing.length > 0) {
-      // Update with first_name and last_name
+      // Build dynamic UPDATE query (only update image if a new one was provided)
       let query = 'UPDATE profiles SET first_name = ?, last_name = ?, bio = ?, linkedin_url = ?';
       let params = [first_name, last_name, bio, linkedin_url];
 
@@ -158,7 +187,7 @@ exports.updateProfile = async (req, res) => {
 
       await pool.execute(query, params);
     } else {
-      // Insert with first_name and last_name
+      // Insert new profile record
       await pool.execute(
         'INSERT INTO profiles (user_id, first_name, last_name, bio, linkedin_url, profile_image_url) VALUES (?, ?, ?, ?, ?, ?)',
         [userId, first_name, last_name, bio, linkedin_url, profile_image_url]
@@ -171,6 +200,8 @@ exports.updateProfile = async (req, res) => {
     res.status(500).json({ error: "Server error updating profile" });
   }
 };
+
+// CREATE (ADD) SUB-RECORDS
 
 exports.addDegree = async (req, res) => {
   try {
@@ -201,6 +232,7 @@ exports.addCertification = async (req, res) => {
       return res.status(400).json({ error: "Invalid Course URL format." });
     }
 
+    // Mapping frontend fields to the database schema
     const name = cert_name;
     const issuing_organization = null;
     const issue_date = completion_date;
@@ -226,6 +258,8 @@ exports.addLicense = async (req, res) => {
     if (awarding_body_url && !isValidUrl(awarding_body_url)) {
       return res.status(400).json({ error: "Invalid Awarding Body URL format." });
     }
+    
+    // Ensure date is formatted correctly for SQL (YYYY-MM-DD)
     const formattedDate = completion_date ? new Date(completion_date).toISOString().split('T')[0] : null;
 
     await pool.execute(
@@ -247,6 +281,7 @@ exports.addCourse = async (req, res) => {
       return res.status(400).json({ error: "Invalid Course URL format." });
     }
     const formattedDate = completion_date ? new Date(completion_date).toISOString().split('T')[0] : null;
+    
     await pool.execute(
       'INSERT INTO short_courses (user_id, course_name, course_url, completion_date) VALUES (?, ?, ?, ?)',
       [req.user.userId, course_name, course_url, formattedDate]
@@ -275,6 +310,10 @@ exports.addEmployment = async (req, res) => {
     res.status(500).json({ error: "Failed to add employment" });
   }
 };
+
+// DELETE SUB-RECORDS
+// All delete endpoints enforce authorization by requiring 'user_id = ?' in the WHERE clause,
+// ensuring a user can only delete their own records.
 
 exports.deleteDegree = async (req, res) => {
   try {
@@ -356,6 +395,9 @@ exports.deleteEmployment = async (req, res) => {
     res.status(500).json({ error: "Failed to delete employment record" });
   }
 };
+
+// UPDATE SUB-RECORDS
+// All update endpoints format the date safely and ensure authorization via user_id.
 
 exports.updateDegree = async (req, res) => {
   try {

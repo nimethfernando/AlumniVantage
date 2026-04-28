@@ -1,80 +1,79 @@
-// server/controllers/analyticsController.js
-const db = require('../config/db');
+const db = require('../config/db'); // Import DB connection pool to handle concurrent query execution
 
 // --- GET FILTER OPTIONS ---
-// This provides the unique list of Programmes, Years, and Sectors to the frontend
+// Fetches unique Programmes, Years, and Sectors to populate the frontend dashboard dropdowns
 exports.getFilterOptions = async (req, res) => {
   try {
-    // Fetch unique degree names
+    // Fetch unique degree names, filtering out null/empty strings to keep the UI clean
     const [programmes] = await db.query(`
       SELECT DISTINCT degree_name FROM degrees 
       WHERE degree_name IS NOT NULL AND degree_name != ''
       ORDER BY degree_name ASC
     `);
 
-    // Fetch unique graduation years
+    // Fetch unique graduation years dynamically extracted from completion_date
     const [years] = await db.query(`
       SELECT DISTINCT YEAR(completion_date) as year FROM degrees 
       WHERE completion_date IS NOT NULL 
       ORDER BY year DESC
     `);
 
-    // Fetch unique industry sectors
+    // Fetch unique industry sectors from current and past employment records
     const [sectors] = await db.query(`
       SELECT DISTINCT industry_sector FROM employment_history 
       WHERE industry_sector IS NOT NULL AND industry_sector != ''
       ORDER BY industry_sector ASC
     `);
 
-    res.json({
+    res.json({ // Map the raw SQL row objects into flat arrays for easier frontend consumption
       programmes: programmes.map(p => p.degree_name),
       years: years.map(y => y.year).filter(y => y !== null), // Filter out any null years just in case
       sectors: sectors.map(s => s.industry_sector)
     });
   } catch (error) {
-    console.error('Failed to fetch filter options:', error);
-    res.status(500).json({ error: 'Failed to fetch filter options' });
+    console.error('Failed to fetch filter options:', error); // Log server-side for debugging
+    res.status(500).json({ error: 'Failed to fetch filter options' }); // Generic client error
   }
 };
 
 
 // --- GET DASHBOARD ANALYTICS ---
-// This processes the selected filters and returns the chart data
+// Processes the selected filters and executes 10 queries to return all chart data simultaneously
 exports.getDashboardAnalytics = async (req, res) => {
   try {
-    const programme = req.query.programme || null;
-    const graduationYear = req.query.graduationYear || null;
-    const sector = req.query.sector || null;
+    const programme = req.query.programme || null; // Extract filter from URL query
+    const graduationYear = req.query.graduationYear || null; // Extract year filter
+    const sector = req.query.sector || null; // Extract sector filter
 
-    const conditions = ['u.is_verified = 1'];
-    const params = [];
+    const conditions = ['u.is_verified = 1']; // Base security condition: only count verified users
+    const params = []; // Array to hold parameterized values preventing SQL injection
 
-    if (programme) {
-      conditions.push('d.degree_name LIKE ?');
+    if (programme) { // Dynamically build the WHERE clause based on active filters
+      conditions.push('d.degree_name LIKE ?'); // Use LIKE for partial degree name matching
       params.push(`%${programme}%`);
     }
 
     if (graduationYear) {
-      conditions.push('YEAR(d.completion_date) = ?');
+      conditions.push('YEAR(d.completion_date) = ?'); // Exact match for graduation year
       params.push(graduationYear);
     }
 
     if (sector) {
-      conditions.push('eh.industry_sector = ?');
+      conditions.push('eh.industry_sector = ?'); // Exact match for employment sector
       params.push(sector);
     }
 
-    const whereClause = `WHERE ${conditions.join(' AND ')}`;
+    const whereClause = `WHERE ${conditions.join(' AND ')}`; // Combine conditions into final SQL string
 
     // --- SKILLS GAP ANALYTICS ---
     const [skillsRaw] = await db.query(`
       SELECT
         skill,
         MAX(curriculum_value) AS curriculum,
-        LEAST(COUNT(DISTINCT u.id) * 10, 100) AS alumni, -- CHANGED to prevent duplicate counting
-        100 AS fullMark
+        LEAST(COUNT(DISTINCT u.id) * 10, 100) AS alumni, -- CHANGED to prevent duplicate counting, capped at 100
+        100 AS fullMark -- Max scale for Recharts radar chart
       FROM (
-        SELECT 'Docker' AS skill, 15 AS curriculum_value
+        SELECT 'Docker' AS skill, 15 AS curriculum_value -- Hardcoded curriculum baseline weights
         UNION ALL
         SELECT 'Kubernetes', 10
         UNION ALL
@@ -91,8 +90,8 @@ exports.getDashboardAnalytics = async (req, res) => {
       LEFT JOIN employment_history eh ON eh.user_id = u.id
       LEFT JOIN certifications c ON c.user_id = u.id
       LEFT JOIN short_courses sc ON sc.user_id = u.id
-      ${whereClause}
-      AND (
+      ${whereClause} -- Inject the dynamic filter conditions
+      AND ( -- Massive OR block to scan certs/courses for wildcard skill keywords
         (skill_base.skill = 'Docker' AND (
           LOWER(COALESCE(c.name, '')) LIKE '%docker%' OR
           LOWER(COALESCE(sc.course_name, '')) LIKE '%docker%'
@@ -140,7 +139,7 @@ exports.getDashboardAnalytics = async (req, res) => {
     `, params);
 
     const skillOrder = ['Docker', 'Kubernetes', 'Cloud', 'Data Analytics', 'Agile', 'Cybersecurity'];
-    const curriculumMap = {
+    const curriculumMap = { // Mapping object to ensure frontend structure matches exactly
       Docker: 15,
       Kubernetes: 10,
       Cloud: 35,
@@ -149,18 +148,18 @@ exports.getDashboardAnalytics = async (req, res) => {
       Cybersecurity: 60
     };
 
-    const skillsGap = skillOrder.map((skill) => {
+    const skillsGap = skillOrder.map((skill) => { // Construct the final array for the radar chart
       const found = skillsRaw.find((item) => item.skill === skill);
       return {
         subject: skill,
         university: curriculumMap[skill],
-        alumni: found ? Number(found.alumni) : 0,
+        alumni: found ? Number(found.alumni) : 0, // Fallback to 0 if no alumni match
         fullMark: 100
       };
     });
 
     // --- CURRENT EMPLOYMENT FILTER ---
-    const currentJobFilterSql = `
+    const currentJobFilterSql = ` -- Sub-query specifically targeting active jobs (end_date IS NULL)
       FROM employment_history eh
       INNER JOIN users u ON u.id = eh.user_id
       LEFT JOIN degrees d ON d.user_id = u.id
@@ -171,7 +170,7 @@ exports.getDashboardAnalytics = async (req, res) => {
       ${sector ? 'AND eh.industry_sector = ?' : ''}
     `;
 
-    const currentJobParams = [
+    const currentJobParams = [ // Reconstruct params array since this is a separate SQL execution context
       ...(programme ? [`%${programme}%`] : []),
       ...(graduationYear ? [graduationYear] : []),
       ...(sector ? [sector] : [])
@@ -180,13 +179,13 @@ exports.getDashboardAnalytics = async (req, res) => {
     // --- EMPLOYMENT CHARTS ---
     const [industryEmployment] = await db.query(`
       SELECT
-        COALESCE(eh.industry_sector, 'Unknown') AS name,
+        COALESCE(eh.industry_sector, 'Unknown') AS name, -- Replace NULLs with 'Unknown' for clean UI
         COUNT(DISTINCT eh.user_id) AS value
       ${currentJobFilterSql}
       AND eh.industry_sector IS NOT NULL
       GROUP BY eh.industry_sector
       ORDER BY value DESC
-      LIMIT 8
+      LIMIT 8 -- Restrict to top 8 for Pie Chart readability
     `, currentJobParams);
 
     const [jobTitles] = await db.query(`
@@ -236,8 +235,8 @@ exports.getDashboardAnalytics = async (req, res) => {
     // --- OTHER ANALYTICS ---
     const [certificationTrendRaw] = await db.query(`
       SELECT
-        DATE_FORMAT(c.issue_date, '%b') AS month,
-        MONTH(c.issue_date) AS monthNumber,
+        DATE_FORMAT(c.issue_date, '%b') AS month, -- Group by abbreviated month name (Jan, Feb)
+        MONTH(c.issue_date) AS monthNumber, -- Keep numeric month for accurate chronological sorting
         COUNT(DISTINCT CASE WHEN LOWER(c.name) LIKE '%aws%' THEN u.id ELSE NULL END) AS AWS,
         COUNT(DISTINCT CASE WHEN LOWER(c.name) LIKE '%azure%' THEN u.id ELSE NULL END) AS Azure,
         COUNT(DISTINCT CASE WHEN LOWER(c.name) LIKE '%gcp%' OR LOWER(c.name) LIKE '%google cloud%' THEN u.id ELSE NULL END) AS GCP,
@@ -247,12 +246,12 @@ exports.getDashboardAnalytics = async (req, res) => {
       LEFT JOIN employment_history eh ON eh.user_id = u.id
       LEFT JOIN certifications c ON c.user_id = u.id
       ${whereClause}
-      AND c.issue_date >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+      AND c.issue_date >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH) -- Restrict trendline to last 6 months
       GROUP BY MONTH(c.issue_date), DATE_FORMAT(c.issue_date, '%b')
       ORDER BY monthNumber ASC
     `, params);
 
-    const certificationTrend = certificationTrendRaw.map((item) => ({
+    const certificationTrend = certificationTrendRaw.map((item) => ({ // Strip monthNumber before sending to client
       month: item.month,
       AWS: Number(item.AWS),
       Azure: Number(item.Azure),
@@ -263,7 +262,7 @@ exports.getDashboardAnalytics = async (req, res) => {
     const [coursesPopularity] = await db.query(`
       SELECT
         sc.course_name AS subject,
-        COUNT(DISTINCT sc.id) AS value -- CHANGED from COUNT(*) to prevent duplicates
+        COUNT(DISTINCT sc.id) AS value -- CHANGED from COUNT(*) to prevent duplicates skewing the chart
       FROM users u
       LEFT JOIN degrees d ON d.user_id = u.id
       LEFT JOIN employment_history eh ON eh.user_id = u.id
@@ -277,7 +276,7 @@ exports.getDashboardAnalytics = async (req, res) => {
 
     // --- SUMMARY METRICS ---
     const [alumniCountResult] = await db.query(`
-      SELECT COUNT(DISTINCT u.id) AS count
+      SELECT COUNT(DISTINCT u.id) AS count -- Distinct ensures users aren't double-counted if they have multiple degrees
       FROM users u
       LEFT JOIN degrees d ON d.user_id = u.id
       LEFT JOIN employment_history eh ON eh.user_id = u.id
@@ -302,14 +301,14 @@ exports.getDashboardAnalytics = async (req, res) => {
       AND eh.industry_sector IS NOT NULL
       GROUP BY eh.industry_sector
       ORDER BY count DESC
-      LIMIT 1
+      LIMIT 1 -- Limit to 1 to just grab the absolute most popular industry for the top stat card
     `, currentJobParams);
 
-    const totalAlumni = alumniCountResult[0]?.count || 0;
+    const totalAlumni = alumniCountResult[0]?.count || 0; // Safely extract count, default to 0
     const totalCertifications = certificationCountResult[0]?.count || 0;
     const topIndustry = topIndustryResult.length > 0 ? topIndustryResult[0].sector : 'N/A';
 
-    res.json({
+    res.json({ // Bundle all 10 datasets into a single JSON response to minimize HTTP requests
       skillsGap,
       industryEmployment,
       jobTitles,
