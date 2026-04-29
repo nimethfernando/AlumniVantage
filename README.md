@@ -59,7 +59,11 @@ Install the required Node dependencies:
 
 Bash
 npm install
-Create a .env file in the client folder and add your scoped developer API keys:
+Copy the example environment file for the client:
+
+Bash
+cp .env.example .env
+Open the client/.env file and add your scoped developer API keys if necessary:
 
 Code snippet
 VITE_ALUMNI_API_KEY=your_directory_key_here
@@ -67,14 +71,14 @@ VITE_ANALYTICS_API_KEY=your_analytics_key_here
 💻 Running the Application
 To run the full stack, you will need two terminal windows open.
 
-Start the Backend Server:
+1. Start the Backend Server:
 
 Bash
 cd server
 npm run dev
 The backend will launch on http://localhost:3000 and confirm the database connection.
 
-Start the Frontend Client:
+2. Start the Frontend Client:
 
 Bash
 cd client
@@ -86,9 +90,9 @@ AlumniVantage features comprehensive, interactive API documentation. Once the ba
 
 👉 http://localhost:3000/api-docs
 
-🛡️ Architecture & Scoping
-This API uses a dual-authentication model to ensure strict data governance:
+🛡️ Architecture & Data Governance
+This API uses a dual-authentication model to ensure strict data security:
 
-User Identity (JWT): Verifies who is making the request (Admin vs. Alumnus).
+User Identity (JWT): Verifies who is making the request (Admin vs. Alumnus). Handled securely via HttpOnly cookies to prevent Cross-Site Scripting (XSS).
 
-Client Identification (API Keys): Verifies which application is making the request. Keys are strictly scoped (e.g., an AR App key cannot access Dashboard Analytics).
+Client Identification (API Keys): Verifies which application is making the request. Keys are strictly scoped (e.g., a key scoped for the Alumni Directory cannot access Dashboard Analytics).   
