@@ -4,6 +4,7 @@ import './BiddingSystem.css';
 
 const BiddingSystem = () => {
   const [currentBid, setCurrentBid] = useState(null);
+  const [isWinning, setIsWinning] = useState(false);
   const [bidAmount, setBidAmount] = useState('');
   const [message, setMessage] = useState({ type: '', text: '' });
   const [loading, setLoading] = useState(false);
@@ -19,11 +20,12 @@ const BiddingSystem = () => {
       const response = await api.get('/api/bids/status');
       const data = response.data;
 
-      if (data.current_bid === 'No active bids') {
+      if (data.current_bid === 'No active bids' || !data.current_bid) {
         setCurrentBid(null);
       } else {
         setCurrentBid(data.current_bid);
       }
+      setIsWinning(data.isWinning || false);
 
       const used = data.features_used || 0;
       const maxLimit = data.max_features || 3;
@@ -90,7 +92,7 @@ const BiddingSystem = () => {
             <span
               className="status-badge"
               style={{
-                backgroundColor: currentBid.isWinning ? '#28a745' : '#dc3545',
+                backgroundColor: isWinning ? '#28a745' : '#dc3545',
                 color: 'white',
                 padding: '4px 8px',
                 borderRadius: '4px',
@@ -98,7 +100,7 @@ const BiddingSystem = () => {
                 fontSize: '0.8rem'
               }}
             >
-              {currentBid.isWinning ? 'WINNING' : 'OUTBID'}
+              {isWinning ? 'WINNING' : 'OUTBID'}
             </span>
             <p style={{ margin: '0.5rem 0', color: '#6b7280', fontSize: '0.9rem' }}>
               Your Current Bid
