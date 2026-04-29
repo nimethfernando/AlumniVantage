@@ -110,6 +110,8 @@ CREATE TABLE employment_history (
     user_id INT NOT NULL,
     company VARCHAR(255) NOT NULL,
     role VARCHAR(255) NOT NULL,
+    industry_sector VARCHAR(255),
+    location VARCHAR(255),
     start_date DATE NOT NULL,
     end_date DATE DEFAULT NULL,
     CONSTRAINT fk_employment_user
@@ -227,9 +229,10 @@ CREATE INDEX idx_api_logs_created_at ON api_logs(created_at);
 CREATE INDEX idx_api_logs_endpoint ON api_logs(endpoint);
 
 -- ========================================
--- OPTIONAL TEST DATA
--- Only developer user inserted
+-- DEFAULT TEST DATA
 -- ========================================
+
+-- Insert Developer User
 INSERT INTO users (
     email,
     password_hash,
@@ -252,6 +255,35 @@ INSERT INTO users (
     NULL,
     '2026-04-05 20:16:59',
     'developer',
+    0,
+    0,
+    NULL,
+    '2026-04-04 20:16:59'
+);
+
+-- Insert Admin User
+INSERT INTO users (
+    email,
+    password_hash,
+    is_verified,
+    verification_token,
+    verification_expires_at,
+    reset_token,
+    reset_token_expires,
+    role,
+    attended_event,
+    appearance_count,
+    last_appearance_date,
+    created_at
+) VALUES (
+    'admin1@my.westminster.ac.uk',
+    '$2b$10$YDFLNf7GpDAtQzGQsPrHpubqGyf3.XVxbchz.vwKU4otxYcCO2sKi',
+    1,
+    NULL,
+    NULL,
+    NULL,
+    '2026-04-05 20:16:59',
+    'admin',
     0,
     0,
     NULL,
